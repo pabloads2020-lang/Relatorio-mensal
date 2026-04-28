@@ -15,6 +15,7 @@
   --green: #2ecc71; --green-bg: rgba(46,204,113,0.12);
   --red: #e74c3c; --red-bg: rgba(231,76,60,0.12);
   --amber: #f39c12; --amber-bg: rgba(243,156,18,0.12);
+  --blue: #3498db; --blue-bg: rgba(52,152,219,0.12);
   --header-bg: #161b25; --header-border: rgba(255,255,255,0.07);
   --card-bg: #161b25; --card-border: rgba(255,255,255,0.07);
   --debug-bg: #1c2333; --overlay-bg: rgba(14,17,23,.88);
@@ -155,42 +156,55 @@ function gerarRelatorioHTML() {
   let alocacoes = dadosCarteira.alocacoes;
   let retornos = dadosCarteira.retornos;
   
+  // Monta lista de classes com alocação e retorno
   let classesList = [];
   for (let nome in alocacoes) {
     if (alocacoes[nome] > 0) {
-      classesList.push({ nome: nome, alocacao: alocacoes[nome], retorno: retornos[nome] !== undefined ? retornos[nome] : null });
+      classesList.push({
+        nome: nome,
+        alocacao: alocacoes[nome],
+        retorno: retornos[nome] !== undefined ? retornos[nome] : null
+      });
     }
   }
-  classesList.sort((a,b) => b.alocacao - a.alocacao);
+  classesList.sort((a, b) => b.alocacao - a.alocacao);
   
+  // Constrói o texto de desempenho por classe de ativo
   let desempenhoTexto = "";
   for (let item of classesList) {
     if (item.retorno !== null && item.retorno !== 0) {
       let cor = item.retorno >= 0 ? 'relatorio-positivo' : 'relatorio-negativo';
-      let movimento = item.retorno >= 0 ? 'valorização' : 'queda';
-      desempenhoTexto += `<span class="relatorio-classe-item">• <strong>${item.nome}</strong> (${item.alocacao.toFixed(2).replace('.',',')}% da carteira): ${movimento} de <span class="${cor}">${Math.abs(item.retorno).toFixed(2).replace('.',',')}%</span></span>`;
+      let movimento = item.retorno >= 0 ? 'valorização de' : 'queda de';
+      let sinal = item.retorno >= 0 ? '+' : '';
+      desempenhoTexto += `<span class="relatorio-classe-item">• <strong>${item.nome}</strong> (${item.alocacao.toFixed(2).replace('.', ',')}% da carteira): ${movimento} <span class="${cor}">${sinal}${item.retorno.toFixed(2).replace('.', ',')}%</span> no mês</span>`;
     }
   }
   
-  let rentabilidadeStr = rentabilidade !== null ? `${rentabilidade.toFixed(2).replace('.',',')}%` : "não disponível";
-  let pctCdiStr = pctCdi !== null ? `${pctCdi.toFixed(2).replace('.',',')}%` : "não disponível";
+  // Se não conseguiu capturar os retornos individuais, mostra mensagem
+  if (desempenhoTexto === "") {
+    desempenhoTexto = "<span class=\"relatorio-classe-item\">⚠️ Não foi possível capturar os retornos individuais das classes no PDF.</span>";
+  }
+  
+  let rentabilidadeStr = rentabilidade !== null ? `${rentabilidade.toFixed(2).replace('.', ',')}%` : "não disponível";
+  let pctCdiStr = pctCdi !== null ? `${pctCdi.toFixed(2).replace('.', ',')}%` : "não disponível";
   let sinalRentabilidade = (rentabilidade !== null && rentabilidade >= 0) ? 'positivo' : 'negativo';
   let sinalClasse = (rentabilidade !== null && rentabilidade >= 0) ? 'relatorio-positivo' : 'relatorio-negativo';
+  let sinalSinal = (rentabilidade !== null && rentabilidade >= 0) ? '+' : '';
   
   let html = `
     <div class="relatorio-saudacao">📋 Prezado cliente, tudo bem? Segue o seu relatório mensal.</div>
     
     <div class="relatorio-paragrafo">
-      🇧🇷 **Cenário Brasil:** ${mes} de ${ano} foi marcado pela divulgação do IPCA, que veio alinhado às expectativas. O Banco Central deu início ao ciclo de flexibilização da política monetária com novos cortes na Selic, mantendo a atratividade da Renda Fixa. O mercado segue atento ao arcabouço fiscal e à trajetória da dívida pública.
+      🇧🇷 <strong>Cenário Brasil:</strong> ${mes} de ${ano} foi marcado pela divulgação do IPCA, que veio alinhado às expectativas. O Banco Central deu início ao ciclo de flexibilização da política monetária com novos cortes na Selic, mantendo a atratividade da Renda Fixa. O mercado segue atento ao arcabouço fiscal e à trajetória da dívida pública.
     </div>
     
     <div class="relatorio-paragrafo">
-      🌍 **Cenário Global:** ${mes} de ${ano} foi marcado por volatilidade nos mercados internacionais. As tensões geopolíticas no Oriente Médio pressionaram os preços do petróleo. Nos EUA, os dados de inflação e emprego mantêm o Federal Reserve em modo de espera, enquanto a China busca retomar o crescimento com novos estímulos.
+      🌍 <strong>Cenário Global:</strong> ${mes} de ${ano} foi marcado por volatilidade nos mercados internacionais. As tensões geopolíticas no Oriente Médio pressionaram os preços do petróleo. Nos EUA, os dados de inflação e emprego mantêm o Federal Reserve em modo de espera, enquanto a China busca retomar o crescimento com novos estímulos.
     </div>
     
     <div class="relatorio-dados">
       <p>📊 <strong>Desempenho da sua carteira:</strong></p>
-      <p>Sua carteira atravessou esse ambiente com solidez, apresentando um retorno <strong class="${sinalClasse}">${sinalRentabilidade} de ${rentabilidadeStr}</strong> no mês de ${mes.toLowerCase()} de ${ano}${pctCdi !== null ? `, equivalente a <strong>${pctCdiStr} do CDI</strong> do período.` : '.'}</p>
+      <p>Sua carteira atravessou esse ambiente com solidez, apresentando um retorno <strong class="${sinalClasse}">${sinalRentabilidade} de ${sinalSinal}${rentabilidadeStr}</strong> no mês de ${mes.toLowerCase()} de ${ano}, <strong>equivalente a ${pctCdiStr} do CDI</strong> do período.</p>
     </div>
   `;
   
@@ -199,7 +213,7 @@ function gerarRelatorioHTML() {
   }
   
   if (desempenhoTexto) {
-    html += `<div class="relatorio-paragrafo"><strong>📈 Desempenho por classe de ativo:</strong><br>${desempenhoTexto}</div>`;
+    html += `<div class="relatorio-paragrafo"><strong>📈 Desempenho por classe de ativo no mês:</strong><br>${desempenhoTexto}</div>`;
   }
   
   html += `
@@ -275,7 +289,6 @@ async function extrairDadosPDF(file) {
   }
   
   // ==================== ESTRATÉGIAS ====================
-  // Padrão: "Pós Fixado (42,61%) R$ 1.242.086,14 0,43%"
   const estrategias = [
     { nome: 'Pós Fixado', final: 'Pós-Fixado' },
     { nome: 'Inflação', final: 'Inflação' },
@@ -291,19 +304,12 @@ async function extrairDadosPDF(file) {
   ];
   
   for (let item of estrategias) {
-    // Regex para capturar: Nome (99,99%) R$ 999.999,99 99,99%
-    let regex = new RegExp(item.nome + '\\s*\\(\\s*(\\d+),\\s*(\\d+)\\s*%\\)[^\\d]*R\\$\\s*[\\d\\.]+,\\d{2}\\s+(\\d+),(\\d{2})\\s*%', 'i');
+    let regex = new RegExp(item.nome + '\\s*\\(\\s*(\\d+),\\s*(\\d+)\\s*%\\)[^\\d]*R\\$\\s*[\\d\\.]+,\\d{2}\\s+([+-]?\\s*\\d+),(\\d{2})\\s*%', 'i');
     let match = textoCompleto.match(regex);
     
     if (match) {
       let alocacao = parseFloat(match[1] + '.' + match[2]);
-      let retorno = parseFloat(match[3] + '.' + match[4]);
-      
-      // Verificar se é negativo
-      let negativoMatch = textoCompleto.match(new RegExp(item.nome + '[^-]*?(-\\s*\\d+,\\d{2})\\s*%', 'i'));
-      if (negativoMatch) {
-        retorno = -Math.abs(retorno);
-      }
+      let retorno = parseFloat(match[3].replace(/\s/g, '') + '.' + match[4]);
       
       if (alocacao > 0) {
         dadosCarteira.alocacoes[item.final] = alocacao;
@@ -313,13 +319,13 @@ async function extrairDadosPDF(file) {
     }
   }
   
-  // Fallback: busca por qualquer padrão (XX,XX%) e pega o próximo número como retorno
-  let fallbackRegex = /([A-Za-zÀ-Úà-û\s]{2,30}?)\s*\(\s*(\d+),(\d+)\s*%\)[^%]*?(\d+),(\d+)\s*%/gi;
+  // Fallback para capturar classes que não pegaram
+  let fallbackRegex = /([A-Za-zÀ-Úà-û\s]{2,30}?)\s*\(\s*(\d+),(\d+)\s*%\)[^%]*?([+-]?\s*\d+),(\d+)\s*%/gi;
   let fallbackMatch;
   while ((fallbackMatch = fallbackRegex.exec(textoCompleto)) !== null) {
     let nome = fallbackMatch[1].trim();
     let alocacao = parseFloat(fallbackMatch[2] + '.' + fallbackMatch[3]);
-    let retorno = parseFloat(fallbackMatch[4] + '.' + fallbackMatch[5]);
+    let retorno = parseFloat(fallbackMatch[4].replace(/\s/g, '') + '.' + fallbackMatch[5]);
     
     if (nome && alocacao > 0 && alocacao <= 100 && !dadosCarteira.alocacoes[nome]) {
       dadosCarteira.alocacoes[nome] = alocacao;
@@ -333,8 +339,8 @@ async function extrairDadosPDF(file) {
   dbg(`Rentabilidade: ${dadosCarteira.rentabilidadeMensal !== null ? dadosCarteira.rentabilidadeMensal + '%' : 'não encontrada'}`);
   dbg(`%CDI: ${dadosCarteira.pctCdi !== null ? dadosCarteira.pctCdi + '%' : 'não encontrado'}`);
   dbg(`Patrimônio: ${dadosCarteira.patrimonio > 0 ? 'R$ ' + dadosCarteira.patrimonio : 'não encontrado'}`);
-  dbg(`Alocações:`, dadosCarteira.alocacoes);
-  dbg(`Retornos:`, dadosCarteira.retornos);
+  dbg('Alocações:', dadosCarteira.alocacoes);
+  dbg('Retornos:', dadosCarteira.retornos);
   
   return { alocacoes: dadosCarteira.alocacoes, patrimonio: dadosCarteira.patrimonio };
 }
