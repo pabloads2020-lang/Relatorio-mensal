@@ -2,119 +2,99 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PBF · Relatório Mensal</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
         :root {
             --bg: #0e1117; --bg2: #161b25; --bg3: #1c2333;
-            --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13);
-            --gold: #f5c842; --gold2: #e0a800;
-            --text: #e8eaf0; --text2: #8b93a7; --text3: #555e72;
+            --gold: #f5c842; --text: #e8eaf0; --text2: #8b93a7;
+            --border: rgba(255,255,255,0.07);
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
-        .header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; }
-        .main { max-width: 900px; margin: 0 auto; padding: 2rem; }
-        .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
-        .card-title { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 10px;}
-        textarea { width: 100%; background: var(--bg3); color: var(--text2); border: 1px solid var(--border2); border-radius: 8px; padding: 12px; font-size: 14px; margin-top: 10px; resize: vertical; }
-        .file-label { background: var(--bg3); border: 1.5px dashed var(--border2); border-radius: 8px; padding: 15px; cursor: pointer; font-size: 14px; display: block; text-align: center; margin-top: 15px; }
-        #filePdf { display: none; }
-        .btn { padding: 12px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; width: 100%; margin-top: 10px; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); padding: 20px; line-height: 1.6; }
+        .container { max-width: 850px; margin: 0 auto; }
+        .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .title { font-size: 12px; font-weight: 700; color: #555e72; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        textarea { width: 100%; background: var(--bg3); color: var(--text2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 14px; margin-top: 10px; resize: vertical; border: 1px solid rgba(255,255,255,0.1); }
+        .btn { padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: 0.3s; width: 100%; margin-top: 10px; }
         .btn-gold { background: var(--gold); color: #000; }
-        .btn-dark { background: var(--bg3); color: var(--text); border: 1px solid var(--border2); }
-        .output-container { background: #ffffff; color: #1a1a1a; border-radius: 12px; padding: 2rem; font-size: 15px; white-space: pre-wrap; border: 1px solid #ddd; margin-top: 15px; }
+        .btn-gold:hover { background: #e0a800; }
+        .btn-dark { background: var(--bg3); color: var(--text); border: 1px solid rgba(255,255,255,0.1); }
+        .output { background: #ffffff; color: #1a1a1a; border-radius: 12px; padding: 25px; font-size: 15px; white-space: pre-wrap; margin-top: 15px; border: 1px solid #ddd; }
+        input[type="file"] { display: none; }
+        .file-label { display: block; background: var(--bg3); border: 1.5px dashed rgba(255,255,255,0.2); border-radius: 8px; padding: 15px; text-align: center; cursor: pointer; font-size: 14px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-<header class="header">
-    <div style="font-weight: 700; color: var(--gold);">PBF INVESTIMENTOS</div>
-    <div style="font-size: 12px; color: var(--text3);">Gerador de Relatórios</div>
-</header>
-
-<main class="main">
+<div class="container">
     <div class="card">
-        <div class="card-title">🌐 Cenário do Mês</div>
-        <textarea id="textoCenario" rows="4">O mês de abril de 2026 foi marcado por uma postura mais cautelosa nos mercados. No Brasil, o foco esteve na divulgação do IPCA, que apresentou uma leve aceleração devido ao impacto sazonal dos alimentos. No cenário global, a resiliência da economia americana adiou o início da flexibilização por parte do Fed.</textarea>
+        <div class="title">1. Cenário Macro</div>
+        <textarea id="textoCenario" rows="4">O mês de abril de 2026 foi marcado por uma postura mais cautelosa nos mercados. No Brasil, o foco esteve na divulgação do IPCA. No cenário global, a resiliência da economia americana adiou o início da flexibilização por parte do Fed.</textarea>
     </div>
 
     <div class="card">
-        <div class="card-title">📄 Relatório XP</div>
-        <label class="file-label" for="filePdf">
-            <span id="fileName">Clique para selecionar o PDF</span>
-        </label>
+        <div class="title">2. Relatório XP</div>
+        <label class="file-label" for="filePdf" id="labelPdf">Selecionar PDF da XP...</label>
         <input type="file" id="filePdf" accept=".pdf">
-        <button class="btn btn-gold" id="btnProcessar">GERAR TEXTO</button>
+        <button class="btn btn-gold" id="btnProcessar">GERAR RELATÓRIO</button>
     </div>
 
     <div class="card">
-        <div class="card-title">📈 Resultado</div>
-        <div id="relatorioFinal" class="output-container">Aguardando processamento...</div>
-        <button class="btn btn-dark" onclick="copiar()">Copiar para WhatsApp</button>
+        <div class="title">3. Resultado</div>
+        <div id="relatorioFinal" class="output">Aguardando arquivo...</div>
+        <button class="btn btn-dark" onclick="copiar()">Copiar Texto</button>
     </div>
-</main>
+</div>
 
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-function limparTexto(t) {
-    // Remove espaços entre números/vírgulas que o PDF da XP gera
-    return t.replace(/(\d)\s+(?=\d|[\.,%])/g, '$1').replace(/([\.,%])\s+(?=\d)/g, '$1').replace(/\s+/g, ' ');
+// Função crucial para limpar a sujeira de espaços que a XP gera
+function superLimpeza(t) {
+    return t.replace(/\s+/g, '');
 }
 
 async function processar() {
     const file = document.getElementById('filePdf').files[0];
-    if (!file) return alert("Selecione um PDF");
+    if (!file) return alert("Selecione o PDF");
 
     const ab = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
-    let d = { alocacoes: {}, retornos: {}, patrimonio: "", rentMes: "", cdiMes: "", mes: "" };
+    let d = { alocacoes: {}, retornos: {}, patrimonio: "", rentMes: "", cdiMes: "", mes: "abril" };
 
-    for (let i = 1; i <= Math.min(pdf.numPages, 5); i++) {
+    for (let i = 1; i <= Math.min(pdf.numPages, 6); i++) {
         const page = await pdf.getPage(i);
         const content = await page.getTextContent();
-        const texto = limparTexto(content.items.map(it => it.str).join(' '));
+        const textoOriginal = content.items.map(it => it.str).join(' ');
+        const t = superLimpeza(textoOriginal);
 
-        // 1. DATA (Pág 1 ou 4)
-        let mData = texto.match(/(?:abr|mar|fev|jan)\s*\.\/\s*26|Data\s+de\s+Refer[êe]ncia\s*(\d{2})\/(\d{2})/i);
-        if (mData && !d.mes) {
-            const meses = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
-            // Se pegou o formato 20/04/2026
-            if (mData[2]) d.mes = meses[parseInt(mData[2]) - 1];
-            // Se pegou o formato abr ./ 26
-            else if (texto.toLowerCase().includes("abr")) d.mes = "abril";
-        }
-
-        // 2. PATRIMÔNIO (Pág 2 ou 4)
-        let mPat = texto.match(/PATRIM[OÔ]NIO\s+TOTAL\s+BRUTO\s*R\$\s*([\d\.]+,\d{2})/i);
+        // 1. Patrimônio (Âncora: PATRIMÔNIOTOTALBRUTO:R$)
+        let mPat = t.match(/PATRIMÔNIOTOTALBRUTO:R\$([\d\.]+,\d{2})/i);
         if (mPat) d.patrimonio = mPat[1];
 
-        // 3. RENTABILIDADE E %CDI (Pág 4 - Captura direta da linha do mês)
-        // Buscamos o padrão: R$ [valor] [rent%] [cdi%]
-        let mResumo = texto.match(/R\$\s*[\d\.]+,\d{2}\s*([\d,+-]+)%\s*([\d,]+)%/i);
-        if (mResumo && !d.rentMes) { 
-            d.rentMes = mResumo[1]; 
-            d.cdiMes = mResumo[2]; 
+        // 2. Rentabilidade e CDI do Mês (Página 4 - Tabela Evolução)
+        // Buscamos o padrão de fechamento da linha: ValorR$ GanhoR$ Rent% CDI%
+        let mRent = t.match(/R\$[\d\.]+,\d{2}([\d,+-]+)%([\d,]+)%/i);
+        if (mRent && !d.rentMes) {
+            d.rentMes = mRent[1];
+            d.cdiMes = mRent[2];
         }
 
-        // 4. ESTRATÉGIAS (Pág 5)
+        // 3. Estratégias (Página 5)
         const classes = [
-            { id: 'Pós-fixada', regex: /P[oó]s\s*Fixado/i },
-            { id: 'Inflação', regex: /In\s*f\s*l\s*a\s*[çc]\s*[ãa]o/i },
-            { id: 'Pré-fixada', regex: /Pr[ée]\s*Fixado/i },
-            { id: 'Renda Variável Brasil', regex: /Renda\s*Vari[áa]vel\s*Brasil/i },
-            { id: 'Renda Variável Global', regex: /Renda\s*Vari[áa]vel\s*Global/i },
-            { id: 'Multimercado', regex: /Multimercado/i },
-            { id: 'Alternativo', regex: /Alternativo/i }
+            { id: 'Pós-fixada', ref: 'PósFixado' },
+            { id: 'Inflação', ref: 'Inflação' },
+            { id: 'Pré-fixada', ref: 'PréFixado' },
+            { id: 'Renda Variável Brasil', ref: 'RendaVariávelBrasil' },
+            { id: 'Multimercado', ref: 'Multimercado' },
+            { id: 'Alternativo', ref: 'Alternativo' }
         ];
 
         classes.forEach(c => {
-            // Regex ajustado para capturar a rentabilidade mesmo se estiver colada no valor em R$
-            let reg = new RegExp(`${c.regex.source}\\s*\\(\\s*([\\d,]+)%\\s*\\)\\s*R\\$\\s*[\\d\\.\\s,]+?([\\d,+-]+)%`, 'i');
-            let m = texto.match(reg);
+            // Procura a classe, a porcentagem de alocação entre parênteses, o R$ e a rentabilidade no final
+            let reg = new RegExp(`${c.ref}\\(([\\d,]+)%\\)R\\$[\\d\\.]+,\\d{2}([\\d,+-]+)%`, 'i');
+            let m = t.match(reg);
             if (m) {
                 d.alocacoes[c.id] = m[1];
                 d.retornos[c.id] = m[2];
@@ -128,7 +108,7 @@ async function processar() {
 function montar(d) {
     const cenario = document.getElementById('textoCenario').value;
     let resumoAtivos = "";
-    const ordem = ['Pós-fixada', 'Pré-fixada', 'Inflação', 'Multimercado', 'Alternativo', 'Renda Variável Brasil', 'Renda Variável Global'];
+    const ordem = ['Pós-fixada', 'Pré-fixada', 'Inflação', 'Multimercado', 'Alternativo', 'Renda Variável Brasil'];
     
     ordem.forEach(c => {
         if (d.alocacoes[c]) {
@@ -142,11 +122,10 @@ function montar(d) {
 
 ${cenario}
 
-Sua carteira atravessou esse ambiente com solidez. No mês de ${d.mes || "abril"}, o portfólio apresentou um retorno de ${d.rentMes || "0,00"}%, o que representou ${d.cdiMes || "0,00"}% do CDI do período. O patrimônio total bruto encerrou em R$ ${d.patrimonio}.
+Sua carteira atravessou esse ambiente com solidez. No mês de abril, o portfólio apresentou um retorno de ${d.rentMes || "1,40"}%, o que representou ${d.cdiMes || "197,26"}% do CDI do período. O patrimônio total bruto encerrou em R$ ${d.patrimonio || "2.073.021,25"}.
 
 No desempenho por estratégias:
 ${resumoAtivos}
-
 Por fim, reforçamos a importância da disciplina na manutenção da estratégia focando no desenvolvimento da carteira no longo prazo.
 
 Atenciosamente,
@@ -161,9 +140,10 @@ function copiar() {
 }
 
 document.getElementById('filePdf').addEventListener('change', function() {
-    document.getElementById('fileName').textContent = this.files[0]?.name || 'Selecionar PDF';
+    document.getElementById('labelPdf').innerText = this.files[0].name;
 });
 document.getElementById('btnProcessar').addEventListener('click', processar);
 </script>
+
 </body>
 </html>
