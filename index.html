@@ -199,7 +199,7 @@ async function extrairDadosPDF(file) {
     let textoLimpo = superLimpeza(textoOriginal);
     
     dbg(`\n--- PÁGINA ${p} (LIMPA) ---`);
-    dbg(textoLimpo.substring(0, 800));
+    dbg(textoLimpo.substring(0, 1000));
     
     if (p === 1) {
       let dataMatch = textoLimpo.match(/DataDeReferência(\d{2})\/(\d{2})\/(\d{4})/);
@@ -225,9 +225,10 @@ async function extrairDadosPDF(file) {
       dbg(`📊 %CDI: ${dados.pctCdi}%`);
     }
     
-    // CAPTURA TODAS AS CLASSES DINAMICAMENTE (sem limite)
-    // Padrão: NomeDaClasse(XX,XX%)R$valorXX,XX%
-    let regexClasse = /([A-Za-zÀ-Úà-û]+?)(\d+),(\d+)%\)R\$[\d\.]+,\d+(-?\d+),(\d+)%/gi;
+    // CAPTURA TODAS AS CLASSES - Padrão: Nome(XX,XX%)R$valorXX,XX% ou -XX,XX%
+    // Ex: PósFixado(76,91%)R$395.582,601,11%
+    // Ex: Inflação(19,37%)R$99.646,31-0,28%
+    let regexClasse = /([A-Za-zÀ-Úà-û]+?)\((\d+),(\d+)%\)R\$[\d\.]+,\d+(-?\d+),(\d+)%/gi;
     let match;
     while ((match = regexClasse.exec(textoLimpo)) !== null) {
       let nome = match[1];
@@ -235,10 +236,9 @@ async function extrairDadosPDF(file) {
       let retorno = match[4] + ',' + match[5];
       
       // Limpa e padroniza o nome
-      nome = nome.trim();
       if (nome === 'PósFixado') nome = 'Pós-Fixado';
       else if (nome === 'PréFixado') nome = 'Pré-Fixado';
-      else if (nome === 'Inflação' || nome === 'Inflação') nome = 'Inflação';
+      else if (nome === 'Inflação') nome = 'Inflação';
       else if (nome === 'RendaVariávelBrasil') nome = 'Renda Variável Brasil';
       else if (nome === 'RendaVariávelGlobal') nome = 'Renda Variável Global';
       else if (nome === 'RendaFixaGlobal') nome = 'Renda Fixa Global';
