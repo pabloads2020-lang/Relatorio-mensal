@@ -76,8 +76,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .relatorio-texto { font-size: 14px; line-height: 1.6; color: var(--text); white-space: pre-wrap; }
 .cenario-textarea { width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; padding: 12px; color: var(--text); font-size: 14px; font-family: 'DM Sans', sans-serif; resize: vertical; margin-top: 0.5rem; }
 .cenario-textarea:focus { outline: none; border-color: var(--gold); }
-.cenario-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-.cenario-header span { font-size: 12px; color: var(--gold); }
 </style>
 </head>
 <body>
@@ -92,10 +90,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 <main class="main">
   <div class="card">
     <div class="card-title">📝 Cenário Macro do Mês</div>
-    <div class="cenario-header">
-      <span>📅 Cenário gerado automaticamente com base no mês do PDF (você pode editar)</span>
-    </div>
-    <textarea id="textoCenario" class="cenario-textarea" rows="5">Aguardando PDF para gerar cenário automático...</textarea>
+    <textarea id="textoCenario" class="cenario-textarea" rows="6">O mês de abril de 2026 foi marcado por uma consolidação das expectativas econômicas globais e locais. No Brasil, o foco permaneceu na trajetória da inflação e no compromisso fiscal, fatores que influenciam diretamente o ritmo de queda da taxa Selic pelo Banco Central. No cenário global, a resiliência da economia norte-americana e a manutenção dos juros em patamares elevados pelo Fed continuam ditando o ritmo dos mercados, somadas às tensões geopolíticas que adicionam volatilidade aos preços das commodities e à percepção de risco dos investidores.</textarea>
   </div>
 
   <div class="card">
@@ -147,37 +142,6 @@ function superLimpeza(texto) {
     return texto.replace(/\s+/g, '');
 }
 
-// Gera cenário automático baseado no mês
-function gerarCenarioAutomatico(mes, ano) {
-    const cenarios = {
-        "Janeiro": `O mês de janeiro de ${ano} foi marcado pelo início do ano com ajustes de posições nos mercados. No Brasil, o governo enviou ao Congresso as diretrizes orçamentárias, enquanto o mercado acompanhou de perto os primeiros sinais de atividade econômica. O IPCA-15 veio dentro das expectativas, mantendo as projeções de inflação ancoradas. No cenário global, a posse do novo governo nos EUA e as primeiras medidas da nova administração foram destaque, enquanto a China anunciou estímulos para conter a desaceleração.`,
-        
-        "Fevereiro": `O mês de fevereiro de ${ano} foi marcado pela divulgação do PIB do quarto trimestre, que mostrou resiliência da economia brasileira. O mercado acompanhou as discussões sobre a reforma tributária no Senado, enquanto a arrecadação recorde trouxe algum alívio às preocupações fiscais. Globalmente, os dados de inflação e emprego nos EUA mantiveram a cautela sobre os próximos passos do Fed, e o BCE iniciou debates sobre flexibilização monetária.`,
-        
-        "Março": `O mês de março de ${ano} foi marcado pela divulgação do IPCA, que veio alinhado às expectativas, abrindo espaço para o primeiro corte da Selic (de 15% para 14,75%), dando início ao ciclo de flexibilização da política monetária. O mercado comemorou a sinalização do BACEN, mas segue atento ao arcabouço fiscal e à trajetória da dívida pública. No cenário global, a escalada dos conflitos no Oriente Médio pressionou os preços do petróleo, enquanto os dados de inflação e emprego nos EUA mantiveram o Fed em modo de espera.`,
-        
-        "Abril": `O mês de abril de ${ano} foi marcado por uma consolidação das expectativas econômicas para o restante do ano. No Brasil, a temporada de balanços das empresas de capital aberto trouxe resultados mistos, enquanto o mercado começou a precificar os próximos passos do Copom. A pauta fiscal permaneceu no centro das atenções, com a tramitação de medidas de ajuste no Congresso. Globalmente, as tensões comerciais entre EUA e China voltaram à tona, enquanto a indústria alemã mostrou sinais de recuperação.`,
-        
-        "Maio": `O mês de maio de ${ano} foi marcado por tensões políticas e avanço da agenda de reformas no Brasil. O mercado acompanhou a tramitação do arcabouço fiscal na Câmara, enquanto os dados de atividade econômica mostraram resiliência e a inflação seguiu controlada. Na cena global, a decisão de política monetária do Fed manteve os juros inalterados, com o mercado precificando cortes para o segundo semestre, enquanto o BCE sinalizou o início do ciclo de flexibilização.`,
-        
-        "Junho": `O mês de junho de ${ano} foi marcado pela decisão do Copom, que manteve o tom hawkish diante das incertezas fiscais, reduzindo as expectativas de cortes mais agressivos da Selic. A arrecadação federal surpreendeu positivamente, mas o cenário fiscal ainda preocupa os agentes. Globalmente, a reunião do Fed indicou cautela diante da inflação ainda elevada, com juros americanos no maior nível em duas décadas, enquanto o BCE iniciou o ciclo de cortes.`,
-        
-        "Julho": `O mês de julho de ${ano} foi marcado pela divulgação do Índice de Confiança da Indústria e do Comércio, que mostraram recuperação gradual no Brasil. O governo anunciou medidas para estimular o crédito e o investimento. Nos mercados globais, a temporada de balanços do segundo trimestre nos EUA trouxe resultados mistos, enquanto o mercado de trabalho americano mostrou resiliência, adiando as expectativas de cortes de juros.`,
-        
-        "Agosto": `O mês de agosto de ${ano} foi marcado pela tradicional "saída de verão" nos mercados do hemisfério norte, reduzindo a liquidez global. No Brasil, a agenda fiscal avançou com a votação de medidas importantes no Congresso, enquanto os dados de emprego mostraram resiliência. Nos EUA, os dados de inflação ao consumidor vieram dentro do esperado, enquanto a recuperação europeia segue lenta.`,
-        
-        "Setembro": `O mês de setembro de ${ano} foi marcado pela divulgação do PIB do segundo trimestre, que surpreendeu positivamente no Brasil. O mercado acompanhou as discussões sobre o Orçamento para o próximo ano, enquanto o Copom sinalizou cautela diante das incertezas externas e fiscais. Globalmente, a decisão do Fed sobre os juros foi aguardada, com o cenário eleitoral nos EUA começando a ganhar forma.`,
-        
-        "Outubro": `O mês de outubro de ${ano} foi marcado pela reta final das eleições municipais e seus desdobramentos políticos no Brasil. O governo enviou o projeto de Lei Orçamentária Anual ao Congresso, enquanto o mercado acompanhou atento à composição das novas maiorias. Globalmente, o aumento das tensões geopolíticas com conflitos no Leste Europeu e no Oriente Médio pressionou os preços do petróleo.`,
-        
-        "Novembro": `O mês de novembro de ${ano} foi marcado pela Black Friday e pelo início da temporada de compras de fim de ano no Brasil, com o varejo mostrando recuperação. O mercado começou a projetar o cenário para o próximo ano, com expectativas de continuidade do ciclo de cortes da Selic. Globalmente, o resultado das eleições nos EUA e seus desdobramentos para o comércio global geraram volatilidade nos mercados.`,
-        
-        "Dezembro": `O mês de dezembro de ${ano} foi marcado pela aprovação do Orçamento para o próximo ano e pelos dados fiscais de fim de ano no Brasil. O governo anunciou medidas de ajuste para manter a trajetória da dívida sob controle. Nos mercados globais, as últimas decisões de política monetária do ano foram anunciadas, com o Fed mantendo os juros inalterados e o BCE continuando com os cortes.`
-    };
-    
-    return cenarios[mes] || `O mês de ${mes} de ${ano} foi marcado por um ambiente de atenção às decisões de política monetária e à tramitação da agenda fiscal no Congresso. O mercado acompanhou de perto os indicadores de inflação e atividade, que seguem ditando o ritmo da economia. Globalmente, investidores permaneceram atentos às decisões dos principais bancos centrais e aos desdobramentos geopolíticos.`;
-}
-
 async function extrairDadosPDF(file) {
   let ab = await file.arrayBuffer();
   let pdf = await pdfjsLib.getDocument({ data: ab }).promise;
@@ -226,8 +190,6 @@ async function extrairDadosPDF(file) {
     }
     
     // CAPTURA TODAS AS CLASSES - Padrão: Nome(XX,XX%)R$valorXX,XX% ou -XX,XX%
-    // Ex: PósFixado(76,91%)R$395.582,601,11%
-    // Ex: Inflação(19,37%)R$99.646,31-0,28%
     let regexClasse = /([A-Za-zÀ-Úà-û]+?)\((\d+),(\d+)%\)R\$[\d\.]+,\d+(-?\d+),(\d+)%/gi;
     let match;
     while ((match = regexClasse.exec(textoLimpo)) !== null) {
@@ -268,11 +230,8 @@ function gerarRelatorioTexto(dados) {
   let alocacoes = dados.alocacoes;
   let retornos = dados.retornos;
   
-  // Gera cenário automático baseado no mês
-  let cenario = gerarCenarioAutomatico(mes, ano);
-  
-  // Atualiza o textarea com o cenário gerado
-  document.getElementById('textoCenario').value = cenario;
+  // Pega o cenário manual do textarea
+  let cenario = document.getElementById('textoCenario').value;
   
   let desempenhoTexto = "";
   let classesList = [];
@@ -364,7 +323,6 @@ document.getElementById('btnLimpar').addEventListener('click', () => {
   document.getElementById('status').classList.remove('show');
   document.getElementById('patrimTag').classList.remove('show');
   document.getElementById('relatorioConteudo').innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text3);">⚡ Importe um PDF para gerar o relatório automático</div>';
-  document.getElementById('textoCenario').value = 'Aguardando PDF para gerar cenário automático...';
   clearDebug();
   document.getElementById('filePdf').value = '';
   document.getElementById('fileName').textContent = 'Selecionar arquivo PDF...';
