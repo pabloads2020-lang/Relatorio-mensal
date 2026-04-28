@@ -1,215 +1,176 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PBF · Relatório Mensal</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<style>
-    /* Mantendo seu estilo original para o visual continuar igual */
-    :root {
-        --bg: #0e1117; --bg2: #161b25; --bg3: #1c2333;
-        --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13);
-        --gold: #f5c842; --gold2: #e0a800;
-        --text: #e8eaf0; --text2: #8b93a7; --text3: #555e72;
-        --green: #2ecc71; --green-bg: rgba(46,204,113,0.12);
-        --red: #e74c3c; --red-bg: rgba(231,76,60,0.12);
-    }
-    body.light {
-        --bg: #f5f7fa; --bg2: #ffffff; --bg3: #f0f2f5;
-        --border: rgba(0,0,0,0.08); --gold: #d4a017;
-        --text: #1a1a2e; --text2: #4a5568; --text3: #718096;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); }
-    .header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; }
-    .main { max-width: 900px; margin: 0 auto; padding: 2rem; }
-    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
-    .card-title { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 10px;}
-    .upload-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
-    .file-label { background: var(--bg3); border: 1.5px dashed var(--border2); border-radius: 8px; padding: 9px 14px; cursor: pointer; font-size: 14px; flex: 1; }
-    #filePdf { display: none; }
-    .btn { padding: 9px 18px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; }
-    .btn-gold { background: var(--gold); color: #000; }
-    .status { display: none; padding: 9px; border-radius: 8px; font-size: 14px; margin-top: 10px; }
-    .status.show { display: block; }
-    .status-ok { background: var(--green-bg); color: var(--green); }
-    .debug-box { display: none; background: #000; color: #0f0; padding: 10px; font-family: monospace; font-size: 11px; margin-top: 10px; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
-    .debug-box.show { display: block; }
-    .relatorio-container { background: rgba(255,255,255,0.02); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border); }
-    .relatorio-dados { background: var(--bg3); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--gold); margin: 15px 0; }
-    .relatorio-positivo { color: var(--green); font-weight: bold; }
-    .relatorio-negativo { color: var(--red); font-weight: bold; }
-</style>
+    <meta charset="UTF-8">
+    <title>PBF · Gerador de Relatório Profissional</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        :root {
+            --bg: #0e1117; --card: #161b25; --gold: #f5c842; --text: #e8eaf0; --text-dim: #8b93a7;
+            --green: #2ecc71; --red: #e74c3c; --border: rgba(255,255,255,0.07);
+        }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
+        .container { max-width: 850px; margin: 0 auto; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .btn { background: var(--gold); color: #000; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .output { background: #fff; color: #1a1a1a; padding: 30px; border-radius: 8px; white-space: pre-wrap; font-size: 15px; border: 1px solid #ccc; }
+        .debug-area { font-family: monospace; font-size: 11px; color: #555; margin-top: 10px; display: none; }
+        h3 { color: var(--gold); margin-top: 0; }
+        .negative { color: var(--red); }
+        .positive { color: var(--green); }
+    </style>
 </head>
 <body>
 
-<header class="header">
-    <div style="font-weight: bold;">PBF Relatório</div>
-    <div id="hDate"></div>
-</header>
-
-<main class="main">
+<div class="container">
     <div class="card">
-        <div class="card-title">📄 Importar relatório XP</div>
-        <div class="upload-row">
-            <label class="file-label" for="filePdf">📎 <span id="fileName">Selecionar PDF...</span></label>
-            <input type="file" id="filePdf" accept=".pdf">
-            <button class="btn btn-gold" id="btnImportar">Gerar Relatório</button>
-        </div>
-        <div id="status" class="status"></div>
-        <button style="background:none; border:none; color:var(--text3); cursor:pointer; font-size:10px; margin-top:10px;" onclick="document.getElementById('debugBox').classList.toggle('show')">Exibir Debug</button>
-        <div id="debugBox" class="debug-box"></div>
+        <h3>1. Importar PDF da XP</h3>
+        <input type="file" id="filePdf" accept=".pdf">
+        <button class="btn" id="btnProcessar">Gerar Texto do Relatório</button>
+        <div id="status" style="margin-top:10px; font-size:13px;"></div>
     </div>
 
     <div class="card">
-        <div class="card-title">📈 Resultado</div>
-        <div id="relatorioConteudo" class="relatorio-container">Aguardando PDF...</div>
+        <h3>2. Texto do Relatório (Pronto para copiar)</h3>
+        <div id="relatorioFinal" class="output">O relatório aparecerá aqui após o processamento...</div>
+        <button class="btn" style="margin-top:10px; background:#444; color:#fff;" onclick="copiarTexto()">Copiar Texto</button>
     </div>
-</main>
+
+    <div id="debugBox" class="debug-area"></div>
+</div>
 
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-let dadosCarteira = {};
+// =========================================================
+// BASE DE DADOS DE CENÁRIOS (Atualize aqui uma vez por mês)
+// =========================================================
+const cenariosMensais = {
+    "Abril/2026": {
+        brasil: "No Brasil, o mês de abril foi marcado pela divulgação do IPCA dentro das expectativas, o que permitiu ao Banco Central manter o ritmo de cortes na Selic. O cenário fiscal seguiu no radar dos investidores, mas a melhora na arrecadação trouxe um alívio temporário para os ativos de risco locais.",
+        global: "No cenário global, o foco permaneceu nos dados de inflação dos EUA, que mostram uma resiliência maior do que o esperado, adiando as expectativas de corte de juros pelo Fed. Além disso, a manutenção dos conflitos geopolíticos contribuiu para a volatilidade nos preços das commodities."
+    },
+    "Março/2026": {
+        brasil: "O mês de março foi marcado por uma consolidação das expectativas econômicas. No Brasil, a divulgação do IPCA coincidiu com o primeiro corte da Selic, dando início ao ciclo de flexibilização da política monetária.",
+        global: "No cenário global, a volatilidade adicional veio do acirramento dos conflitos no Oriente Médio pressionando os preços do petróleo, somada aos dados de emprego nos EUA."
+    }
+};
 
-function dbg(txt) { 
-    const box = document.getElementById('debugBox');
-    box.textContent += txt + '\n';
+let dados = { alocacoes: {}, retornos: {} };
+
+function limparTexto(t) {
+    // Remove espaços entre letras/números comuns no PDF da XP
+    return t.replace(/(\d)\s+(?=\d|[\.,%])/g, '$1').replace(/([\.,%])\s+(?=\d)/g, '$1').replace(/\s+/g, ' ');
 }
 
-function limparDados() {
-    dadosCarteira = { alocacoes: {}, retornos: {}, patrimonio: 0, rentabilidadeMensal: null, pctCdi: null, mes: "", ano: "" };
-    document.getElementById('debugBox').textContent = "";
-}
+async function processar() {
+    const file = document.getElementById('filePdf').files[0];
+    if (!file) return alert("Selecione um PDF");
 
-// Função poderosa para limpar espaços entre letras e números
-function limparEspacos(texto) {
-    // Remove espaços entre números, vírgulas e pontos (ex: 2 8 . 9 7 8 , 3 7 -> 28.978,37)
-    let t = texto.replace(/(\d)\s+(?=\d|[\.,%])/g, '$1');
-    t = t.replace(/([\.,%])\s+(?=\d)/g, '$1');
-    // Remove espaços duplos
-    return t.replace(/\s+/g, ' ');
-}
+    const ab = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+    
+    dados = { alocacoes: {}, retornos: {}, patrimonio: "", rentMes: "", cdiMes: "", mes: "", ano: "" };
 
-async function extrairDadosPDF(file) {
-    limparDados();
-    let ab = await file.arrayBuffer();
-    let pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+    for (let i = 1; i <= Math.min(pdf.numPages, 5); i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        const texto = limparTexto(content.items.map(it => it.str).join(' '));
 
-    for (let p = 1; p <= Math.min(pdf.numPages, 5); p++) {
-        let page = await pdf.getPage(p);
-        let content = await page.getTextContent();
-        let textoOriginal = content.items.map(i => i.str).join(' ');
-        let texto = limparEspacos(textoOriginal);
-        
-        dbg(`--- PÁGINA ${p} (Processada) ---`);
-        dbg(texto.substring(0, 500));
-
-        // 1. DATA (Pág 1 ou 2)
-        let dataMatch = texto.match(/Data\s+de\s+Refer[êe]ncia\s+(\d{2})\/(\d{2})\/(\d{4})/i);
-        if (dataMatch && !dadosCarteira.mes) {
+        // Captura Data
+        let mData = texto.match(/Data\s+de\s+Refer[êe]ncia\s+(\d{2})\/(\d{2})\/(\d{4})/i);
+        if (mData && !dados.mes) {
             const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-            dadosCarteira.mes = meses[parseInt(dataMatch[2]) - 1];
-            dadosCarteira.ano = dataMatch[3];
+            dados.mes = meses[parseInt(mData[2]) - 1];
+            dados.ano = mData[3];
         }
 
-        // 2. PATRIMÔNIO (Pág 2)
-        let patMatch = texto.match(/PATRIM[OÔ]NIO\s+TOTAL\s+BRUTO:\s*R\$\s*([\d\.]+,\d{2})/i);
-        if (patMatch) {
-            dadosCarteira.patrimonio = patMatch[1];
-            dbg(`Achou Patr: ${patMatch[1]}`);
+        // Captura Patrimônio (Pág 2 ou 4)
+        let mPat = texto.match(/PATRIM[OÔ]NIO\s+TOTAL\s+BRUTO:\s*R\$\s*([\d\.]+,\d{2})/i);
+        if (mPat) dados.patrimonio = mPat[1];
+
+        // Captura Rentabilidade e %CDI (Baseado no seu Debug da Pág 4)
+        // O padrão é: R$ [valor] [rent%] [cdi%]
+        let mResumo = texto.match(/abr\s*\.\/\s*26\s*R\$\s*[\d\.]+,\d{2}.+?R\$\s*[\d\.]+,\d{2}\s*([\d,]+)%\s*([\d,]+)%/i);
+        if (mResumo) {
+            dados.rentMes = mResumo[1];
+            dados.cdiMes = mResumo[2];
+        } else {
+            // Backup caso o formato mude (Pág 2)
+            let mRent2 = texto.match(/RENTABILIDADE\s+M[ÊE]S:\s*([\d,]+)%/i);
+            if (mRent2) dados.rentMes = mRent2[1];
         }
 
-        // 3. RENTABILIDADE E %CDI (Pág 2 - Tabela de Resumo)
-        // Busca na linha do "MÊS" os valores financeiros e percentuais
-        let resumoMatch = texto.match(/M[ÊE]S\s*R\$\s*[\d\.]+,\d{2}\s*([\d,]+)\s*%\s*([\d,]+)\s*%/i);
-        if (resumoMatch) {
-            dadosCarteira.rentabilidadeMensal = resumoMatch[1];
-            dadosCarteira.pctCdi = resumoMatch[2];
-            dbg(`Achou Rent: ${resumoMatch[1]}% e CDI: ${resumoMatch[2]}%`);
-        }
-
-        // 4. ESTRATÉGIAS (Pág 5)
-        if (p >= 4) {
-            const itens = [
-                { id: 'Pós Fixado', regex: /P[oó]s\s*Fixado/i },
+        // Captura Estratégias (Pág 5)
+        if (i >= 4) {
+            const classes = [
+                { id: 'Pós-fixada', regex: /P[oó]s\s*Fixado/i },
                 { id: 'Inflação', regex: /In\s*f\s*l\s*a\s*[çc]\s*[ãa]o/i },
-                { id: 'Pré Fixado', regex: /Pr[ée]\s*Fixado/i },
+                { id: 'Pré-fixada', regex: /Pr[ée]\s*Fixado/i },
                 { id: 'Renda Variável Brasil', regex: /Renda\s*Vari[áa]vel\s*Brasil/i },
-                { id: 'Renda Variável Global', regex: /Renda\s*Vari[áa]vel\s*Global/i },
                 { id: 'Multimercado', regex: /Multimercado/i },
-                { id: 'Alternativo', regex: /Alternativo/i }
+                { id: 'Alternativo', regex: /Alternativo/i },
+                { id: 'Renda Variável Global', regex: /Renda\s*Vari[áa]vel\s*Global/i }
             ];
 
-            itens.forEach(item => {
-                // Regex para capturar: Nome ( Aloc% ) R$ Valor Rent%
-                let regEstrat = new RegExp(`${item.regex.source}\\s*\\(\\s*([\\d,]+)\\s*%\\s*\\)\\s*R\\$\\s*[\\d\\.\\s]+,\\d{2}\\s*([\\d,+-]+)\\s*%`, 'i');
-                let m = texto.match(regEstrat);
+            classes.forEach(c => {
+                let reg = new RegExp(`${c.regex.source}\\s*\\(\\s*([\\d,]+)%\\s*\\)\\s*R\\$\\s*[\\d\\.\\s]+,\\d{2}\\s*([\\d,+-]+)%`, 'i');
+                let m = texto.match(reg);
                 if (m) {
-                    dadosCarteira.alocacoes[item.id] = m[1];
-                    dadosCarteira.retornos[item.id] = m[2];
-                    dbg(`Estratégia: ${item.id} -> ${m[1]}% aloc / ${m[2]}% retorno`);
+                    dados.alocacoes[c.id] = m[1];
+                    dados.retornos[c.id] = m[2];
                 }
             });
         }
     }
-    gerarHTML();
+
+    construirRelatorio();
 }
 
-function gerarHTML() {
-    if (!dadosCarteira.patrimonio) {
-        document.getElementById('relatorioConteudo').innerHTML = "Erro ao ler dados. Verifique o log de debug.";
-        return;
-    }
+function construirRelatorio() {
+    const chave = `${dados.mes}/${dados.ano}`;
+    const cenario = cenariosMensais[chave] || { 
+        brasil: "(Resumo do mercado brasileiro para este mês ainda não cadastrado no script)", 
+        global: "(Resumo do mercado global para este mês ainda não cadastrado no script)" 
+    };
 
-    let estrs = "";
-    for (let nome in dadosCarteira.alocacoes) {
-        let ret = dadosCarteira.retornos[nome] || "0,00";
-        let cor = ret.includes('-') ? 'relatorio-negativo' : 'relatorio-positivo';
-        estrs += `• <strong>${nome}</strong> (${dadosCarteira.alocacoes[nome]}% da carteira): <span class="${cor}">${ret}% no mês</span><br>`;
-    }
-
-    let html = `
-        <div style="color:var(--gold); font-weight:bold; margin-bottom:15px;">📋 Prezado cliente, segue o resumo do seu portfólio.</div>
-        <p style="font-size:14px; margin-bottom:10px;">O mês de <strong>${dadosCarteira.mes} de ${dadosCarteira.ano}</strong> apresentou os seguintes resultados:</p>
-        
-        <div class="relatorio-dados">
-            <p>💰 <strong>Patrimônio Total:</strong> R$ ${dadosCarteira.patrimonio}</p>
-            <p>📈 <strong>Rentabilidade:</strong> ${dadosCarteira.rentabilidadeMensal}% (${dadosCarteira.pctCdi}% do CDI)</p>
-        </div>
-
-        <p style="font-size:14px; margin-top:15px;"><strong>Desempenho por classe:</strong></p>
-        <div style="font-size:13px; line-height:1.6; margin-top:5px;">${estrs}</div>
-        
-        <div style="margin-top:20px; font-size:12px; border-top:1px solid var(--border); padding-top:10px; color:var(--text3);">
-            Atenciosamente,<br><strong>Equipe PBF Investimentos</strong>
-        </div>
-    `;
-    document.getElementById('relatorioConteudo').innerHTML = html;
-}
-
-// Eventos
-document.getElementById('btnImportar').addEventListener('click', async () => {
-    let file = document.getElementById('filePdf').files[0];
-    if (!file) return alert("Selecione um PDF");
-    document.getElementById('status').innerHTML = "Processando...";
-    document.getElementById('status').className = "status show";
+    let textoClasses = "";
+    const ordem = ['Pós-fixada', 'Pré-fixada', 'Inflação', 'Multimercado', 'Alternativo', 'Renda Variável Brasil', 'Renda Variável Global'];
     
-    try {
-        await extrairDadosPDF(file);
-        document.getElementById('status').innerHTML = "✅ Relatório Gerado!";
-        document.getElementById('status').className = "status show status-ok";
-    } catch (e) {
-        document.getElementById('status').innerHTML = "❌ Erro: " + e.message;
-        dbg("ERRO: " + e.stack);
-    }
-});
+    ordem.forEach(cls => {
+        if (dados.alocacoes[cls]) {
+            let aloc = dados.alocacoes[cls];
+            let ret = dados.retornos[cls];
+            let acao = parseFloat(ret.replace(',', '.')) >= 0 ? "subiu" : "recuou";
+            textoClasses += `• A classe ${cls} (${aloc}% da carteira) ${acao} ${ret}%;\n`;
+        }
+    });
 
-document.getElementById('filePdf').addEventListener('change', function() {
-    document.getElementById('fileName').textContent = this.files[0]?.name || 'Selecionar PDF...';
-});
+    const relatorio = `Prezado Cliente, tudo bem? Segue o seu relatório mensal.
+
+O mês de ${dados.mes.toLowerCase()} foi marcado por:
+${cenario.brasil}
+${cenario.global}
+
+Sua carteira atravessou esse ambiente com solidez. No mês de ${dados.mes.toLowerCase()}, o portfólio apresentou um retorno de ${dados.rentMes}%. Esse resultado representou ${dados.cdiMes}% do CDI do período. O patrimônio total bruto encerrou em R$ ${dados.patrimonio}.
+
+No desempenho por estratégias:
+${textoClasses}
+Por fim, reforçamos a importância da disciplina na manutenção da estratégia focando no desenvolvimento da carteira no longo prazo. Essa postura é fundamental para atravessar diferentes ciclos de mercado e manter a carteira alinhada aos seus objetivos financeiros.
+
+Atenciosamente,
+Equipe PBF Investimentos`;
+
+    document.getElementById('relatorioFinal').innerText = relatorio;
+}
+
+function copiarTexto() {
+    const txt = document.getElementById('relatorioFinal').innerText;
+    navigator.clipboard.writeText(txt);
+    alert("Texto copiado para a área de transferência!");
+}
+
+document.getElementById('btnProcessar').addEventListener('click', processar);
 </script>
 
 </body>
