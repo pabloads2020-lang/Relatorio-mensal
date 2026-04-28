@@ -231,93 +231,113 @@ function gerarRelatorioHTML() {
 async function extrairDadosPDF(file) {
   let ab = await file.arrayBuffer();
   let pdf = await pdfjsLib.getDocument({ data: ab }).promise;
-  let textoCompleto = '';
+  
+  // Array para armazenar texto de cada página
+  let paginas = [];
   
   for (let p = 1; p <= pdf.numPages; p++) {
     let page = await pdf.getPage(p);
     let textContent = await page.getTextContent();
+    let textoPagina = '';
     for (let item of textContent.items) {
       if (item.str && item.str.trim()) {
-        textoCompleto += item.str + ' ';
+        textoPagina += item.str + ' ';
       }
     }
-    textoCompleto += '\n';
+    paginas.push(textoPagina);
   }
-  
-  // LIMPEZA: remove espaços dentro de números
-  let textoLimpo = textoCompleto.replace(/(\d+)\s*,\s*(\d+)\s*%/g, '$1,$2%');
-  textoLimpo = textoLimpo.replace(/(\d+)\s*,\s*(\d+)/g, '$1,$2');
-  textoLimpo = textoLimpo.replace(/R\s*\$\s*([\d\s\.]+),(\d+)/g, 'R$$$1,$2');
-  textoLimpo = textoLimpo.replace(/(\d+)\s+(\d{3})/g, '$1$2');
-  textoLimpo = textoLimpo.replace(/\.\s+(\d{3})/g, '.$1');
-  
-  dbg('=== TEXTO LIMPO ===');
-  dbg(textoLimpo.substring(0, 3000));
   
   dadosCarteira = {
     alocacoes: {}, retornos: {}, rentabilidadeMensal: null, pctCdi: null,
     dataReferencia: "", patrimonio: 0, mesReferencia: "", anoReferencia: ""
   };
   
-  // DATA
-  let dataMatch = textoLimpo.match(/Data de Referência\s+(\d{2})\/(\d{2})\/(\d{4})/);
-  if (dataMatch) {
-    let meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-    dadosCarteira.mesReferencia = meses[parseInt(dataMatch[2]) - 1];
-    dadosCarteira.anoReferencia = dataMatch[3];
-    dbg(`📅 Data: ${dadosCarteira.mesReferencia}/${dadosCarteira.anoReferencia}`);
-  }
-  
-  // PATRIMÔNIO
-  let patMatch = textoLimpo.match(/PATRIM[OÔ]NIO\s+TOTAL\s+BRUTO:\s*R\$([\d.,]+)/i);
-  if (patMatch) {
-    let valor = patMatch[1].replace(/\./g, '').replace(',', '.');
-    dadosCarteira.patrimonio = parseFloat(valor);
-    dbg(`💰 Patrimônio: R$ ${dadosCarteira.patrimonio.toFixed(2)}`);
-  }
-  
-  // RENTABILIDADE MÊS
-  let rentMatch = textoLimpo.match(/RENTABILIDADE\s+M[ÉE]S:\s*([\d,]+%)/i);
-  if (rentMatch) {
-    let valor = rentMatch[1].replace(',', '.').replace('%', '');
-    dadosCarteira.rentabilidadeMensal = parseFloat(valor);
-    dbg(`📈 Rentabilidade Mensal: ${dadosCarteira.rentabilidadeMensal}%`);
-  } else {
-    let portMatch = textoLimpo.match(/Portfólio\s+(\d+),(\d{2})%/i);
-    if (portMatch) {
-      dadosCarteira.rentabilidadeMensal = parseFloat(portMatch[1] + '.' + portMatch[2]);
-      dbg(`📈 Rentabilidade (fallback): ${dadosCarteira.rentabilidadeMensal}%`);
+  // Processa cada página individualmente
+  for (let idx = 0; idx < paginas.length; idx++) {
+    let pagina = paginas[idx];
+    dbg(`\n--- PÁGINA ${idx + 1} ---`);
+    dbg(pagina.substring(0, 800));
+    
+    // Página 1: Data
+    if (idx === 0) {
+      let dataMatch = pagina.match(/Data de Referência\s+(\d{2})\/(\d{2})\/(\d{4})/);
+      if (dataMatch) {
+        let meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+        dadosCarteira.mesReferencia = meses[parseInt(dataMatch[2]) - 1];
+        dadosCarteira.anoReferencia = dataMatch[3];
+        dbg(`📅 Data: ${dadosCarteira.mesReferencia}/${dadosCarteira.anoReferencia}`);
+      }
     }
-  }
-  
-  // %CDI
-  let cdiMatch = textoLimpo.match(/M[ÊE]S[^\d]*R\$[\d.,]+\s+(\d+),(\d{2})%\s+(\d+),(\d{2})%/i);
-  if (cdiMatch) {
-    dadosCarteira.pctCdi = parseFloat(cdiMatch[3] + '.' + cdiMatch[4]);
-    dbg(`📊 %CDI: ${dadosCarteira.pctCdi}%`);
-  }
-  
-  // ESTRATÉGIAS - Busca por padrão "Pós Fixado (36,75%) R$761.750,29 0,66%"
-  let regexEstrategia = /([A-Za-zÀ-Úà-û\s]+?)\s*\((\d+),(\d{2})%\)\s*R\$[\d.,]+\s+(\d+),(\d{2})%/gi;
-  let match;
-  while ((match = regexEstrategia.exec(textoLimpo)) !== null) {
-    let nome = match[1].trim();
-    let alocacao = parseFloat(match[2] + '.' + match[3]);
-    let retorno = parseFloat(match[4] + '.' + match[5]);
     
-    // Corrige nomes
-    if (nome.includes('Pós')) nome = 'Pós-Fixado';
-    else if (nome.includes('Pré')) nome = 'Pré-Fixado';
-    else if (nome.includes('Inflação') || nome.includes('In fl')) nome = 'Inflação';
-    else if (nome.includes('Multimercado')) nome = 'Multimercado';
-    else if (nome.includes('Renda Variável Brasil')) nome = 'Renda Variável Brasil';
-    else if (nome.includes('Alternativo')) nome = 'Alternativo';
-    else if (nome.includes('Renda Variável Global')) nome = 'Renda Variável Global';
+    // Páginas com dados financeiros (Patrimônio, Rentabilidade, %CDI)
+    if (pagina.includes('PATRIMÔNIO TOTAL BRUTO')) {
+      // Patrimônio
+      let patMatch = pagina.match(/PATRIM[OÔ]NIO\s+TOTAL\s+BRUTO:\s*R\$?(\d+\.?\d*),(\d{2})/i);
+      if (patMatch) {
+        let valor = patMatch[1].replace(/\./g, '') + '.' + patMatch[2];
+        dadosCarteira.patrimonio = parseFloat(valor);
+        dbg(`💰 Patrimônio: R$ ${dadosCarteira.patrimonio.toFixed(2)}`);
+      }
+      
+      // Rentabilidade Mês
+      let rentMatch = pagina.match(/RENTABILIDADE\s+M[ÉE]S:\s*(\d+),(\d{2})%/i);
+      if (rentMatch) {
+        dadosCarteira.rentabilidadeMensal = parseFloat(rentMatch[1] + '.' + rentMatch[2]);
+        dbg(`📈 Rentabilidade Mensal: ${dadosCarteira.rentabilidadeMensal}%`);
+      }
+      
+      // %CDI - busca na tabela RESUMO
+      let cdiMatch = pagina.match(/M[ÊE]S\s+R\$\s+[\d\.]+,?\d+\s+(\d+),(\d{2})%\s+(\d+),(\d{2})%/i);
+      if (cdiMatch) {
+        dadosCarteira.pctCdi = parseFloat(cdiMatch[3] + '.' + cdiMatch[4]);
+        dbg(`📊 %CDI: ${dadosCarteira.pctCdi}%`);
+      }
+    }
     
-    if (alocacao > 0 && alocacao <= 100 && !dadosCarteira.alocacoes[nome]) {
-      dadosCarteira.alocacoes[nome] = alocacao;
-      dadosCarteira.retornos[nome] = retorno;
-      dbg(`✅ ${nome}: alocação ${alocacao}%, retorno ${retorno}%`);
+    // Páginas de Estratégias (busca pelo padrão "Pós Fixado (36,75%) R$761.750,29 0,66%")
+    let regexEstrategia = /([A-Za-zÀ-Úà-û\s]+?)\s*\((\d+),(\d{2})%\)\s*R\$[\d\s\.]+,?\d+\s+(\d+),(\d{2})%/gi;
+    let match;
+    while ((match = regexEstrategia.exec(pagina)) !== null) {
+      let nome = match[1].trim();
+      let alocacao = parseFloat(match[2] + '.' + match[3]);
+      let retorno = parseFloat(match[4] + '.' + match[5]);
+      
+      // Limpa o nome
+      nome = nome.replace(/\s+/g, ' ').trim();
+      if (nome === 'Pós Fixado') nome = 'Pós-Fixado';
+      else if (nome === 'Pré Fixado') nome = 'Pré-Fixado';
+      else if (nome === 'In fl ação') nome = 'Inflação';
+      else if (nome === 'Renda Variável Brasil') nome = 'Renda Variável Brasil';
+      else if (nome === 'Alternativo') nome = 'Alternativo';
+      else if (nome === 'Renda Variável Global') nome = 'Renda Variável Global';
+      else if (nome === 'Multimercado') nome = 'Multimercado';
+      
+      if (alocacao > 0 && alocacao <= 100 && !dadosCarteira.alocacoes[nome]) {
+        dadosCarteira.alocacoes[nome] = alocacao;
+        dadosCarteira.retornos[nome] = retorno;
+        dbg(`✅ ${nome}: alocação ${alocacao}%, retorno ${retorno}%`);
+      }
+    }
+    
+    // Fallback para página de performance (RENTABILIDADE POR CLASSE)
+    let regexPerf = /([A-Za-zÀ-Úà-û\s]+?)\s+(\d+),(\d{2})%\s+(\d+),(\d{2})%/i;
+    let perfMatch;
+    while ((perfMatch = regexPerf.exec(pagina)) !== null) {
+      let nome = perfMatch[1].trim();
+      let retorno = parseFloat(perfMatch[2] + '.' + perfMatch[3]);
+      
+      if (nome === 'Pós Fixado') nome = 'Pós-Fixado';
+      else if (nome === 'Pré Fixado') nome = 'Pré-Fixado';
+      else if (nome === 'Inflação') nome = 'Inflação';
+      else if (nome === 'Multimercado') nome = 'Multimercado';
+      else if (nome === 'Renda Variável Brasil') nome = 'Renda Variável Brasil';
+      else if (nome === 'Alternativo') nome = 'Alternativo';
+      else if (nome === 'Renda Variável Global') nome = 'Renda Variável Global';
+      
+      if (!isNaN(retorno) && dadosCarteira.alocacoes[nome] && !dadosCarteira.retornos[nome]) {
+        dadosCarteira.retornos[nome] = retorno;
+        dbg(`✅ ${nome}: retorno ${retorno}% (performance)`);
+      }
     }
   }
   
