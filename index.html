@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PBF · Rebalanceador + Relatório Mensal</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Atkinson+Hyperlegible:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root {
+  --bg: #0e1117; --bg2: #161b25; --bg3: #1c2333;
+  --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13);
+  --gold: #f5c842; --gold2: #e0a800;
+  --text: #e8eaf0; --text2: #8b93a7; --text3: #555e72;
+  --green: #2ecc71; --green-bg: rgba(46,204,113,0.12);
+  --red: #e74c3c; --red-bg: rgba(231,76,60,0.12);
+  --amber: #f39c12; --amber-bg: rgba(243,156,18,0.12);
+  --blue: #3498db; --blue-bg: rgba(52,152,219,0.12);
+  --header-bg: #161b25; --header-border: rgba(255,255,255,0.07);
+  --card-bg: #161b25; --card-border: rgba(255,255,255,0.07);
+  --input-bg: #1c2333; --input-border: rgba(255,255,255,0.13);
+  --alvo-bar-bg: #1c2333; --resumo-item-bg: #1c2333;
+  --debug-bg: #1c2333; --overlay-bg: rgba(14,17,23,.88);
+  --footer-border: rgba(255,255,255,0.07);
+  --relatorio-bg: linear-gradient(135deg, rgba(245,200,66,0.03) 0%, rgba(52,152,219,0.03) 100%);
+}
+body.light {
+  --bg: #f5f7fa; --bg2: #ffffff; --bg3: #f0f2f5;
+  --border: rgba(0,0,0,0.08); --border2: rgba(0,0,0,0.12);
+  --gold: #d4a017; --gold2: #b8860b;
+  --text: #1a1a2e; --text2: #4a5568; --text3: #718096;
+  --green: #27ae60; --green-bg: rgba(39,174,96,0.1);
+  --red: #e74c3c; --red-bg: rgba(231,76,60,0.1);
+  --amber: #e67e22; --amber-bg: rgba(230,126,34,0.1);
+  --header-bg: #ffffff; --header-border: rgba(0,0,0,0.08);
+  --card-bg: #ffffff; --card-border: rgba(0,0,0,0.08);
+  --input-bg: #ffffff; --input-border: #e2e8f0;
+  --alvo-bar-bg: #e2e8f0; --resumo-item-bg: #f7fafc;
+  --debug-bg: #f7fafc; --overlay-bg: rgba(255,255,255,.95);
+  --footer-border: rgba(0,0,0,0.08);
+  --relatorio-bg: linear-gradient(135deg, rgba(245,200,66,0.05) 0%, rgba(52,152,219,0.05) 100%);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; transition: all 0.2s ease; }
+
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+.classe-input, .alvo-pct, .rec-nums, .rec-valor, .resumo-val, .patrim-tag, .header-date, .total-bar span:last-child, .debug-box {
+  font-family: 'Atkinson Hyperlegible', monospace;
+  font-weight: 600;
+}
+
+.header { background: var(--header-bg); border-bottom: 1px solid var(--header-border); padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.header-logo { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 600; }
+.dot { width: 28px; height: 28px; background: var(--gold); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #000; }
+.header-right { display: flex; align-items: center; gap: 1rem; }
+.header-date { font-size: 13px; color: var(--text3); }
+.theme-toggle { background: var(--bg3); border: 1px solid var(--border2); border-radius: 30px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; }
+.theme-toggle:hover { border-color: var(--gold); transform: scale(1.05); }
+.main { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+.card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+.card-title { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.upload-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.file-label { display: flex; align-items: center; gap: 8px; background: var(--bg3); border: 1.5px dashed var(--border2); border-radius: 8px; padding: 9px 14px; cursor: pointer; font-size: 14px; color: var(--text2); flex: 1; min-width: 180px; }
+.file-label:hover { border-color: var(--gold); color: var(--gold); }
+#filePdf { display: none; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; white-space: nowrap; }
+.btn-gold { background: var(--gold); color: #000; }
+.btn-gold:hover { background: var(--gold2); transform: translateY(-1px); }
+.btn-ghost { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
+.btn-ghost:hover { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+.btn-full { background: var(--gold); color: #000; font-size: 15px; font-weight: 600; width: 100%; padding: 12px; justify-content: center; margin-top: 1rem; border-radius: 10px; }
+.btn-debug { background: transparent; border: 1px solid var(--border2); border-radius: 20px; padding: 4px 12px; font-size: 11px; font-weight: 500; cursor: pointer; color: var(--text2); display: flex; align-items: center; gap: 6px; }
+.btn-debug:hover { border-color: var(--gold); color: var(--gold); background: rgba(245,200,66,0.1); }
+.status { display: none; align-items: center; gap: 8px; padding: 9px 13px; border-radius: 8px; font-size: 14px; margin-top: 0.75rem; }
+.status.show { display: flex; }
+.status-ok { background: var(--green-bg); color: var(--green); border: 1px solid rgba(46, 204, 113, 0.25); }
+.status-err { background: var(--red-bg); color: var(--red); border: 1px solid rgba(231, 76, 60, 0.25); }
+.patrim-tag { display: none; align-items: center; gap: 6px; margin-top: 0.6rem; background: rgba(245, 200, 66, 0.1); border: 1px solid rgba(245, 200, 66, 0.25); border-radius: 20px; padding: 6px 14px; font-size: 14px; font-weight: 600; color: var(--gold); width: fit-content; }
+.patrim-tag.show { display: flex; }
+.perfis-row { display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.perfil-btn { flex: 1; min-width: 100px; padding: 10px; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; text-align: center; border: 1px solid var(--border2); background: var(--bg2); color: var(--text2); }
+.perfil-btn:hover { border-color: var(--gold); color: var(--gold); }
+.perfil-btn.ativo { background: var(--gold); border-color: var(--gold); color: #000; font-weight: 600; }
+.tab-bar { display: flex; gap: 1px; background: var(--border); border-radius: 10px; margin-bottom: 1.5rem; overflow: hidden; }
+.tab-btn { flex: 1; padding: 12px; background: var(--bg2); border: none; color: var(--text2); font-size: 14px; font-weight: 600; cursor: pointer; }
+.tab-btn.active { background: var(--gold); color: #000; }
+.tab-btn:first-child { border-radius: 10px 0 0 10px; }
+.tab-btn:last-child { border-radius: 0 10px 10px 0; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+@media (max-width: 700px) { .grid2 { grid-template-columns: 1fr; } }
+.classe-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.classe-row:last-of-type { border-bottom: none; }
+.dot8 { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.c0 { background: #f5c842; } .c1 { background: #3498db; } .c2 { background: #2ecc71; } .c3 { background: #9b59b6; }
+.c4 { background: #e74c3c; } .c5 { background: #1abc9c; } .c6 { background: #e67e22; } .c7 { background: #95a5a6; }
+.c8 { background: #f1c40f; } .c9 { background: #e84393; } .c10 { background: #00cec9; }
+.classe-nome { flex: 1; font-size: 14px; }
+.classe-input { width: 80px; padding: 8px 10px; text-align: right; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 7px; color: var(--text); font-size: 15px; font-weight: 600; }
+.classe-input:focus { outline: none; border-color: var(--gold); }
+.total-bar { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 8px; font-size: 14px; font-weight: 500; margin-top: 0.75rem; }
+.total-ok { background: var(--green-bg); color: var(--green); border: 1px solid rgba(46, 204, 113, 0.2); }
+.total-err { background: var(--red-bg); color: var(--red); border: 1px solid rgba(231, 76, 60, 0.2); }
+.alvo-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.alvo-row:last-of-type { border-bottom: none; }
+.alvo-nome { flex: 1; font-size: 14px; }
+.alvo-bar-wrap { width: 60px; height: 4px; background: var(--alvo-bar-bg); border-radius: 2px; overflow: hidden; }
+.alvo-bar-fill { height: 100%; background: var(--gold); border-radius: 2px; }
+.alvo-pct { font-size: 15px; font-weight: 700; color: var(--gold); min-width: 42px; text-align: right; }
+.rec-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.rec-nome { flex: 1; font-size: 14px; min-width: 110px; }
+.rec-nums { font-size: 14px; color: var(--text2); font-weight: 500; }
+.rec-valor { font-size: 15px; font-weight: 700; min-width: 120px; }
+.rec-valor.alocar { color: var(--green); }
+.rec-valor.retirar { color: var(--red); }
+.rec-valor.manter { color: var(--amber); }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+.b-manter { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(243, 156, 18, 0.3); }
+.b-alocar { background: var(--green-bg); color: var(--green); border: 1px solid rgba(46, 204, 113, 0.3); }
+.b-retirar { background: var(--red-bg); color: var(--red); border: 1px solid rgba(231, 76, 60, 0.3); }
+.resumo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+@media (max-width: 500px) { .resumo-grid { grid-template-columns: repeat(2, 1fr); } }
+.resumo-item { background: var(--resumo-item-bg); border-radius: 8px; padding: 0.75rem; text-align: center; }
+.resumo-label { font-size: 12px; color: var(--text3); margin-bottom: 4px; }
+.resumo-val { font-size: 26px; font-weight: 700; }
+.legenda { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
+.legenda-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text3); }
+.debug-wrapper { margin-top: 0.75rem; }
+.debug-header { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 0.5rem; }
+.debug-box { display: none; background: var(--debug-bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; font-size: 12px; max-height: 250px; overflow-y: auto; white-space: pre-wrap; line-height: 1.7; }
+.debug-box.show { display: block; }
+.overlay { display: none; position: fixed; inset: 0; background: var(--overlay-bg); z-index: 200; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; }
+.overlay.show { display: flex; }
+.spin { width: 40px; height: 40px; border: 3px solid var(--border2); border-top-color: var(--gold); border-radius: 50%; animation: rot 0.8s linear infinite; }
+@keyframes rot { to { transform: rotate(360deg); } }
+.footer { text-align: center; font-size: 12px; color: var(--text3); padding: 2rem; border-top: 1px solid var(--footer-border); margin-top: 1rem; }
+.arrow { transition: transform 0.2s ease; display: inline-block; }
+.arrow.rotated { transform: rotate(90deg); }
+.classe-input:focus, .btn:focus, .perfil-btn:focus, .tab-btn:focus {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* Estilos do Relatório */
+.relatorio-container {
+  background: var(--relatorio-bg);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+.relatorio-saudacao {
+  font-size: 15px;
+  margin-bottom: 1.25rem;
+  color: var(--gold);
+  font-weight: 500;
+}
+.relatorio-paragrafo {
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  color: var(--text);
+}
+.relatorio-dados {
+  background: var(--bg3);
+  border-radius: 10px;
+  padding: 1rem;
+  margin: 1rem 0;
+  border-left: 3px solid var(--gold);
+}
+.relatorio-dados p {
+  margin: 0.5rem 0;
+  font-size: 14px;
+}
+.relatorio-dados strong {
+  color: var(--gold);
+}
+.relatorio-classe-item {
+  margin: 0.25rem 0;
+  font-size: 14px;
+  display: block;
+}
+.relatorio-positivo { color: var(--green); }
+.relatorio-negativo { color: var(--red); }
+.relatorio-assinatura {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text3);
+  font-style: italic;
+}
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"><div class="spin"></div><div class="spin-text">Processando PDF...</div></div>
+
+<header class="header">
+  <div class="header-logo">
+    <div class="dot">PBF</div>
+    Rebalanceador + Relatório Mensal
+  </div>
+  <div class="header-right">
+    <div class="header-date" id="hDate"></div>
+    <button class="theme-toggle" id="themeToggle" title="Alternar modo claro/escuro">🌙</button>
+  </div>
+</header>
+
+<main class="main">
+  <div class="card">
+    <div class="card-title">
+      Importar relatório XP (PDF)
+      <span>🔍 Suporte a Caixa, Proventos e Fundos Listados</span>
+    </div>
+    <div class="upload-row">
+      <label class="file-label" for="filePdf"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><span id="fileName">Selecionar arquivo PDF...</span></label>
+      <input type="file" id="filePdf" accept=".pdf">
+      <button class="btn btn-gold" id="btnImportar">Importar PDF</button>
+      <button class="btn btn-ghost" id="btnLimpar">Limpar</button>
+    </div>
+    <div id="status" class="status"></div>
+    <div id="patrimTag" class="patrim-tag"><span id="patrimVal"></span></div>
+    
+    <div class="debug-wrapper">
+      <div class="debug-header">
+        <button class="btn-debug" id="btnToggleDebug">
+          <span class="arrow" id="debugArrow">▶</span> 
+          📋 Detalhes da leitura do PDF
+        </button>
+      </div>
+      <div id="debugBox" class="debug-box"></div>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="tab-rebalanceamento">⚖️ Rebalanceamento</button>
+    <button class="tab-btn" data-tab="tab-relatorio">📊 Relatório Mensal</button>
+  </div>
+
+  <div id="tab-rebalanceamento" class="tab-content active">
+    <div class="perfis-row" id="perfisRow"></div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Alocação atual</div>
+        <div id="inputsAtual"></div>
+        <div id="totalBar" class="total-bar total-err"><span>Total</span><span id="totalVal">0,00%</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Carteira recomendada · <span id="perfilLabel" style="color:var(--gold)">Moderado</span></div>
+        <div id="tabelaAlvo"></div>
+        <button class="btn btn-full" id="btnAnalisar">Analisar rebalanceamento</button>
+      </div>
+    </div>
+    <div id="resultArea" class="card fade-in" style="display:none">
+      <div class="card-title">Recomendações de rebalanceamento</div>
+      <div id="listaRec"></div>
+      <div class="resumo-grid" id="resumoGrid"></div>
+      <div class="legenda">
+        <div class="legenda-item"><div class="dot8" style="background:var(--amber)"></div>Manter</div>
+        <div class="legenda-item"><div class="dot8" style="background:var(--green)"></div>Alocar</div>
+        <div class="legenda-item"><div class="dot8" style="background:var(--red)"></div>Retirar</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-relatorio" class="tab-content">
+    <div class="card">
+      <div class="card-title">📈 Relatório Mensal - Análise PBF</div>
+      <div id="relatorioConteudo" class="relatorio-container">
+        <div style="text-align: center; padding: 2rem; color: var(--text3);">
+          ⚡ Importe um PDF para gerar o relatório automático
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">Material informativo — não constitui recomendação de investimento.</footer>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const PERFIS = {
+  Conservador: { "Renda Fixa Pós": 85, "Renda Fixa Pré": 15, "Renda Fixa Inflação": 0, "Multiestratégia": 0, "Renda Variável": 0, "Renda Fixa Global": 0, "Renda Variável Global": 0, "Alternativo": 0 },
+  Moderado: { "Renda Fixa Pós": 54, "Renda Fixa Pré": 13, "Renda Fixa Inflação": 20, "Multiestratégia": 5, "Renda Variável": 4, "Renda Fixa Global": 0, "Renda Variável Global": 4, "Alternativo": 0 },
+  Agressivo: { "Renda Fixa Pós": 44, "Renda Fixa Pré": 15, "Renda Fixa Inflação": 24, "Multiestratégia": 5, "Renda Variável": 6, "Renda Fixa Global": 0, "Renda Variável Global": 6, "Alternativo": 0 }
+};
+
+const CLASSES = ["Renda Fixa Pós", "Renda Fixa Pré", "Renda Fixa Inflação", "Multiestratégia", "Renda Variável", "Renda Fixa Global", "Renda Variável Global", "Alternativo", "Caixa", "Proventos", "Fundos Listados"];
+const CORES = ["c0","c1","c2","c3","c4","c5","c6","c7","c8","c9","c10"];
+
+let perfilAtivo = "Moderado";
+let inputsMap = {};
+let patrimonioTotal = 0;
+let debugContent = [];
+
+// Dados da carteira
+let dadosCarteira = {
+  alocacoes: {},
+  retornos: {},
+  rentabilidadeMensal: null,
+  pctCdi: null,
+  dataReferencia: "",
+  patrimonio: 0
+};
+
+function fmtPct(v) { return v.toFixed(2).replace('.', ',') + ' %'; }
+function fmtPctSimples(v) { if (v === undefined || v === null) return '0,00'; return v.toFixed(2).replace('.', ','); }
+function fmtPctRelatorio(v) { if (v === undefined || v === null) return '0,00%'; return v.toFixed(2).replace('.', ',') + '%'; }
+function fmtBRL(v) { return 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2}); }
+function setStatus(msg, tipo) { const el = document.getElementById('status'); el.innerHTML = msg; el.className = 'status show status-' + tipo; setTimeout(() => el.classList.remove('show'), 4000); }
+function dbg(txt) { debugContent.push(txt); document.getElementById('debugBox').textContent = debugContent.join('\n'); }
+function clearDebug() { debugContent = []; document.getElementById('debugBox').textContent = ''; }
+
+function atualizarTotal() {
+  let t = 0;
+  CLASSES.forEach(c => { t += parseFloat(inputsMap[c]?.value || 0) || 0; });
+  document.getElementById('totalVal').textContent = fmtPct(t);
+  document.getElementById('totalBar').className = 'total-bar ' + (Math.abs(t - 100) < 1 ? 'total-ok' : 'total-err');
+}
+
+function gerarRelatorioHTML() {
+  let data = dadosCarteira.dataReferencia || "mês de referência";
+  let rentabilidade = dadosCarteira.rentabilidadeMensal;
+  let pctCdi = dadosCarteira.pctCdi;
+  let patrimonio = dadosCarteira.patrimonio;
+  let alocacoes = dadosCarteira.alocacoes;
+  let retornos = dadosCarteira.retornos;
+  
+  let textoPctCdi = "";
+  if (rentabilidade !== null && pctCdi !== null) {
+    textoPctCdi = ` (${pctCdi}% do CDI)`;
+  }
+  
+  // Construir lista de classes
+  let classesList = [];
+  for (let nome in alocacoes) {
+    if (alocacoes[nome] > 0) {
+      classesList.push({
+        nome: nome,
+        alocacao: alocacoes[nome],
+        retorno: retornos[nome] !== undefined ? retornos[nome] : null
+      });
+    }
+  }
+  classesList.sort((a,b) => b.alocacao - a.alocacao);
+  
+  let positivos = [];
+  let negativos = [];
+  for (let item of classesList) {
+    if (item.retorno !== null && item.retorno > 0) positivos.push(item);
+    if (item.retorno !== null && item.retorno < 0) negativos.push(item);
+  }
+  let destaque = positivos.length > 0 ? positivos[0] : null;
+  
+  let html = `
+    <div class="relatorio-saudacao">
+      📋 Prezado cliente, tudo bem? Segue o seu relatório mensal.
+    </div>
+    
+    <div class="relatorio-paragrafo">
+      O mês de ${data} foi marcado por um ambiente de maior volatilidade nos mercados globais, 
+      com destaque para a escalada dos conflitos no Oriente Médio pressionando os preços do petróleo. 
+      No Brasil, o cenário fiscal permaneceu no centro das atenções, enquanto o Banco Central 
+      seguiu com sua estratégia de controle inflacionário.
+    </div>
+    
+    <div class="relatorio-dados">
+      <p>📊 <strong>Desempenho da sua carteira:</strong></p>
+      <p>Sua carteira atravessou esse ambiente com solidez, apresentando um retorno de <strong class="${rentabilidade >= 0 ? 'relatorio-positivo' : 'relatorio-negativo'}">${fmtPctRelatorio(rentabilidade)}</strong> no mês de ${data}${textoPctCdi}.</p>
+    </div>
+  `;
+  
+  if (patrimonio > 0) {
+    html += `<div class="relatorio-paragrafo">💰 <strong>Patrimônio atual:</strong> ${fmtBRL(patrimonio)}</div>`;
+  }
+  
+  if (classesList.length > 0) {
+    html += `<div class="relatorio-paragrafo"><strong>📈 Desempenho por estratégia:</strong><br>`;
+    for (let item of classesList) {
+      let retornoStr = item.retorno !== null ? fmtPctRelatorio(item.retorno) : "não disponível";
+      let retornoClass = (item.retorno !== null && item.retorno >= 0) ? 'relatorio-positivo' : 'relatorio-negativo';
+      html += `<span class="relatorio-classe-item">• <strong>${item.nome}</strong> (${fmtPctSimples(item.alocacao)}% da carteira): <span class="${retornoClass}">${retornoStr}</span></span>`;
+    }
+    html += `</div>`;
+  }
+  
+  if (destaque) {
+    html += `<div class="relatorio-paragrafo">
+      🌟 <strong>Destaque positivo do mês:</strong> ${destaque.nome} com retorno de <span class="relatorio-positivo">${fmtPctRelatorio(destaque.retorno)}</span>.
+    </div>`;
+  }
+  
+  if (negativos.length > 0) {
+    let nomesNeg = negativos.map(n => n.nome).join(', ');
+    html += `<div class="relatorio-paragrafo">
+      ⚠️ <strong>Detrator(es):</strong> ${nomesNeg} impactaram negativamente o desempenho no período.
+    </div>`;
+  }
+  
+  html += `
+    <div class="relatorio-paragrafo">
+      Por fim, reforçamos a importância da disciplina na manutenção da estratégia e nos aportes focando no desenvolvimento da carteira no longo prazo. 
+      Essa postura é fundamental para atravessar diferentes ciclos de mercado, aproveitar oportunidades, reduzir os impactos das oscilações no curto prazo 
+      e manter a carteira alinhada aos seus objetivos financeiros.
+    </div>
+    
+    <div class="relatorio-assinatura">
+      Atenciosamente,<br>
+      Equipe PBF Investimentos
+    </div>
+  `;
+  
+  return html;
+}
+
+async function extrairDadosPDF(file) {
+  let ab = await file.arrayBuffer();
+  let pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+  let textoCompleto = '';
+  
+  for (let p = 1; p <= pdf.numPages; p++) {
+    let page = await pdf.getPage(p);
+    let tc = await page.getTextContent();
+    textoCompleto += tc.items.map(item => item.str).join(' ') + ' ';
+  }
+  
+  dbg('=== TRECHO DO PDF ===');
+  dbg(textoCompleto.substring(0, 2000));
+  
+  // 1. Data de Referência
+  let dataMatch = textoCompleto.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+  if (dataMatch) {
+    let meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    dadosCarteira.dataReferencia = meses[parseInt(dataMatch[2])-1] + ' de ' + dataMatch[3];
+    dbg('📅 Data: ' + dadosCarteira.dataReferencia);
+  }
+  
+  // 2. Rentabilidade Mensal e %CDI (da linha MÊS)
+  let mesMatch = textoCompleto.match(/M[ÊE]S[\s\S]*?R\$\s+[\d\.]+,\d{2}\s+(\d+,\d{2})%\s+(\d+,\d{2})%/i);
+  if (mesMatch) {
+    dadosCarteira.rentabilidadeMensal = parseFloat(mesMatch[1].replace(',', '.'));
+    dadosCarteira.pctCdi = parseFloat(mesMatch[2].replace(',', '.'));
+    dbg('📈 Rentabilidade Mensal: ' + dadosCarteira.rentabilidadeMensal + '%');
+    dbg('📊 %CDI: ' + dadosCarteira.pctCdi + '%');
+  } else {
+    // Fallback: pegar do Portfólio
+    let portMatch = textoCompleto.match(/Portf[oó]lio\s+(\d+,\d{2})%/i);
+    if (portMatch) {
+      dadosCarteira.rentabilidadeMensal = parseFloat(portMatch[1].replace(',', '.'));
+      dbg('📈 Rentabilidade (fallback): ' + dadosCarteira.rentabilidadeMensal + '%');
+    }
+  }
+  
+  // 3. Extrair alocações e retornos da seção Estratégias
+  let estrategiasIndex = textoCompleto.indexOf('Estratégias');
+  if (estrategiasIndex !== -1) {
+    let secao = textoCompleto.substring(estrategiasIndex, estrategiasIndex + 3000);
+    dbg('=== SEÇÃO Estratégias ===');
+    dbg(secao.substring(0, 1000));
+    
+    // Padrão para cada linha: Nome (XX,XX%) R$ X.XXX,XX X,XX%
+    let linhas = secao.split(/\n/);
+    for (let linha of linhas) {
+      // Pós Fixado   ( 84 , 73 %)   R $   36 . 723 , 18   1 , 41 %
+      let matchAloc = linha.match(/(Pós Fixado|Pré Fixado|Inflação|Renda Variável Brasil|Fundos Listados|Caixa|Proventos)\s*\(\s*(\d{1,3})\s*,\s*(\d{2})\s*%\)/i);
+      if (matchAloc) {
+        let nome = matchAloc[1];
+        let alocacao = parseFloat(matchAloc[2] + '.' + matchAloc[3]);
+        
+        let nomeSistema = nome;
+        if (nome === 'Pós Fixado') nomeSistema = 'Renda Fixa Pós';
+        if (nome === 'Pré Fixado') nomeSistema = 'Renda Fixa Pré';
+        if (nome === 'Inflação') nomeSistema = 'Renda Fixa Inflação';
+        if (nome === 'Renda Variável Brasil') nomeSistema = 'Renda Variável';
+        if (nome === 'Fundos Listados') nomeSistema = 'Fundos Listados';
+        if (nome === 'Caixa') nomeSistema = 'Caixa';
+        if (nome === 'Proventos') nomeSistema = 'Proventos';
+        
+        dadosCarteira.alocacoes[nomeSistema] = alocacao;
+        dbg('✅ Alocação ' + nomeSistema + ': ' + alocacao + '%');
+        
+        // Buscar retorno na mesma linha (Mês Atual)
+        let retMatch = linha.match(/[\d\.,]+\s+([+-]?\s*\d{1,3}\s*,\s*\d{2})\s*%/);
+        if (retMatch) {
+          let retorno = parseFloat(retMatch[1].replace(/\s/g, '').replace(',', '.'));
+          dadosCarteira.retornos[nomeSistema] = retorno;
+          dbg('📈 Retorno ' + nomeSistema + ': ' + retorno + '%');
+        }
+      }
+    }
+  }
+  
+  // 4. Patrimônio
+  let patMatch = textoCompleto.match(/PATRIM[OÔ]NIO\s*TOTAL\s*BRUTO[:\s]*R\$\s*([\d\.]+,\d{2})/i);
+  if (patMatch) {
+    dadosCarteira.patrimonio = parseFloat(patMatch[1].replace(/\./g, '').replace(',', '.'));
+    dbg('💰 Patrimônio: R$ ' + dadosCarteira.patrimonio);
+  }
+  
+  dbg('\n=== RESUMO ===');
+  dbg('Data: ' + dadosCarteira.dataReferencia);
+  dbg('Rentabilidade: ' + dadosCarteira.rentabilidadeMensal + '%');
+  dbg('%CDI: ' + dadosCarteira.pctCdi + '%');
+  dbg('Alocações: ' + JSON.stringify(dadosCarteira.alocacoes));
+  dbg('Retornos: ' + JSON.stringify(dadosCarteira.retornos));
+  
+  return { res: dadosCarteira.alocacoes, patrimonio: dadosCarteira.patrimonio };
+}
+
+function renderInputs() {
+  let container = document.getElementById('inputsAtual');
+  container.innerHTML = '';
+  CLASSES.forEach((classe, idx) => {
+    let row = document.createElement('div');
+    row.className = 'classe-row';
+    row.innerHTML = '<div class="dot8 ' + CORES[idx] + '"></div><span class="classe-nome">' + classe + '</span><input class="classe-input" type="number" step="any" min="0" max="100" value="0" id="inp_' + idx + '"><span class="pct-label">%</span>';
+    container.appendChild(row);
+    inputsMap[classe] = row.querySelector('input');
+    inputsMap[classe].addEventListener('input', atualizarTotal);
+  });
+  atualizarTotal();
+}
+
+function renderAlvo() {
+  let rec = PERFIS[perfilAtivo];
+  document.getElementById('perfilLabel').textContent = perfilAtivo;
+  let container = document.getElementById('tabelaAlvo');
+  let classesAlvo = CLASSES.filter(c => c !== 'Caixa' && c !== 'Proventos' && c !== 'Fundos Listados');
+  container.innerHTML = classesAlvo.map(c => '<div class="alvo-row"><div class="dot8 ' + CORES[CLASSES.indexOf(c)] + '"></div><span class="alvo-nome">' + c + '</span><div class="alvo-bar-wrap"><div class="alvo-bar-fill" style="width:' + rec[c] + '%"></div></div><span class="alvo-pct">' + rec[c] + '%</span></div>').join('');
+}
+
+function renderPerfis() {
+  let container = document.getElementById('perfisRow');
+  container.innerHTML = Object.keys(PERFIS).map(p => '<button class="perfil-btn ' + (p === perfilAtivo ? 'ativo' : '') + '" data-perfil="' + p + '">' + p + '</button>').join('');
+  container.querySelectorAll('.perfil-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      perfilAtivo = btn.dataset.perfil;
+      renderPerfis();
+      renderAlvo();
+      document.getElementById('resultArea').style.display = 'none';
+    });
+  });
+}
+
+function analisar() {
+  let total = 0;
+  let atual = {};
+  CLASSES.forEach(c => { atual[c] = parseFloat(inputsMap[c]?.value || 0) || 0; total += atual[c]; });
+  
+  if (Math.abs(total - 100) > 1) {
+    setStatus('Total deve ser próximo de 100% (atual: ' + fmtPct(total) + '). Tolerância de 1%', 'err');
+    return;
+  }
+  
+  let alvo = PERFIS[perfilAtivo];
+  let nManter = 0, nAlocar = 0, nRetirar = 0;
+  let classesAnalise = CLASSES.filter(c => c !== 'Caixa' && c !== 'Proventos' && c !== 'Fundos Listados');
+  
+  let html = classesAnalise.map(c => {
+    let diff = alvo[c] - atual[c];
+    let valorMovimentar = Math.abs(diff * dadosCarteira.patrimonio / 100);
+    let badgeClass, label, valorClass;
+    if (Math.abs(diff) < 0.05) { badgeClass = 'b-manter'; label = '✓ Manter'; valorClass = 'manter'; nManter++; }
+    else if (diff > 0) { badgeClass = 'b-alocar'; label = '↑ Alocar +' + fmtPct(diff); valorClass = 'alocar'; nAlocar++; }
+    else { badgeClass = 'b-retirar'; label = '↓ Retirar ' + fmtPct(Math.abs(diff)); valorClass = 'retirar'; nRetirar++; }
+    let valorDisplay = Math.abs(diff) < 0.05 ? 'R$ 0,00' : fmtBRL(valorMovimentar);
+    return '<div class="rec-row"><div class="dot8 ' + CORES[CLASSES.indexOf(c)] + '"></div><span class="rec-nome">' + c + '</span><span class="rec-nums">' + fmtPct(atual[c]) + ' → ' + alvo[c] + '%</span><span class="rec-valor ' + valorClass + '">' + valorDisplay + '</span><span class="badge ' + badgeClass + '">' + label + '</span></div>';
+  }).join('');
+  
+  document.getElementById('listaRec').innerHTML = html;
+  document.getElementById('resumoGrid').innerHTML = '<div class="resumo-item"><div class="resumo-label">Manter</div><div class="resumo-val" style="color:var(--amber)">' + nManter + '</div></div><div class="resumo-item"><div class="resumo-label">Alocar</div><div class="resumo-val" style="color:var(--green)">' + nAlocar + '</div></div><div class="resumo-item"><div class="resumo-label">Retirar</div><div class="resumo-val" style="color:var(--red)">' + nRetirar + '</div></div><div class="resumo-item"><div class="resumo-label">Perfil</div><div class="resumo-val" style="color:var(--gold);font-size:14px">' + perfilAtivo + '</div></div>';
+  document.getElementById('resultArea').style.display = 'block';
+}
+
+// Eventos
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    let tabId = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+  });
+});
+
+document.getElementById('btnToggleDebug').addEventListener('click', () => {
+  document.getElementById('debugBox').classList.toggle('show');
+  document.getElementById('debugArrow').classList.toggle('rotated');
+});
+
+document.getElementById('filePdf').addEventListener('change', function() {
+  document.getElementById('fileName').textContent = this.files[0]?.name || 'Selecionar arquivo PDF...';
+});
+
+document.getElementById('btnImportar').addEventListener('click', async () => {
+  let file = document.getElementById('filePdf').files[0];
+  if (!file) { setStatus('Selecione um arquivo PDF primeiro.', 'err'); return; }
+  clearDebug();
+  dadosCarteira = { alocacoes: {}, retornos: {}, rentabilidadeMensal: null, pctCdi: null, dataReferencia: "", patrimonio: 0 };
+  document.getElementById('overlay').classList.add('show');
+  try {
+    let result = await extrairDadosPDF(file);
+    let res = result.res;
+    let patrimonio = result.patrimonio;
+    dadosCarteira.patrimonio = patrimonio;
+    for (let classe of CLASSES) {
+      inputsMap[classe].value = (res[classe] !== null && res[classe] > 0) ? res[classe].toFixed(2) : '0';
+    }
+    atualizarTotal();
+    document.getElementById('relatorioConteudo').innerHTML = gerarRelatorioHTML();
+    setStatus('✅ PDF importado com sucesso! Relatório gerado.', 'ok');
+    if (dadosCarteira.patrimonio > 0) {
+      document.getElementById('patrimVal').innerHTML = fmtBRL(dadosCarteira.patrimonio);
+      document.getElementById('patrimTag').classList.add('show');
+    }
+  } catch (e) {
+    setStatus('Erro: ' + e.message, 'err');
+    dbg('ERRO: ' + e.message);
+  } finally {
+    document.getElementById('overlay').classList.remove('show');
+  }
+});
+
+document.getElementById('btnLimpar').addEventListener('click', () => {
+  CLASSES.forEach(c => { if (inputsMap[c]) inputsMap[c].value = '0'; });
+  dadosCarteira = { alocacoes: {}, retornos: {}, rentabilidadeMensal: null, pctCdi: null, dataReferencia: "", patrimonio: 0 };
+  atualizarTotal();
+  document.getElementById('resultArea').style.display = 'none';
+  document.getElementById('status').classList.remove('show');
+  document.getElementById('patrimTag').classList.remove('show');
+  document.getElementById('relatorioConteudo').innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text3);">⚡ Importe um PDF para gerar o relatório automático</div>';
+  clearDebug();
+  document.getElementById('filePdf').value = '';
+  document.getElementById('fileName').textContent = 'Selecionar arquivo PDF...';
+});
+
+document.getElementById('btnAnalisar').addEventListener('click', analisar);
+document.getElementById('themeToggle').addEventListener('click', () => {
+  document.body.classList.toggle('light');
+  localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
+  document.getElementById('themeToggle').textContent = document.body.classList.contains('light') ? '☀️' : '🌙';
+});
+
+(function init() {
+  if (localStorage.getItem('theme') === 'light') document.body.classList.add('light');
+  document.getElementById('hDate').textContent = new Date().toLocaleDateString('pt-BR');
+  renderInputs(); renderPerfis(); renderAlvo();
+})();
+</script>
+</body>
+</html>
