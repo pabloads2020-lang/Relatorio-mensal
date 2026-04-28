@@ -149,36 +149,14 @@ function clearDebug() { debugLines = []; document.getElementById('debugBox').tex
 
 function gerarCenarioBrasil(mes, ano) {
   const cenarios = {
-    "Janeiro": `🇧🇷 **Cenário Brasil:** O mês de janeiro de ${ano} foi marcado pelo início do ano com ajustes de posições nos mercados. O IPCA-15 veio dentro das expectativas, mantendo as projeções de inflação ancoradas.`,
-    "Fevereiro": `🇧🇷 **Cenário Brasil:** Fevereiro de ${ano} foi marcado pela divulgação do PIB do quarto trimestre, que mostrou resiliência da economia. A arrecadação recorde trouxe algum alívio às preocupações fiscais.`,
-    "Março": `🇧🇷 **Cenário Brasil:** Março de ${ano} foi marcado pela divulgação do IPCA, que veio alinhado às expectativas. O Banco Central deu início ao ciclo de flexibilização da política monetária com o primeiro corte da Selic (de 15% para 14,75%). O mercado segue atento ao arcabouço fiscal e à trajetória da dívida pública.`,
-    "Abril": `🇧🇷 **Cenário Brasil:** Abril de ${ano} foi marcado pela temporada de balanços das empresas. O mercado começou a precificar os próximos passos do Copom, com expectativas de novos cortes na Selic.`,
-    "Maio": `🇧🇷 **Cenário Brasil:** Maio de ${ano} foi marcado por avanço da agenda de reformas. Os dados de atividade econômica mostraram resiliência, enquanto a inflação segue controlada.`,
-    "Junho": `🇧🇷 **Cenário Brasil:** Junho de ${ano} foi marcado pela decisão do Copom. A arrecadação federal surpreendeu positivamente.`,
-    "Julho": `🇧🇷 **Cenário Brasil:** Julho de ${ano} foi marcado pela divulgação do Índice de Confiança da Indústria, que mostrou recuperação gradual.`,
-    "Agosto": `🇧🇷 **Cenário Brasil:** Agosto de ${ano} foi marcado pela 'saída de verão' nos mercados do hemisfério norte, reduzindo a liquidez global.`,
-    "Setembro": `🇧🇷 **Cenário Brasil:** Setembro de ${ano} foi marcado pela divulgação do PIB do segundo trimestre, que surpreendeu positivamente.`,
-    "Outubro": `🇧🇷 **Cenário Brasil:** Outubro de ${ano} foi marcado pela reta final das eleições municipais e seus desdobramentos políticos.`,
-    "Novembro": `🇧🇷 **Cenário Brasil:** Novembro de ${ano} foi marcado pela Black Friday e pelo início da temporada de compras de fim de ano.`,
-    "Dezembro": `🇧🇷 **Cenário Brasil:** Dezembro de ${ano} foi marcado pela aprovação do Orçamento para ${parseInt(ano)+1}.`
+    "Março": `🇧🇷 **Cenário Brasil:** Março de ${ano} foi marcado pela divulgação do IPCA, que veio alinhado às expectativas. O Banco Central deu início ao ciclo de flexibilização da política monetária com o primeiro corte da Selic (de 15% para 14,75%). O mercado segue atento ao arcabouço fiscal e à trajetória da dívida pública.`
   };
   return cenarios[mes] || `🇧🇷 **Cenário Brasil:** O mês de ${mes} de ${ano} foi marcado por atenção às decisões de política monetária e à agenda fiscal no Congresso.`;
 }
 
 function gerarCenarioGlobal(mes, ano) {
   const cenarios = {
-    "Janeiro": `🌍 **Cenário Global:** Janeiro de ${ano} começou com atenção à posse do novo governo nos EUA. Os preços das commodities oscilaram com as tensões no Oriente Médio.`,
-    "Fevereiro": `🌍 **Cenário Global:** Fevereiro de ${ano} foi marcado pelos dados de inflação e emprego nos EUA. O BCE iniciou debates sobre flexibilização monetária.`,
-    "Março": `🌍 **Cenário Global:** Março de ${ano} foi marcado por forte volatilidade. A escalada dos conflitos no Oriente Médio pressionou os preços do petróleo. Nos EUA, dados de inflação mantiveram o Fed em modo de espera.`,
-    "Abril": `🌍 **Cenário Global:** Abril de ${ano} foi marcado pela temporada de balanços nos EUA. As empresas de tecnologia surpreenderam positivamente.`,
-    "Maio": `🌍 **Cenário Global:** Maio de ${ano} foi marcado pela decisão do Fed, que manteve os juros inalterados. O BCE sinalizou o início do ciclo de flexibilização.`,
-    "Junho": `🌍 **Cenário Global:** Junho de ${ano} foi marcado pela reunião do Fed. O BCE iniciou o ciclo de cortes de juros.`,
-    "Julho": `🌍 **Cenário Global:** Julho de ${ano} foi marcado pela temporada de balanços do segundo trimestre nos EUA.`,
-    "Agosto": `🌍 **Cenário Global:** Agosto de ${ano} foi marcado pela 'saída de verão' nos mercados, reduzindo liquidez.`,
-    "Setembro": `🌍 **Cenário Global:** Setembro de ${ano} foi marcado pela decisão do Fed sobre os juros.`,
-    "Outubro": `🌍 **Cenário Global:** Outubro de ${ano} foi marcado pelo aumento das tensões geopolíticas no Leste Europeu.`,
-    "Novembro": `🌍 **Cenário Global:** Novembro de ${ano} foi marcado pelo resultado das eleições nos EUA.`,
-    "Dezembro": `🌍 **Cenário Global:** Dezembro de ${ano} foi marcado pelas últimas decisões de política monetária do ano.`
+    "Março": `🌍 **Cenário Global:** Março de ${ano} foi marcado por forte volatilidade. A escalada dos conflitos no Oriente Médio pressionou os preços do petróleo. Nos EUA, dados de inflação mantiveram o Fed em modo de espera.`
   };
   return cenarios[mes] || `🌍 **Cenário Global:** O mês de ${mes} de ${ano} foi marcado por atenção às decisões dos bancos centrais.`;
 }
@@ -285,7 +263,6 @@ async function extrairDadosPDF(file) {
   }
   
   // ==================== RENTABILIDADE MÊS ====================
-  // Busca por "RENTABILIDADE MÊS: 0,83%"
   let rentMesMatch = textoCompleto.match(/RENTABILIDADE\s+M[ÊE]S:\s*(\d+,\d{2})%/i);
   if (rentMesMatch) {
     dadosCarteira.rentabilidadeMensal = parseFloat(rentMesMatch[1].replace(',', '.'));
@@ -293,16 +270,10 @@ async function extrairDadosPDF(file) {
   }
   
   // ==================== %CDI da tabela RESUMO ====================
-  // Busca na tabela: "MÊS   R$ 502,91   0,83%   68,17%"
   let cdiMatch = textoCompleto.match(/M[ÊE]S[^\d]*R\$\s*\d+\.?\d*,\d{2}\s+(\d+,\d{2})%\s+(\d+,\d{2})%/i);
   if (cdiMatch) {
-    let rentabilidadeTabela = parseFloat(cdiMatch[1].replace(',', '.'));
-    let pctCdiTabela = parseFloat(cdiMatch[2].replace(',', '.'));
-    if (dadosCarteira.rentabilidadeMensal === null) {
-      dadosCarteira.rentabilidadeMensal = rentabilidadeTabela;
-    }
-    dadosCarteira.pctCdi = pctCtiTabela;
-    dbg(`📊 Tabela RESUMO - %CDI: ${pcdiTabela}%`);
+    dadosCarteira.pctCdi = parseFloat(cdiMatch[2].replace(',', '.'));
+    dbg(`📊 %CDI da tabela RESUMO: ${dadosCarteira.pctCdi}%`);
   }
   
   // ==================== PATRIMÔNIO ====================
@@ -312,69 +283,70 @@ async function extrairDadosPDF(file) {
     dbg(`💰 Patrimônio: R$ ${dadosCarteira.patrimonio.toFixed(2)}`);
   }
   
-  // ==================== ESTRATÉGIAS ====================
-  // Busca pela seção "Estratégias" e extrai cada linha manualmente
+  // ==================== ESTRATÉGIAS (BUSCA POR PADRÕES ESPECÍFICOS) ====================
+  // Buscar a seção após "Estratégias"
   let estrategiasIdx = textoCompleto.indexOf('Estratégias');
   if (estrategiasIdx !== -1) {
     let secao = textoCompleto.substring(estrategiasIdx, estrategiasIdx + 2000);
-    dbg('\n=== SEÇÃO Estratégias ===');
+    dbg('\n=== SEÇÃO Estratégias (texto bruto) ===');
     dbg(secao.substring(0, 1500));
     
-    // Lista de classes que queremos capturar
-    const classesParaBuscar = [
-      'Pós Fixado', 'Pré Fixado', 'Inflação', 'Multimercado', 
-      'Renda Variável Global', 'Renda Fixa Global', 'Alternativo', 
-      'Fundos Listados', 'Caixa', 'Proventos'
+    // Lista de padrões para buscar (nome, alocacao, retorno)
+    // Baseado no debug: "Pós Fixado   ( 58 , 34 %)   R $   35.758,53   1 , 27 %"
+    const padroes = [
+      { nome: 'Pós Fixado', nomeFinal: 'Pós-Fixado' },
+      { nome: 'Pré Fixado', nomeFinal: 'Pré-Fixado' },
+      { nome: 'Inflação', nomeFinal: 'Inflação' },
+      { nome: 'In fl ação', nomeFinal: 'Inflação' },
+      { nome: 'Multimercado', nomeFinal: 'Multimercado' },
+      { nome: 'Renda Variável Global', nomeFinal: 'Renda Variável Global' },
+      { nome: 'Renda Fixa Global', nomeFinal: 'Renda Fixa Global' },
+      { nome: 'Alternativo', nomeFinal: 'Alternativo' },
+      { nome: 'Fundos Listados', nomeFinal: 'Fundos Listados' },
+      { nome: 'Caixa', nomeFinal: 'Caixa' },
+      { nome: 'Proventos', nomeFinal: 'Proventos' }
     ];
     
-    for (let classe of classesParaBuscar) {
-      // Padrão: "Pós Fixado   ( 58 , 34 %)   R $   35.758,53   1 , 27 %"
-      let regex = new RegExp(classe + '\\s*\\(\\s*(\\d{1,3})\\s*,\\s*(\\d{2})\\s*%\\)[^%]*?(\\d{1,2})\\s*,\\s*(\\d{2})\\s*%', 'i');
+    for (let padrao of padroes) {
+      // Regex para capturar: NOME ( XX , XX %) ... XX , XX %
+      let regex = new RegExp(padrao.nome + '\\s*\\(\\s*(\\d{1,3})\\s*,\\s*(\\d{2})\\s*%\\)[^%]*?(\\d{1,2})\\s*,\\s*(\\d{2})\\s*%', 'i');
       let match = secao.match(regex);
       
       if (match) {
-        let nomeSistema = classe;
-        if (classe === 'Pós Fixado') nomeSistema = 'Pós-Fixado';
-        if (classe === 'Pré Fixado') nomeSistema = 'Pré-Fixado';
-        if (classe === 'Inflação') nomeSistema = 'Inflação';
-        if (classe === 'Multimercado') nomeSistema = 'Multimercado';
-        if (classe === 'Renda Variável Global') nomeSistema = 'Renda Variável Global';
-        if (classe === 'Renda Fixa Global') nomeSistema = 'Renda Fixa Global';
-        if (classe === 'Alternativo') nomeSistema = 'Alternativo';
-        if (classe === 'Fundos Listados') nomeSistema = 'Fundos Listados';
-        if (classe === 'Caixa') nomeSistema = 'Caixa';
-        if (classe === 'Proventos') nomeSistema = 'Proventos';
-        
         let alocacao = parseFloat(match[1] + '.' + match[2]);
         let retorno = parseFloat(match[3] + '.' + match[4]);
         
-        // Ajuste para retorno negativo (ex: -0,88%)
-        let negativoMatch = secao.match(new RegExp(classe + '[^-]*?(-\\s*\\d{1,2}\\s*,\\s*\\d{2})\\s*%', 'i'));
+        // Verificar se o retorno é negativo (procura por - antes do número)
+        let negativoRegex = new RegExp(padrao.nome + '[^-]*?(-\\s*\\d{1,2}\\s*,\\s*\\d{2})\\s*%', 'i');
+        let negativoMatch = secao.match(negativoRegex);
         if (negativoMatch) {
           retorno = -parseFloat(negativoMatch[1].replace(/\s/g, '').replace(',', '.'));
         }
         
         if (alocacao > 0 && alocacao <= 100) {
-          dadosCarteira.alocacoes[nomeSistema] = alocacao;
+          dadosCarteira.alocacoes[padrao.nomeFinal] = alocacao;
           if (!isNaN(retorno) && retorno !== 0) {
-            dadosCarteira.retornos[nomeSistema] = retorno;
+            dadosCarteira.retornos[padrao.nomeFinal] = retorno;
           }
-          dbg(`✅ ${classe}: ${alocacao}% | retorno: ${retorno}%`);
+          dbg(`✅ ${padrao.nomeFinal}: ${alocacao}% | retorno: ${retorno}%`);
         }
       }
     }
     
-    // Fallback: busca genérica para qualquer classe
-    let genericRegex = /([A-Za-zÀ-Úà-û\s]{2,20}?)\s*\(\s*(\d{1,3})\s*,\s*(\d{2})\s*%\)[^%]*?([+-]?\s*\d{1,2}\s*,\s*\d{2})\s*%/gi;
-    let genericMatch;
-    while ((genericMatch = genericRegex.exec(secao)) !== null) {
-      let nome = genericMatch[1].trim();
-      let alocacao = parseFloat(genericMatch[2] + '.' + genericMatch[3]);
-      let retorno = parseFloat(genericMatch[4].replace(/\s/g, '').replace(',', '.'));
+    // FALLBACK: busca genérica por qualquer padrão (  XX , XX %) e retorno no final
+    let genericRegex = /([A-Za-zÀ-Úà-û\s]{2,30}?)\s*\(\s*(\d{1,3})\s*,\s*(\d{2})\s*%\)[^%]*?(\d{1,2})\s*,\s*(\d{2})\s*%/gi;
+    let match;
+    while ((match = genericRegex.exec(secao)) !== null) {
+      let nome = match[1].trim();
+      let alocacao = parseFloat(match[2] + '.' + match[3]);
+      let retorno = parseFloat(match[4] + '.' + match[5]);
+      
+      // Limpar nome (remover caracteres estranhos)
+      nome = nome.replace(/[^\w\sÀ-Úà-û]/g, '').trim();
       
       if (nome && alocacao > 0 && alocacao <= 100 && !dadosCarteira.alocacoes[nome]) {
         dadosCarteira.alocacoes[nome] = alocacao;
-        if (!isNaN(retorno)) {
+        if (!isNaN(retorno) && retorno !== 0) {
           dadosCarteira.retornos[nome] = retorno;
         }
         dbg(`✅ (fallback) ${nome}: ${alocacao}% | retorno: ${retorno}%`);
@@ -388,8 +360,8 @@ async function extrairDadosPDF(file) {
   dbg(`Rentabilidade Mensal: ${dadosCarteira.rentabilidadeMensal !== null ? dadosCarteira.rentabilidadeMensal + '%' : 'não encontrada'}`);
   dbg(`% CDI: ${dadosCarteira.pctCdi !== null ? dadosCarteira.pctCdi + '%' : 'não encontrado'}`);
   dbg(`Patrimônio: ${dadosCarteira.patrimonio > 0 ? 'R$ ' + dadosCarteira.patrimonio : 'não encontrado'}`);
-  dbg(`Alocações capturadas: ${Object.keys(dadosCarteira.alocacoes).join(', ') || 'nenhuma'}`);
-  dbg(`Retornos capturados: ${Object.keys(dadosCarteira.retornos).join(', ') || 'nenhum'}`);
+  dbg(`Alocações capturadas: ${JSON.stringify(dadosCarteira.alocacoes)}`);
+  dbg(`Retornos capturados: ${JSON.stringify(dadosCarteira.retornos)}`);
   
   return { alocacoes: dadosCarteira.alocacoes, patrimonio: dadosCarteira.patrimonio };
 }
