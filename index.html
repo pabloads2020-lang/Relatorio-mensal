@@ -1,417 +1,133 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PBF · Relatório Mensal</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Atkinson+Hyperlegible:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<style>
-:root {
-  --bg: #0e1117; --bg2: #161b25; --bg3: #1c2333;
-  --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13);
-  --gold: #f5c842; --gold2: #e0a800;
-  --text: #e8eaf0; --text2: #8b93a7; --text3: #555e72;
-  --green: #2ecc71; --green-bg: rgba(46,204,113,0.12);
-  --red: #e74c3c; --red-bg: rgba(231,76,60,0.12);
-  --amber: #f39c12; --amber-bg: rgba(243,156,18,0.12);
-  --blue: #3498db; --blue-bg: rgba(52,152,219,0.12);
-  --header-bg: #161b25; --header-border: rgba(255,255,255,0.07);
-  --card-bg: #161b25; --card-border: rgba(255,255,255,0.07);
-  --input-bg: #1c2333; --input-border: rgba(255,255,255,0.13);
-  --debug-bg: #1c2333; --overlay-bg: rgba(14,17,23,.88);
-  --footer-border: rgba(255,255,255,0.07);
-  --relatorio-bg: linear-gradient(135deg, rgba(245,200,66,0.03) 0%, rgba(52,152,219,0.03) 100%);
-}
-body.light {
-  --bg: #f5f7fa; --bg2: #ffffff; --bg3: #f0f2f5;
-  --border: rgba(0,0,0,0.08); --border2: rgba(0,0,0,0.12);
-  --gold: #d4a017; --gold2: #b8860b;
-  --text: #1a1a2e; --text2: #4a5568; --text3: #718096;
-  --green: #27ae60; --green-bg: rgba(39,174,96,0.1);
-  --red: #e74c3c; --red-bg: rgba(231,76,60,0.1);
-  --amber: #e67e22; --amber-bg: rgba(230,126,34,0.1);
-  --header-bg: #ffffff; --header-border: rgba(0,0,0,0.08);
-  --card-bg: #ffffff; --card-border: rgba(0,0,0,0.08);
-  --input-bg: #ffffff; --input-border: #e2e8f0;
-  --debug-bg: #f7fafc; --overlay-bg: rgba(255,255,255,.95);
-  --footer-border: rgba(0,0,0,0.08);
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-.header { background: var(--header-bg); border-bottom: 1px solid var(--header-border); padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-.header-logo { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 600; }
-.dot { width: 28px; height: 28px; background: var(--gold); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #000; }
-.header-right { display: flex; align-items: center; gap: 1rem; }
-.header-date { font-size: 13px; color: var(--text3); }
-.theme-toggle { background: var(--bg3); border: 1px solid var(--border2); border-radius: 30px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; }
-.main { max-width: 900px; margin: 0 auto; padding: 2rem; }
-.card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
-.card-title { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-.upload-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
-.file-label { display: flex; align-items: center; gap: 8px; background: var(--bg3); border: 1.5px dashed var(--border2); border-radius: 8px; padding: 9px 14px; cursor: pointer; font-size: 14px; color: var(--text2); flex: 1; min-width: 180px; }
-.file-label:hover { border-color: var(--gold); color: var(--gold); }
-#filePdf { display: none; }
-.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; white-space: nowrap; }
-.btn-gold { background: var(--gold); color: #000; }
-.btn-gold:hover { background: var(--gold2); transform: translateY(-1px); }
-.btn-ghost { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
-.btn-ghost:hover { border-color: var(--red); color: var(--red); background: var(--red-bg); }
-.status { display: none; align-items: center; gap: 8px; padding: 9px 13px; border-radius: 8px; font-size: 14px; margin-top: 0.75rem; }
-.status.show { display: flex; }
-.status-ok { background: var(--green-bg); color: var(--green); border: 1px solid rgba(46, 204, 113, 0.25); }
-.status-err { background: var(--red-bg); color: var(--red); border: 1px solid rgba(231, 76, 60, 0.25); }
-.patrim-tag { display: none; align-items: center; gap: 6px; margin-top: 0.6rem; background: rgba(245, 200, 66, 0.1); border: 1px solid rgba(245, 200, 66, 0.25); border-radius: 20px; padding: 6px 14px; font-size: 14px; font-weight: 600; color: var(--gold); width: fit-content; }
-.patrim-tag.show { display: flex; }
-.btn-debug { background: transparent; border: 1px solid var(--border2); border-radius: 20px; padding: 4px 12px; font-size: 11px; font-weight: 500; cursor: pointer; color: var(--text2); display: flex; align-items: center; gap: 6px; margin-top: 1rem; }
-.btn-debug:hover { border-color: var(--gold); color: var(--gold); background: rgba(245,200,66,0.1); }
-.debug-box { display: none; background: var(--debug-bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; font-size: 12px; max-height: 250px; overflow-y: auto; white-space: pre-wrap; margin-top: 0.5rem; font-family: monospace; }
-.debug-box.show { display: block; }
-.overlay { display: none; position: fixed; inset: 0; background: var(--overlay-bg); z-index: 200; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; }
-.overlay.show { display: flex; }
-.spin { width: 40px; height: 40px; border: 3px solid var(--border2); border-top-color: var(--gold); border-radius: 50%; animation: rot 0.8s linear infinite; }
-@keyframes rot { to { transform: rotate(360deg); } }
-.footer { text-align: center; font-size: 12px; color: var(--text3); padding: 2rem; border-top: 1px solid var(--footer-border); margin-top: 1rem; }
-.arrow { transition: transform 0.2s ease; display: inline-block; }
-.arrow.rotated { transform: rotate(90deg); }
-
-/* Relatório */
-.relatorio-container { background: var(--relatorio-bg); border-radius: 12px; padding: 1.5rem; }
-.relatorio-saudacao { font-size: 15px; margin-bottom: 1.25rem; color: var(--gold); font-weight: 500; }
-.relatorio-paragrafo { font-size: 14px; line-height: 1.6; margin-bottom: 1rem; color: var(--text); }
-.relatorio-dados { background: var(--bg3); border-radius: 10px; padding: 1rem; margin: 1rem 0; border-left: 3px solid var(--gold); }
-.relatorio-dados p { margin: 0.5rem 0; font-size: 14px; }
-.relatorio-dados strong { color: var(--gold); }
-.relatorio-classe-item { margin: 0.25rem 0; font-size: 14px; display: block; }
-.relatorio-positivo { color: var(--green); }
-.relatorio-negativo { color: var(--red); }
-.relatorio-assinatura { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 13px; color: var(--text3); font-style: italic; }
-</style>
-</head>
-<body>
-
-<div class="overlay" id="overlay"><div class="spin"></div><div>Processando PDF...</div></div>
-
-<header class="header">
-  <div class="header-logo"><div class="dot">PBF</div>Relatório Mensal</div>
-  <div class="header-right"><div class="header-date" id="hDate"></div><button class="theme-toggle" id="themeToggle">🌙</button></div>
-</header>
-
-<main class="main">
-  <div class="card">
-    <div class="card-title">📄 Importar relatório XP (PDF)</div>
-    <div class="upload-row">
-      <label class="file-label" for="filePdf">📎 <span id="fileName">Selecionar arquivo PDF...</span></label>
-      <input type="file" id="filePdf" accept=".pdf">
-      <button class="btn btn-gold" id="btnImportar">Importar PDF</button>
-      <button class="btn btn-ghost" id="btnLimpar">Limpar</button>
-    </div>
-    <div id="status" class="status"></div>
-    <div id="patrimTag" class="patrim-tag">💰 <span id="patrimVal"></span></div>
-    
-    <button class="btn-debug" id="btnToggleDebug"><span class="arrow" id="debugArrow">▶</span> Detalhes da leitura</button>
-    <div id="debugBox" class="debug-box"></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">📈 Relatório Mensal - Análise PBF</div>
-    <div id="relatorioConteudo" class="relatorio-container">
-      <div style="text-align: center; padding: 2rem; color: var(--text3);">
-        ⚡ Importe um PDF para gerar o relatório automático
-      </div>
-    </div>
-  </div>
-</main>
-
-<footer class="footer">Material informativo — não constitui recomendação de investimento.</footer>
-
-<script>
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-let debugLines = [];
-let dadosCarteira = {
-  alocacoes: {},
-  retornos: {},
-  rentabilidadeMensal: null,
-  pctCdi: null,
-  dataReferencia: "",
-  patrimonio: 0,
-  mesReferencia: "",
-  anoReferencia: ""
-};
-
-function fmtPct(v) { if (v === undefined || v === null) return 'n/d'; return v.toFixed(2).replace('.', ',') + '%'; }
-function fmtBRL(v) { return 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2}); }
-function setStatus(msg, tipo) { 
-  const el = document.getElementById('status'); 
-  el.innerHTML = msg; 
-  el.className = 'status show status-' + tipo; 
-  setTimeout(() => el.classList.remove('show'), 4000); 
-}
-function dbg(txt) { debugLines.push(txt); document.getElementById('debugBox').textContent = debugLines.join('\n'); }
-function clearDebug() { debugLines = []; document.getElementById('debugBox').textContent = ''; }
-
-function gerarCenarioBrasil(mes, ano) {
-  const cenarios = {
-    "Janeiro": `🇧🇷 **Cenário Brasil:** O mês de janeiro de ${ano} foi marcado pelo início do ano com ajustes de posições nos mercados. O governo enviou ao Congresso as diretrizes orçamentárias, enquanto o mercado acompanhou de perto os primeiros sinais de atividade econômica. O IPCA-15 veio dentro das expectativas, mantendo as projeções de inflação ancoradas.`,
-    "Fevereiro": `🇧🇷 **Cenário Brasil:** Fevereiro de ${ano} foi marcado pela divulgação do PIB do quarto trimestre, que mostrou resiliência da economia. O mercado acompanhou as discussões sobre a reforma tributária no Senado. A arrecadação recorde trouxe algum alívio às preocupações fiscais, mas o cenário ainda demanda atenção.`,
-    "Março": `🇧🇷 **Cenário Brasil:** Março de ${ano} foi marcado pela divulgação do IPCA, que veio alinhado às expectativas, abrindo espaço para o primeiro corte da Selic (de 15% para 14,75%), dando início ao ciclo de flexibilização da política monetária. O mercado comemorou a sinalização do BACEN, mas segue atento ao arcabouço fiscal e à trajetória da dívida pública.`,
-    "Abril": `🇧🇷 **Cenário Brasil:** Abril de ${ano} foi marcado pela temporada de balanços das empresas de capital aberto. O mercado começou a precificar os próximos passos do Copom, com expectativas de novos cortes na Selic. A pauta fiscal permaneceu no centro das atenções, com a tramitação de medidas de ajuste no Congresso.`,
-    "Maio": `🇧🇷 **Cenário Brasil:** Maio de ${ano} foi marcado por tensões políticas e avanço da agenda de reformas. O mercado acompanhou a tramitação do arcabouço fiscal na Câmara. Os dados de atividade econômica mostraram resiliência, enquanto a inflação segue controlada, permitindo ao BACEN dar continuidade ao ciclo de cortes.`,
-    "Junho": `🇧🇷 **Cenário Brasil:** Junho de ${ano} foi marcado pela decisão do Copom, que manteve o tom hawkish diante das incertezas fiscais. O mercado reduziu as expectativas de cortes mais agressivos da Selic. A arrecadação federal surpreendeu positivamente, mas o cenário fiscal ainda preocupa os agentes.`,
-    "Julho": `🇧🇷 **Cenário Brasil:** Julho de ${ano} foi marcado pela divulgação do Índice de Confiança da Indústria e do Comércio, que mostraram recuperação gradual. O governo anunciou medidas para estimular o crédito e o investimento. O mercado manteve o foco nas discussões sobre a reforma administrativa e na trajetória da dívida pública.`,
-    "Agosto": `🇧🇷 **Cenário Brasil:** Agosto de ${ano} foi marcado pela 'saída de verão' nos mercados do hemisfério norte, reduzindo a liquidez global. No Brasil, a agenda fiscal avançou com a votação de medidas importantes no Congresso. Os dados de emprego mostraram resiliência, com a taxa de desemprego em patamares historicamente baixos.`,
-    "Setembro": `🇧🇷 **Cenário Brasil:** Setembro de ${ano} foi marcado pela divulgação do PIB do segundo trimestre, que surpreendeu positivamente. O mercado acompanhou as discussões sobre o Orçamento para o próximo ano. O Copom sinalizou cautela diante das incertezas externas e fiscais, mantendo o ritmo de cortes moderado.`,
-    "Outubro": `🇧🇷 **Cenário Brasil:** Outubro de ${ano} foi marcado pela reta final das eleições municipais e seus desdobramentos políticos. O governo enviou o projeto de Lei Orçamentária Anual ao Congresso. O mercado acompanhou atento à composição das novas maiorias e à capacidade do governo de aprovar pautas de interesse.`,
-    "Novembro": `🇧🇷 **Cenário Brasil:** Novembro de ${ano} foi marcado pela Black Friday e pelo início da temporada de compras de fim de ano. O varejo mostrou recuperação, enquanto a indústria segue com capacidade ociosa. O mercado começou a projetar o cenário para ${parseInt(ano)+1}, com expectativas de continuidade do ciclo de cortes da Selic.`,
-    "Dezembro": `🇧🇷 **Cenário Brasil:** Dezembro de ${ano} foi marcado pela aprovação do Orçamento para ${parseInt(ano)+1} e pelos dados fiscais de fim de ano. O governo anunciou medidas de ajuste para manter a trajetória da dívida sob controle. O mercado encerrou o ano com cautela moderada, projetando um ${parseInt(ano)+1} desafiador, mas com oportunidades.`
-  };
-  return cenarios[mes] || `🇧🇷 **Cenário Brasil:** O mês de ${mes} de ${ano} foi marcado por um ambiente de atenção às decisões de política monetária e à tramitação da agenda fiscal no Congresso. O mercado acompanhou de perto os indicadores de inflação e atividade, que seguem ditando o ritmo dos cortes da Selic.`;
-}
-
-function gerarCenarioGlobal(mes, ano) {
-  const cenarios = {
-    "Janeiro": `🌍 **Cenário Global:** Janeiro de ${ano} começou com atenções voltadas à posse do novo governo nos EUA e às primeiras medidas da nova administração. Na Europa, a economia mostrou sinais de recuperação gradual, enquanto a China anunciou estímulos para conter a desaceleração. Os preços das commodities energéticas oscilaram com as tensões no Oriente Médio.`,
-    "Fevereiro": `🌍 **Cenário Global:** Fevereiro de ${ano} foi marcado pela divulgação dos dados de inflação e emprego nos EUA, que mantiveram a cautela sobre os próximos passos do Fed. Na Europa, o BCE iniciou debates sobre flexibilização monetária. Na China, os dados de atividade mostraram desaceleração, pressionando os preços das commodities.`,
-    "Março": `🌍 **Cenário Global:** Março de ${ano} foi marcado por forte volatilidade nos mercados internacionais. A escalada dos conflitos no Oriente Médio — com a intensificação da guerra no Irã — pressionou os preços do petróleo para cima. Nos EUA, os dados de inflação e emprego mantiveram o Fed em modo de espera. Na Europa, a recuperação econômica segue lenta, enquanto a China anunciou novos estímulos para conter a desaceleração imobiliária.`,
-    "Abril": `🌍 **Cenário Global:** Abril de ${ano} foi marcado pela temporada de balanços corporativos nos EUA e na Europa. As empresas de tecnologia surpreenderam positivamente, impulsionando os índices americanos. No front geopolítico, as tensões comerciais entre EUA e China voltaram à tona. Na Europa, a indústria alemã mostrou sinais de recuperação.`,
-    "Maio": `🌍 **Cenário Global:** Maio de ${ano} foi marcado pela decisão de política monetária do Fed, que manteve os juros inalterados. O mercado precificou cortes para o segundo semestre. Na Europa, o BCE sinalizou o início do ciclo de flexibilização ainda em ${ano}. Na China, os dados de exportação surpreenderam positivamente.`,
-    "Junho": `🌍 **Cenário Global:** Junho de ${ano} foi marcado pela reunião do Fed, que indicou cautela diante da inflação ainda elevada. Os juros americanos permaneceram no maior nível em duas décadas. Na Europa, o BCE iniciou o ciclo de cortes, enquanto a economia chinesa segue desacelerando, impactando os preços das commodities.`,
-    "Julho": `🌍 **Cenário Global:** Julho de ${ano} foi marcado pela temporada de balanços do segundo trimestre nos EUA. Os resultados mistos geraram volatilidade. O mercado de trabalho americano mostrou resiliência, adiando as expectativas de cortes de juros. Na Europa, a economia segue estagnada, enquanto a China anuncia novas medidas de estímulo.`,
-    "Agosto": `🌍 **Cenário Global:** Agosto de ${ano} foi marcado pela tradicional 'saída de verão' nos mercados americanos e europeus, reduzindo liquidez e amplificando movimentos. Nos EUA, os dados de inflação ao consumidor vieram dentro do esperado. Na Europa, a recuperação segue lenta, com a Alemanha enfrentando desafios na indústria automotiva.`,
-    "Setembro": `🌍 **Cenário Global:** Setembro de ${ano} foi marcado pela decisão do Fed sobre os juros, com o mercado aguardando o início do ciclo de cortes. O cenário eleitoral nos EUA para ${parseInt(ano)+1} começou a ganhar forma. Na Europa, o BCE seguiu com sua estratégia de flexibilização, enquanto a China lida com a crise no setor imobiliário.`,
-    "Outubro": `🌍 **Cenário Global:** Outubro de ${ano} foi marcado pelo aumento das tensões geopolíticas, com conflitos no Leste Europeu e no Oriente Médio. Os preços do petróleo e do gás natural dispararam. Nos EUA, a economia mostrou resiliência, adiando as expectativas de cortes agressivos de juros. Na Europa, a crise energética voltou ao centro das atenções.`,
-    "Novembro": `🌍 **Cenário Global:** Novembro de ${ano} foi marcado pelo resultado das eleições nos EUA e seus desdobramentos para o comércio global. O mercado reagiu com volatilidade às novas diretrizes de política externa. Na Europa, a economia mostrou sinais de estagnação, enquanto a China anunciou pacote fiscal bilionário para conter a desaceleração.`,
-    "Dezembro": `🌍 **Cenário Global:** Dezembro de ${ano} foi marcado pelas últimas decisões de política monetária do ano. O Fed manteve os juros inalterados, enquanto o BCE continuou com os cortes. Mercados globais encerraram o ano com expectativas de um ${parseInt(ano)+1} desafiador, com atenção redobrada aos conflitos geopolíticos e à trajetória da inflação.`
-  };
-  return cenarios[mes] || `🌍 **Cenário Global:** O mês de ${mes} de ${ano} foi marcado por atenção às decisões de política monetária dos principais bancos centrais. Nos EUA, o Fed manteve o discurso de cautela diante da inflação. Na Europa, a economia segue frágil, enquanto a China lida com a desaceleração e as tensões comerciais globais.`;
-}
-
-function gerarRelatorioHTML() {
-  let mes = dadosCarteira.mesReferencia || "março";
-  let ano = dadosCarteira.anoReferencia || "2026";
-  let rentabilidade = dadosCarteira.rentabilidadeMensal;
-  let pctCdi = dadosCarteira.pctCdi;
-  let patrimonio = dadosCarteira.patrimonio;
-  let alocacoes = dadosCarteira.alocacoes;
-  let retornos = dadosCarteira.retornos;
-  
-  let classesList = [];
-  for (let nome in alocacoes) {
-    if (alocacoes[nome] > 0) {
-      classesList.push({ nome: nome, alocacao: alocacoes[nome], retorno: retornos[nome] !== undefined ? retornos[nome] : null });
-    }
-  }
-  classesList.sort((a,b) => b.alocacao - a.alocacao);
-  
-  let desempenhoTexto = "";
-  for (let item of classesList) {
-    if (item.retorno !== null) {
-      let cor = item.retorno >= 0 ? 'relatorio-positivo' : 'relatorio-negativo';
-      let movimento = item.retorno >= 0 ? 'valorização' : 'queda';
-      desempenhoTexto += `<span class="relatorio-classe-item">• <strong>${item.nome}</strong> (${item.alocacao.toFixed(2).replace('.',',')}% da carteira): ${movimento} de <span class="${cor}">${Math.abs(item.retorno).toFixed(2).replace('.',',')}%</span></span>`;
-    }
-  }
-  
-  let rentabilidadeStr = rentabilidade !== null ? `${rentabilidade.toFixed(2).replace('.',',')}%` : "não disponível";
-  let pctCdiStr = pctCdi !== null ? `${Math.abs(pctCdi).toFixed(2).replace('.',',')}%` : "não disponível";
-  let sinalRentabilidade = (rentabilidade !== null && rentabilidade >= 0) ? 'positivo' : 'negativo';
-  let sinalClasse = (rentabilidade !== null && rentabilidade >= 0) ? 'relatorio-positivo' : 'relatorio-negativo';
-  
-  let html = `
-    <div class="relatorio-saudacao">📋 Prezado cliente, tudo bem? Segue o seu relatório mensal.</div>
-    
-    <div class="relatorio-paragrafo">
-      ${gerarCenarioBrasil(mes, ano)}
-    </div>
-    
-    <div class="relatorio-paragrafo">
-      ${gerarCenarioGlobal(mes, ano)}
-    </div>
-    
-    <div class="relatorio-dados">
-      <p>📊 <strong>Desempenho da sua carteira:</strong></p>
-      <p>Sua carteira atravessou esse ambiente com solidez, apresentando um retorno <strong class="${sinalClasse}">${sinalRentabilidade} de ${rentabilidadeStr}</strong> no mês de ${mes} de ${ano}${pctCdi !== null ? `, equivalente a <strong>${pctCdiStr} do CDI</strong> do período.` : '.'}</p>
-    </div>
-  `;
-  
-  if (patrimonio > 0) {
-    html += `<div class="relatorio-paragrafo">💰 <strong>Patrimônio atual:</strong> ${fmtBRL(patrimonio)}</div>`;
-  }
-  
-  if (classesList.length > 0) {
-    html += `<div class="relatorio-paragrafo"><strong>📈 Desempenho por classe de ativo:</strong><br>${desempenhoTexto}</div>`;
-  }
-  
-  html += `
-    <div class="relatorio-paragrafo">
-      Por fim, reforçamos a importância da disciplina na manutenção da estratégia e nos aportes focando no desenvolvimento da carteira no longo prazo. 
-      Essa postura é fundamental para atravessar diferentes ciclos de mercado, aproveitar oportunidades, reduzir os impactos das oscilações no curto prazo 
-      e manter a carteira alinhada aos seus objetivos financeiros.
-    </div>
-    
-    <div class="relatorio-assinatura">
-      Atenciosamente,<br>
-      Equipe PBF Investimentos
-    </div>
-  `;
-  
-  return html;
-}
-
 async function extrairDadosPDF(file) {
   let ab = await file.arrayBuffer();
   let pdf = await pdfjsLib.getDocument({ data: ab }).promise;
   let textoCompleto = '';
+  
   for (let p = 1; p <= pdf.numPages; p++) {
     let page = await pdf.getPage(p);
-    let tc = await page.getTextContent();
-    textoCompleto += tc.items.map(item => item.str).join(' ') + ' ';
+    let textContent = await page.getTextContent();
+    for (let item of textContent.items) {
+      if (item.str && item.str.trim()) {
+        textoCompleto += item.str + ' ';
+      }
+    }
   }
-  
-  dbg('=== TRECHO DO PDF (primeiros 2000 caracteres) ===');
-  dbg(textoCompleto.substring(0, 2000));
   
   dadosCarteira = {
     alocacoes: {}, retornos: {}, rentabilidadeMensal: null, pctCdi: null,
     dataReferencia: "", patrimonio: 0, mesReferencia: "", anoReferencia: ""
   };
   
-  // Data
-  let dataMatch = textoCompleto.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+  // ==================== DATA (20/04/2026) ====================
+  let dataMatch = textoCompleto.match(/Data de Referência[^\d]*(\d{2})\/(\d{2})\/(\d{4})/i);
+  if (!dataMatch) dataMatch = textoCompleto.match(/(\d{2})\/(\d{2})\/(\d{4})/);
   if (dataMatch) {
     let meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-    dadosCarteira.mesReferencia = meses[parseInt(dataMatch[2])-1];
+    dadosCarteira.mesReferencia = meses[parseInt(dataMatch[2]) - 1];
     dadosCarteira.anoReferencia = dataMatch[3];
-    dadosCarteira.dataReferencia = `${dadosCarteira.mesReferencia} de ${dadosCarteira.anoReferencia}`;
-    dbg('📅 Data: ' + dadosCarteira.dataReferencia);
-  } else {
-    dadosCarteira.mesReferencia = "Março";
-    dadosCarteira.anoReferencia = "2026";
-    dbg('📅 Data não encontrada, usando padrão: Março/2026');
+    dbg(`📅 Data: ${dadosCarteira.mesReferencia}/${dadosCarteira.anoReferencia}`);
   }
   
-  // Rentabilidade e %CDI
-  let mesMatch = textoCompleto.match(/M[ÊE]S[\s\S]*?[\-\+]?\s*(\d+,\d{2})\s*%\s*([\-\+]?\s*\d+,\d{2})\s*%/i);
-  if (!mesMatch) mesMatch = textoCompleto.match(/M[ÊE]S[^\d]*(\d+,\d{2})%\s*([\-\+]?\d+,\d{2})%/i);
-  if (mesMatch) {
-    dadosCarteira.rentabilidadeMensal = parseFloat(mesMatch[1].replace(',', '.'));
-    dadosCarteira.pctCdi = parseFloat(mesMatch[2].replace(',', '.'));
-    dbg(`📈 Rentabilidade Mensal: ${dadosCarteira.rentabilidadeMensal}% | %CDI: ${dadosCarteira.pctCdi}%`);
+  // ==================== RENTABILIDADE MÊS ====================
+  // Procura por "RENTABILIDADE MÊS: 1,40%"
+  let rentMesMatch = textoCompleto.match(/RENTABILIDADE\s+M[ÊE]S:\s*(\d+),(\d{2})%/i);
+  if (rentMesMatch) {
+    dadosCarteira.rentabilidadeMensal = parseFloat(rentMesMatch[1] + '.' + rentMesMatch[2]);
+    dbg(`📈 Rentabilidade Mensal: ${dadosCarteira.rentabilidadeMensal}%`);
   } else {
-    dbg('⚠️ Rentabilidade mensal não encontrada no PDF');
+    // Fallback: busca na tabela de referências "Portfólio   1 , 40 %"
+    let refMatch = textoCompleto.match(/Portfólio\s+(\d+)\s*,\s*(\d{2})\s*%/i);
+    if (refMatch) {
+      dadosCarteira.rentabilidadeMensal = parseFloat(refMatch[1] + '.' + refMatch[2]);
+      dbg(`📈 Rentabilidade (fallback): ${dadosCarteira.rentabilidadeMensal}%`);
+    }
   }
   
-  // Estratégias
-  let idx = textoCompleto.indexOf('Estratégias');
-  if (idx !== -1) {
-    let secao = textoCompleto.substring(idx, idx + 2000);
-    dbg('=== SEÇÃO Estratégias ===');
-    dbg(secao.substring(0, 1200));
+  // ==================== %CDI ====================
+  // Procura na tabela RESUMO: "MÊS   R$ 28.978,37   1,40%   197,26%"
+  let cdiMatch = textoCompleto.match(/M[ÊE]S[^\d]*R\$\s*[\d\.]+,\d{2}\s+(\d+),(\d{2})%\s+(\d+),(\d{2})%/i);
+  if (cdiMatch) {
+    dadosCarteira.pctCdi = parseFloat(cdiMatch[3] + '.' + cdiMatch[4]);
+    dbg(`📊 %CDI: ${dadosCarteira.pctCdi}%`);
+  }
+  
+  // ==================== PATRIMÔNIO ====================
+  let patMatch = textoCompleto.match(/PATRIM[OÔ]NIO\s+TOTAL\s+BRUTO:\s*R\$\s*([\d\.]+),(\d{2})/i);
+  if (patMatch) {
+    let valor = patMatch[1].replace(/\./g, '');
+    dadosCarteira.patrimonio = parseFloat(valor + '.' + patMatch[2]);
+    dbg(`💰 Patrimônio: R$ ${dadosCarteira.patrimonio.toFixed(2)}`);
+  }
+  
+  // ==================== ESTRATÉGIAS ====================
+  // Procura a seção "Estratégias" e pega o texto
+  let estrategiasIndex = textoCompleto.indexOf('Estratégias');
+  if (estrategiasIndex !== -1) {
+    let secao = textoCompleto.substring(estrategiasIndex, estrategiasIndex + 2000);
+    dbg('\n=== SEÇÃO Estratégias (bruta) ===');
+    dbg(secao);
     
-    const mapping = {
-      "Pós Fixado": "Renda Fixa Pós", "Pré Fixado": "Renda Fixa Pré",
-      "Inflação": "Renda Fixa Inflação", "Multimercado": "Multiestratégia",
-      "Renda Variável Brasil": "Renda Variável", "Alternativo": "Alternativo",
-      "Renda Variável Global": "Renda Variável Global", "Fundos Listados": "Fundos Listados",
-      "Caixa": "Caixa", "Renda Fixa Global": "Renda Fixa Global"
-    };
+    // Divide em linhas
+    let linhas = secao.split(/\n/);
     
-    let lines = secao.split(/\n/);
-    for (let line of lines) {
-      let match = line.match(/([A-Za-zÀ-Úà-û\s]+?)\s*\(\s*(\d{1,3})\s*,\s*(\d{2})\s*%\)/i);
-      if (match) {
-        let nomePDF = match[1].trim();
+    for (let linha of linhas) {
+      // Padrão: "Pós Fixado   ( 36 , 75 %)   R $   761.750,29   0 , 66 %"
+      // Remove espaços extras e procura números
+      let linhaLimpa = linha.replace(/\s+/g, ' ').trim();
+      
+      // Padrão: nome ( xx,xx% ) ... xx,xx%
+      let regex = /^([A-Za-zÀ-Úà-û\s]+?)\s*\(\s*(\d+)\s*,\s*(\d+)\s*%\).*?(\d+)\s*,\s*(\d+)\s*%/i;
+      let match = linhaLimpa.match(regex);
+      
+      if (match && !match[1].includes('Estratégias') && !match[1].includes('Saldo')) {
+        let nome = match[1].trim();
         let alocacao = parseFloat(match[2] + '.' + match[3]);
-        let nomeSistema = mapping[nomePDF] || nomePDF;
+        let retorno = parseFloat(match[4] + '.' + match[5]);
         
-        let retMatch = line.match(/([\-\+]?\s*\d{1,3}\s*,\s*\d{2})\s*%/);
-        let retorno = retMatch ? parseFloat(retMatch[1].replace(/\s/g, '').replace(',', '.')) : null;
+        // Ajusta nome para versão amigável
+        if (nome === 'Pós Fixado') nome = 'Pós-Fixado';
+        if (nome === 'Pré Fixado') nome = 'Pré-Fixado';
+        if (nome === 'In fl ação') nome = 'Inflação';
+        if (nome === 'Renda Variável Brasil') nome = 'Renda Variável Brasil';
+        if (nome === 'Renda Variável Global') nome = 'Renda Variável Global';
+        if (nome === 'Renda Fixa Global') nome = 'Renda Fixa Global';
         
-        if (nomeSistema && alocacao > 0) {
-          dadosCarteira.alocacoes[nomeSistema] = alocacao;
-          if (retorno !== null) dadosCarteira.retornos[nomeSistema] = retorno;
-          dbg(`✅ ${nomePDF} → ${nomeSistema}: ${alocacao}% | retorno: ${retorno !== null ? retorno + '%' : 'n/d'}`);
+        if (alocacao > 0 && alocacao <= 100 && !dadosCarteira.alocacoes[nome]) {
+          dadosCarteira.alocacoes[nome] = alocacao;
+          dadosCarteira.retornos[nome] = retorno;
+          dbg(`✅ ${nome}: ${alocacao}% da carteira, retorno: ${retorno}%`);
         }
       }
     }
-  } else {
-    dbg('⚠️ Seção "Estratégias" não encontrada');
   }
   
-  // Patrimônio
-  let patMatch = textoCompleto.match(/PATRIM[OÔ]NIO\s*TOTAL\s*BRUTO[:\s]*R\$\s*([\d\.]+,\d{2})/i);
-  if (patMatch) {
-    dadosCarteira.patrimonio = parseFloat(patMatch[1].replace(/\./g, '').replace(',', '.'));
-    dbg(`💰 Patrimônio: R$ ${dadosCarteira.patrimonio.toFixed(2)}`);
-  } else {
-    dbg('⚠️ Patrimônio não encontrado');
+  // Fallback: busca linha por linha no texto completo
+  let linhas = textoCompleto.split(/\n/);
+  for (let linha of linhas) {
+    if (linha.includes('( ') && linha.includes('%)') && linha.includes('R $')) {
+      let linhaLimpa = linha.replace(/\s+/g, ' ').trim();
+      let regex = /([A-Za-zÀ-Úà-û\s]+?)\s*\(\s*(\d+)\s*,\s*(\d+)\s*%\).*?(\d+)\s*,\s*(\d+)\s*%/i;
+      let match = linhaLimpa.match(regex);
+      if (match && !match[1].includes('Estratégias') && !dadosCarteira.alocacoes[match[1].trim()]) {
+        let nome = match[1].trim();
+        let alocacao = parseFloat(match[2] + '.' + match[3]);
+        let retorno = parseFloat(match[4] + '.' + match[5]);
+        if (alocacao > 0 && alocacao <= 100) {
+          dadosCarteira.alocacoes[nome] = alocacao;
+          dadosCarteira.retornos[nome] = retorno;
+          dbg(`✅ (fallback) ${nome}: ${alocacao}% | retorno: ${retorno}%`);
+        }
+      }
+    }
   }
   
   dbg('\n=== RESUMO FINAL ===');
-  dbg(`Data: ${dadosCarteira.dataReferencia}`);
-  dbg(`Alocações capturadas: ${Object.keys(dadosCarteira.alocacoes).join(', ') || 'nenhuma'}`);
-  dbg(`Retornos capturados: ${Object.keys(dadosCarteira.retornos).join(', ') || 'nenhum'}`);
+  dbg(`Data: ${dadosCarteira.mesReferencia}/${dadosCarteira.anoReferencia}`);
+  dbg(`Rentabilidade: ${dadosCarteira.rentabilidadeMensal !== null ? dadosCarteira.rentabilidadeMensal + '%' : 'não encontrada'}`);
+  dbg(`%CDI: ${dadosCarteira.pctCdi !== null ? dadosCarteira.pctCdi + '%' : 'não encontrado'}`);
+  dbg(`Patrimônio: ${dadosCarteira.patrimonio > 0 ? 'R$ ' + dadosCarteira.patrimonio : 'não encontrado'}`);
+  dbg('Alocações:', dadosCarteira.alocacoes);
+  dbg('Retornos:', dadosCarteira.retornos);
   
   return { alocacoes: dadosCarteira.alocacoes, patrimonio: dadosCarteira.patrimonio };
 }
-
-// Eventos
-document.getElementById('btnToggleDebug').addEventListener('click', () => {
-  document.getElementById('debugBox').classList.toggle('show');
-  document.getElementById('debugArrow').classList.toggle('rotated');
-});
-
-document.getElementById('filePdf').addEventListener('change', function() {
-  document.getElementById('fileName').textContent = this.files[0]?.name || 'Selecionar arquivo PDF...';
-});
-
-document.getElementById('btnImportar').addEventListener('click', async () => {
-  let file = document.getElementById('filePdf').files[0];
-  if (!file) { setStatus('Selecione um arquivo PDF primeiro.', 'err'); return; }
-  clearDebug();
-  document.getElementById('overlay').classList.add('show');
-  try {
-    await extrairDadosPDF(file);
-    document.getElementById('relatorioConteudo').innerHTML = gerarRelatorioHTML();
-    setStatus('✅ PDF importado com sucesso! Relatório gerado.', 'ok');
-    if (dadosCarteira.patrimonio > 0) {
-      document.getElementById('patrimVal').innerHTML = fmtBRL(dadosCarteira.patrimonio);
-      document.getElementById('patrimTag').classList.add('show');
-    } else {
-      document.getElementById('patrimTag').classList.remove('show');
-    }
-  } catch (e) {
-    setStatus('Erro ao processar PDF: ' + e.message, 'err');
-    dbg('ERRO: ' + e.message);
-  } finally {
-    document.getElementById('overlay').classList.remove('show');
-  }
-});
-
-document.getElementById('btnLimpar').addEventListener('click', () => {
-  dadosCarteira = {
-    alocacoes: {}, retornos: {}, rentabilidadeMensal: null, pctCdi: null,
-    dataReferencia: "", patrimonio: 0, mesReferencia: "", anoReferencia: ""
-  };
-  document.getElementById('status').classList.remove('show');
-  document.getElementById('patrimTag').classList.remove('show');
-  document.getElementById('relatorioConteudo').innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text3);">⚡ Importe um PDF para gerar o relatório automático</div>';
-  clearDebug();
-  document.getElementById('filePdf').value = '';
-  document.getElementById('fileName').textContent = 'Selecionar arquivo PDF...';
-});
-
-document.getElementById('themeToggle').addEventListener('click', () => {
-  document.body.classList.toggle('light');
-  localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
-  document.getElementById('themeToggle').textContent = document.body.classList.contains('light') ? '☀️' : '🌙';
-});
-
-(function init() {
-  if (localStorage.getItem('theme') === 'light') document.body.classList.add('light');
-  document.getElementById('hDate').textContent = new Date().toLocaleDateString('pt-BR');
-})();
-</script>
-</body>
-</html>
