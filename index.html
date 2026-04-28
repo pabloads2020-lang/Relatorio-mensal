@@ -238,11 +238,7 @@ async function extrairDadosPDF(file) {
   };
   
   // Processa apenas as páginas 1, 2 e 5
-  let paginasParaProcessar = [1, 2, 5];
-  
-  for (let p of paginasParaProcessar) {
-    if (p > pdf.numPages) continue;
-    
+  for (let p = 1; p <= Math.min(pdf.numPages, 6); p++) {
     let page = await pdf.getPage(p);
     let textContent = await page.getTextContent();
     let texto = '';
@@ -252,12 +248,22 @@ async function extrairDadosPDF(file) {
       }
     }
     
-    dbg(`\n--- PÁGINA ${p} ---`);
-    dbg(texto.substring(0, 2000));
+    // LIMPEZA AGRESSIVA: remove todos os espaços dentro dos números
+    let textoLimpo = texto;
+    textoLimpo = textoLimpo.replace(/(\d+)\s*,\s*(\d+)/g, '$1,$2');
+    textoLimpo = textoLimpo.replace(/(\d+)\s*\.\s*(\d+)/g, '$1.$2');
+    textoLimpo = textoLimpo.replace(/\s*%\s*/g, '%');
+    textoLimpo = textoLimpo.replace(/R\s*\$\s*/g, 'R$');
+    textoLimpo = textoLimpo.replace(/\s+/g, ' ');
+    
+    if (p === 1 || p === 2 || p === 5) {
+      dbg(`\n--- PÁGINA ${p} (LIMPA) ---`);
+      dbg(textoLimpo.substring(0, 1500));
+    }
     
     // PÁGINA 1 - Data
     if (p === 1) {
-      let dataMatch = texto.match(/Data de Referência\s+(\d{2})\/(\d{2})\/(\d{4})/);
+      let dataMatch = textoLimpo.match(/Data de Referência\s+(\d{2})\/(\d{2})\/(\d{4})/);
       if (dataMatch) {
         let meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
         dadosCarteira.mesReferencia = meses[parseInt(dataMatch[2]) - 1];
@@ -269,7 +275,7 @@ async function extrairDadosPDF(file) {
     // PÁGINA 2 - Patrimônio, Rentabilidade e %CDI
     if (p === 2) {
       // Patrimônio
-      let patMatch = texto.match(/PATRIM[OÔ]NIO\s+TOTAL\s+BRUTO:\s*R\$?(\d+\.?\d*),(\d{2})/i);
+      let patMatch = textoLimpo.match(/PATRIM[OÔ]NIO\s+TOTAL\s+BRUTO:\s*R\$(\d+\.?\d*),(\d{2})/i);
       if (patMatch) {
         let valor = patMatch[1].replace(/\./g, '') + '.' + patMatch[2];
         dadosCarteira.patrimonio = parseFloat(valor);
@@ -277,42 +283,28 @@ async function extrairDadosPDF(file) {
       }
       
       // Rentabilidade Mensal
-      let rentMatch = texto.match(/RENTABILIDADE\s+M[ÉE]S:\s*(\d+),(\d{2})%/i);
+      let rentMatch = textoLimpo.match(/RENTABILIDADE\s+M[ÉE]S:\s*(\d+),(\d{2})%/i);
       if (rentMatch) {
         dadosCarteira.rentabilidadeMensal = parseFloat(rentMatch[1] + '.' + rentMatch[2]);
         dbg(`📈 Rentabilidade Mensal: ${dadosCarteira.rentabilidadeMensal}%`);
       }
       
-      // %CDI - busca manual
-      let cdiMatch = texto.match(/M[ÊE]S[^\d]*R\s*\$\s*[\d\s\.]+,?\d+\s+(\d+)\s*,\s*(\d{2})\s*%\s+(\d+)\s*,\s*(\d{2})\s*%/i);
+      // %CDI
+      let cdiMatch = textoLimpo.match(/M[ÊE]S[^\d]*R\$[\d\.,]+\s+(\d+),(\d{2})%\s+(\d+),(\d{2})%/i);
       if (cdiMatch) {
         dadosCarteira.pctCdi = parseFloat(cdiMatch[3] + '.' + cdiMatch[4]);
         dbg(`📊 %CDI: ${dadosCarteira.pctCdi}%`);
       }
     }
     
-    // PÁGINA 5 - Estratégias (busca manual para cada classe)
+    // PÁGINA 5 - Estratégias
     if (p === 5) {
-      dbg('\n--- BUSCANDO ESTRATÉGIAS ---');
-      
-      // Função auxiliar para extrair valores
-      function extrairDados(texto, nomeBusca) {
-        // Busca padrão: "Pós Fixado ( 36 , 75 %) R $ 761 . 750 , 29 0 , 66 %"
-        let regex = new RegExp(nomeBusca + '\\s*\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*%\\)[\\s\\S]*?R\\s*\\$[\\s\\d\\.]+,\\d+\\s+(\\d+)\\s*,\\s*(\\d+)\\s*%', 'i');
-        let match = regex.exec(texto);
-        if (match) {
-          return {
-            alocacao: parseFloat(match[1] + '.' + match[2]),
-            retorno: parseFloat(match[3] + '.' + match[4])
-          };
-        }
-        return null;
-      }
+      dbg('\n--- BUSCANDO ESTRATÉGIAS NA PÁGINA 5 ---');
       
       // Lista de estratégias
       let estrategias = [
         { nome: 'Pós Fixado', final: 'Pós-Fixado' },
-        { nome: 'In fl ação', final: 'Inflação' },
+        { nome: 'In fl ação', final: 'Inflação', nomeBusca: 'In fl ação' },
         { nome: 'Pré Fixado', final: 'Pré-Fixado' },
         { nome: 'Renda Variável Brasil', final: 'Renda Variável Brasil' },
         { nome: 'Alternativo', final: 'Alternativo' },
@@ -321,11 +313,16 @@ async function extrairDadosPDF(file) {
       ];
       
       for (let item of estrategias) {
-        let dados = extrairDados(texto, item.nome);
-        if (dados) {
-          dadosCarteira.alocacoes[item.final] = dados.alocacao;
-          dadosCarteira.retornos[item.final] = dados.retorno;
-          dbg(`✅ ${item.final}: alocação ${dados.alocacao}%, retorno ${dados.retorno}%`);
+        let nomeBusca = item.nomeBusca || item.nome;
+        // Padrão: Pós Fixado (36,75%) R$761.750,29 0,66%
+        let regex = new RegExp(nomeBusca + '\\s*\\((\\d+),(\\d+)%\\)\\s*R\\$[\\d\\.]+,\\d+\\s+(\\d+),(\\d+)%', 'i');
+        let match = regex.exec(textoLimpo);
+        if (match) {
+          let alocacao = parseFloat(match[1] + '.' + match[2]);
+          let retorno = parseFloat(match[3] + '.' + match[4]);
+          dadosCarteira.alocacoes[item.final] = alocacao;
+          dadosCarteira.retornos[item.final] = retorno;
+          dbg(`✅ ${item.final}: alocação ${alocacao}%, retorno ${retorno}%`);
         }
       }
     }
