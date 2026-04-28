@@ -73,15 +73,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .arrow { transition: transform 0.2s ease; display: inline-block; }
 .arrow.rotated { transform: rotate(90deg); }
 .relatorio-container { background: var(--relatorio-bg); border-radius: 12px; padding: 1.5rem; }
-.relatorio-saudacao { font-size: 15px; margin-bottom: 1.25rem; color: var(--gold); font-weight: 500; }
-.relatorio-paragrafo { font-size: 14px; line-height: 1.6; margin-bottom: 1rem; color: var(--text); }
-.relatorio-dados { background: var(--bg3); border-radius: 10px; padding: 1rem; margin: 1rem 0; border-left: 3px solid var(--gold); }
-.relatorio-dados p { margin: 0.5rem 0; font-size: 14px; }
-.relatorio-dados strong { color: var(--gold); }
-.relatorio-classe-item { margin: 0.25rem 0; font-size: 14px; display: block; }
-.relatorio-positivo { color: var(--green); }
-.relatorio-negativo { color: var(--red); }
-.relatorio-assinatura { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 13px; color: var(--text3); font-style: italic; }
+.relatorio-texto { font-size: 14px; line-height: 1.6; color: var(--text); white-space: pre-wrap; }
 .cenario-textarea { width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; padding: 12px; color: var(--text); font-size: 14px; font-family: 'DM Sans', sans-serif; resize: vertical; margin-top: 0.5rem; }
 .cenario-textarea:focus { outline: none; border-color: var(--gold); }
 </style>
@@ -145,7 +137,7 @@ function setStatus(msg, tipo) {
 function dbg(txt) { debugLines.push(txt); document.getElementById('debugBox').textContent = debugLines.join('\n'); }
 function clearDebug() { debugLines = []; document.getElementById('debugBox').textContent = ''; }
 
-// FUNÇÃO MÁGICA DO GEMINI - Remove TODOS os espaços
+// FUNÇÃO MÁGICA - Remove TODOS os espaços
 function superLimpeza(texto) {
     return texto.replace(/\s+/g, '');
 }
@@ -164,19 +156,15 @@ async function extrairDadosPDF(file) {
     anoReferencia: ""
   };
   
-  // Processa apenas as primeiras 6 páginas
   for (let p = 1; p <= Math.min(pdf.numPages, 6); p++) {
     let page = await pdf.getPage(p);
     let textContent = await page.getTextContent();
     let textoOriginal = textContent.items.map(item => item.str).join(' ');
-    
-    // APLICA A SUPREMA LIMPEZA (remove todos os espaços)
     let textoLimpo = superLimpeza(textoOriginal);
     
     dbg(`\n--- PÁGINA ${p} (LIMPA) ---`);
     dbg(textoLimpo.substring(0, 800));
     
-    // DATA (página 1)
     if (p === 1) {
       let dataMatch = textoLimpo.match(/DataDeReferência(\d{2})\/(\d{2})\/(\d{4})/);
       if (dataMatch) {
@@ -187,14 +175,12 @@ async function extrairDadosPDF(file) {
       }
     }
     
-    // PATRIMÔNIO e RENTABILIDADE (página 2)
     let patMatch = textoLimpo.match(/PATRIMÔNIOTOTALBRUTO:R\$([\d\.]+,\d{2})/i);
     if (patMatch) {
       dados.patrimonio = patMatch[1];
       dbg(`💰 Patrimônio: R$ ${dados.patrimonio}`);
     }
     
-    // Rentabilidade e %CDI - padrão: R$28.978,371,40%197,26%
     let rentMatch = textoLimpo.match(/R\$[\d\.]+,\d{2}([\d,]+)%([\d,]+)%/i);
     if (rentMatch && !dados.rentabilidadeMensal) {
       dados.rentabilidadeMensal = rentMatch[1].replace(',', '.');
@@ -203,7 +189,6 @@ async function extrairDadosPDF(file) {
       dbg(`📊 %CDI: ${dados.pctCdi}%`);
     }
     
-    // ESTRATÉGIAS - busca por cada classe
     const classes = [
       { busca: 'PósFixado', nome: 'Pós-Fixado' },
       { busca: 'Inflação', nome: 'Inflação' },
@@ -215,7 +200,6 @@ async function extrairDadosPDF(file) {
     ];
     
     for (let item of classes) {
-      // Padrão: PósFixado(36,75%)R$761.750,290,66%
       let regex = new RegExp(item.busca + '\\((\\d+),(\\d+)%\\)R\\$[\\d\\.]+,\\d+(\\d+),(\\d+)%', 'i');
       let match = regex.exec(textoLimpo);
       if (match) {
@@ -228,18 +212,10 @@ async function extrairDadosPDF(file) {
     }
   }
   
-  dbg('\n=== RESUMO FINAL ===');
-  dbg(`Data: ${dados.mesReferencia}/${dados.anoReferencia}`);
-  dbg(`Rentabilidade: ${dados.rentabilidadeMensal}%`);
-  dbg(`%CDI: ${dados.pctCdi}%`);
-  dbg(`Patrimônio: R$ ${dados.patrimonio}`);
-  dbg('Alocações:', JSON.stringify(dados.alocacoes));
-  dbg('Retornos:', JSON.stringify(dados.retornos));
-  
   return dados;
 }
 
-function gerarRelatorioHTML(dados) {
+function gerarRelatorioTexto(dados) {
   let mes = dados.mesReferencia || "abril";
   let ano = dados.anoReferencia || "2026";
   let rentabilidade = dados.rentabilidadeMensal;
@@ -248,10 +224,8 @@ function gerarRelatorioHTML(dados) {
   let alocacoes = dados.alocacoes;
   let retornos = dados.retornos;
   
-  // Pega o cenário do textarea
   let cenario = document.getElementById('textoCenario').value;
   
-  // Constrói o texto de desempenho por classe
   let desempenhoTexto = "";
   let ordem = ['Pós-Fixado', 'Pré-Fixado', 'Inflação', 'Multimercado', 'Alternativo', 'Renda Variável Brasil', 'Renda Variável Global'];
   
@@ -260,57 +234,30 @@ function gerarRelatorioHTML(dados) {
       let aloc = alocacoes[nome].replace(',', '.');
       let ret = retornos[nome].replace(',', '.');
       let retNum = parseFloat(ret);
-      let cor = retNum >= 0 ? 'relatorio-positivo' : 'relatorio-negativo';
-      let movimento = retNum >= 0 ? 'valorização de' : 'queda de';
-      let sinal = retNum >= 0 ? '+' : '';
-      desempenhoTexto += `<span class="relatorio-classe-item">• <strong>${nome}</strong> (${aloc}% da carteira): ${movimento} <span class="${cor}">${sinal}${ret}%</span> no mês</span>`;
+      let movimento = retNum >= 0 ? 'subiu' : 'recuou';
+      desempenhoTexto += `${nome} (${aloc}% da carteira) ${movimento} ${ret}%; `;
     }
   }
   
   if (desempenhoTexto === "") {
-    desempenhoTexto = "<span class=\"relatorio-classe-item\">⚠️ Não foi possível capturar os retornos individuais das classes no PDF.</span>";
+    desempenhoTexto = "Não foi possível capturar os retornos individuais das classes no PDF.";
   }
   
   let rentabilidadeStr = rentabilidade ? `${rentabilidade.replace(',', '.')}%` : "não disponível";
   let pctCdiStr = pctCdi ? `${pctCdi.replace(',', '.')}%` : "não disponível";
-  let sinalRentabilidade = (rentabilidade && parseFloat(rentabilidade.replace(',', '.')) >= 0) ? 'positivo' : 'negativo';
-  let sinalClasse = (rentabilidade && parseFloat(rentabilidade.replace(',', '.')) >= 0) ? 'relatorio-positivo' : 'relatorio-negativo';
+  let patrimonioStr = patrimonio ? fmtBRL(parseFloat(patrimonio.replace(/\./g, '').replace(',', '.'))) : "";
   
-  let html = `
-    <div class="relatorio-saudacao">📋 Prezado cliente, tudo bem? Segue o seu relatório mensal.</div>
-    
-    <div class="relatorio-paragrafo">
-      ${cenario}
-    </div>
-    
-    <div class="relatorio-dados">
-      <p>📊 <strong>Desempenho da sua carteira:</strong></p>
-      <p>Sua carteira atravessou esse ambiente com solidez, apresentando um retorno <strong class="${sinalClasse}">${sinalRentabilidade} de ${rentabilidadeStr}</strong> no mês de ${mes.toLowerCase()} de ${ano}, <strong>equivalente a ${pctCdiStr} do CDI</strong> do período.</p>
-    </div>
-  `;
+  let texto = `Prezado cliente, tudo bem? Segue o seu relatório mensal.
+
+${cenario}
+
+Sua carteira atravessou esse ambiente com solidez, apresentando um retorno de ${rentabilidadeStr} no mês de ${mes.toLowerCase()} de ${ano}, equivalente a ${pctCdiStr} do CDI do período.${patrimonioStr ? ` O patrimônio atual é de ${patrimonioStr}.` : ''}
+
+No desempenho por classe de ativo: ${desempenhoTexto}
+
+Por fim, reforçamos a importância da disciplina na manutenção da estratégia e nos aportes focando no desenvolvimento da carteira no longo prazo. Essa postura é fundamental para atravessar diferentes ciclos de mercado, aproveitar oportunidades, reduzir os impactos das oscilações no curto prazo e manter a carteira alinhada aos seus objetivos financeiros.`;
   
-  if (patrimonio) {
-    html += `<div class="relatorio-paragrafo">💰 <strong>Patrimônio atual:</strong> ${fmtBRL(parseFloat(patrimonio.replace(/\./g, '').replace(',', '.')))}</div>`;
-  }
-  
-  if (desempenhoTexto) {
-    html += `<div class="relatorio-paragrafo"><strong>📈 Desempenho por classe de ativo no mês:</strong><br>${desempenhoTexto}</div>`;
-  }
-  
-  html += `
-    <div class="relatorio-paragrafo">
-      Por fim, reforçamos a importância da disciplina na manutenção da estratégia e nos aportes focando no desenvolvimento da carteira no longo prazo. 
-      Essa postura é fundamental para atravessar diferentes ciclos de mercado, aproveitar oportunidades, reduzir os impactos das oscilações no curto prazo 
-      e manter a carteira alinhada aos seus objetivos financeiros.
-    </div>
-    
-    <div class="relatorio-assinatura">
-      Atenciosamente,<br>
-      Equipe PBF Investimentos
-    </div>
-  `;
-  
-  return html;
+  return texto;
 }
 
 // Eventos
@@ -341,7 +288,8 @@ document.getElementById('btnImportar').addEventListener('click', async () => {
   try {
     let dados = await extrairDadosPDF(file);
     dadosProcessados = dados;
-    document.getElementById('relatorioConteudo').innerHTML = gerarRelatorioHTML(dados);
+    let textoFinal = gerarRelatorioTexto(dados);
+    document.getElementById('relatorioConteudo').innerHTML = `<div class="relatorio-texto">${textoFinal.replace(/\n/g, '<br>')}</div>`;
     setStatus('✅ PDF importado com sucesso! Relatório gerado.', 'ok');
     if (dados.patrimonio) {
       document.getElementById('patrimVal').innerHTML = fmtBRL(parseFloat(dados.patrimonio.replace(/\./g, '').replace(',', '.')));
