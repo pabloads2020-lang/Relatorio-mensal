@@ -18,7 +18,6 @@
   --blue: #3498db; --blue-bg: rgba(52,152,219,0.12);
   --header-bg: #161b25; --header-border: rgba(255,255,255,0.07);
   --card-bg: #161b25; --card-border: rgba(255,255,255,0.07);
-  --input-bg: #1c2333; --input-border: rgba(255,255,255,0.13);
   --debug-bg: #1c2333; --overlay-bg: rgba(14,17,23,.88);
   --footer-border: rgba(255,255,255,0.07);
   --relatorio-bg: linear-gradient(135deg, rgba(245,200,66,0.03) 0%, rgba(52,152,219,0.03) 100%);
@@ -33,7 +32,6 @@ body.light {
   --amber: #e67e22; --amber-bg: rgba(230,126,34,0.1);
   --header-bg: #ffffff; --header-border: rgba(0,0,0,0.08);
   --card-bg: #ffffff; --card-border: rgba(0,0,0,0.08);
-  --input-bg: #ffffff; --input-border: #e2e8f0;
   --debug-bg: #f7fafc; --overlay-bg: rgba(255,255,255,.95);
   --footer-border: rgba(0,0,0,0.08);
 }
@@ -65,7 +63,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 .patrim-tag.show { display: flex; }
 .btn-debug { background: transparent; border: 1px solid var(--border2); border-radius: 20px; padding: 4px 12px; font-size: 11px; font-weight: 500; cursor: pointer; color: var(--text2); display: flex; align-items: center; gap: 6px; margin-top: 1rem; }
 .btn-debug:hover { border-color: var(--gold); color: var(--gold); background: rgba(245,200,66,0.1); }
-.debug-box { display: none; background: var(--debug-bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; font-size: 12px; max-height: 250px; overflow-y: auto; white-space: pre-wrap; margin-top: 0.5rem; font-family: monospace; }
+.debug-box { display: none; background: var(--debug-bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; font-size: 12px; max-height: 300px; overflow-y: auto; white-space: pre-wrap; margin-top: 0.5rem; font-family: monospace; }
 .debug-box.show { display: block; }
 .overlay { display: none; position: fixed; inset: 0; background: var(--overlay-bg); z-index: 200; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; }
 .overlay.show { display: flex; }
@@ -155,36 +153,36 @@ function gerarCenarioBrasil(mes, ano) {
   const cenarios = {
     "Janeiro": `🇧🇷 **Cenário Brasil:** O mês de janeiro de ${ano} foi marcado pelo início do ano com ajustes de posições nos mercados. O governo enviou ao Congresso as diretrizes orçamentárias, enquanto o mercado acompanhou de perto os primeiros sinais de atividade econômica. O IPCA-15 veio dentro das expectativas, mantendo as projeções de inflação ancoradas.`,
     "Fevereiro": `🇧🇷 **Cenário Brasil:** Fevereiro de ${ano} foi marcado pela divulgação do PIB do quarto trimestre, que mostrou resiliência da economia. O mercado acompanhou as discussões sobre a reforma tributária no Senado. A arrecadação recorde trouxe algum alívio às preocupações fiscais, mas o cenário ainda demanda atenção.`,
-    "Março": `🇧🇷 **Cenário Brasil:** Março de ${ano} foi marcado pela divulgação do IPCA, que veio alinhado às expectativas, abrindo espaço para o primeiro corte da Selic (de 15% para 14,75%), dando início ao ciclo de flexibilização da política monetária. O mercado comemorou a sinalização do BACEN, mas segue atento ao arcabouço fiscal e à trajetória da dívida pública.`,
+    "Março": `🇧🇷 **Cenário Brasil:** Março de ${ano} foi marcado pela divulgação do IPCA, que veio alinhado às expectativas. O Banco Central deu início ao ciclo de flexibilização da política monetária com o primeiro corte da Selic. O mercado comemorou a sinalização, mas segue atento ao arcabouço fiscal e à trajetória da dívida pública.`,
     "Abril": `🇧🇷 **Cenário Brasil:** Abril de ${ano} foi marcado pela temporada de balanços das empresas de capital aberto. O mercado começou a precificar os próximos passos do Copom, com expectativas de novos cortes na Selic. A pauta fiscal permaneceu no centro das atenções, com a tramitação de medidas de ajuste no Congresso.`,
-    "Maio": `🇧🇷 **Cenário Brasil:** Maio de ${ano} foi marcado por tensões políticas e avanço da agenda de reformas. O mercado acompanhou a tramitação do arcabouço fiscal na Câmara. Os dados de atividade econômica mostraram resiliência, enquanto a inflação segue controlada, permitindo ao BACEN dar continuidade ao ciclo de cortes.`,
-    "Junho": `🇧🇷 **Cenário Brasil:** Junho de ${ano} foi marcado pela decisão do Copom, que manteve o tom hawkish diante das incertezas fiscais. O mercado reduziu as expectativas de cortes mais agressivos da Selic. A arrecadação federal surpreendeu positivamente, mas o cenário fiscal ainda preocupa os agentes.`,
-    "Julho": `🇧🇷 **Cenário Brasil:** Julho de ${ano} foi marcado pela divulgação do Índice de Confiança da Indústria e do Comércio, que mostraram recuperação gradual. O governo anunciou medidas para estimular o crédito e o investimento. O mercado manteve o foco nas discussões sobre a reforma administrativa e na trajetória da dívida pública.`,
-    "Agosto": `🇧🇷 **Cenário Brasil:** Agosto de ${ano} foi marcado pela 'saída de verão' nos mercados do hemisfério norte, reduzindo a liquidez global. No Brasil, a agenda fiscal avançou com a votação de medidas importantes no Congresso. Os dados de emprego mostraram resiliência, com a taxa de desemprego em patamares historicamente baixos.`,
-    "Setembro": `🇧🇷 **Cenário Brasil:** Setembro de ${ano} foi marcado pela divulgação do PIB do segundo trimestre, que surpreendeu positivamente. O mercado acompanhou as discussões sobre o Orçamento para o próximo ano. O Copom sinalizou cautela diante das incertezas externas e fiscais, mantendo o ritmo de cortes moderado.`,
-    "Outubro": `🇧🇷 **Cenário Brasil:** Outubro de ${ano} foi marcado pela reta final das eleições municipais e seus desdobramentos políticos. O governo enviou o projeto de Lei Orçamentária Anual ao Congresso. O mercado acompanhou atento à composição das novas maiorias e à capacidade do governo de aprovar pautas de interesse.`,
-    "Novembro": `🇧🇷 **Cenário Brasil:** Novembro de ${ano} foi marcado pela Black Friday e pelo início da temporada de compras de fim de ano. O varejo mostrou recuperação, enquanto a indústria segue com capacidade ociosa. O mercado começou a projetar o cenário para ${parseInt(ano)+1}, com expectativas de continuidade do ciclo de cortes da Selic.`,
-    "Dezembro": `🇧🇷 **Cenário Brasil:** Dezembro de ${ano} foi marcado pela aprovação do Orçamento para ${parseInt(ano)+1} e pelos dados fiscais de fim de ano. O governo anunciou medidas de ajuste para manter a trajetória da dívida sob controle. O mercado encerrou o ano com cautela moderada, projetando um ${parseInt(ano)+1} desafiador, mas com oportunidades.`
+    "Maio": `🇧🇷 **Cenário Brasil:** Maio de ${ano} foi marcado por tensões políticas e avanço da agenda de reformas. O mercado acompanhou a tramitação do arcabouço fiscal na Câmara. Os dados de atividade econômica mostraram resiliência, enquanto a inflação segue controlada.`,
+    "Junho": `🇧🇷 **Cenário Brasil:** Junho de ${ano} foi marcado pela decisão do Copom, que manteve o tom hawkish diante das incertezas fiscais. O mercado reduziu as expectativas de cortes mais agressivos da Selic. A arrecadação federal surpreendeu positivamente.`,
+    "Julho": `🇧🇷 **Cenário Brasil:** Julho de ${ano} foi marcado pela divulgação do Índice de Confiança da Indústria e do Comércio, que mostraram recuperação gradual. O governo anunciou medidas para estimular o crédito e o investimento.`,
+    "Agosto": `🇧🇷 **Cenário Brasil:** Agosto de ${ano} foi marcado pela 'saída de verão' nos mercados do hemisfério norte, reduzindo a liquidez global. No Brasil, a agenda fiscal avançou com a votação de medidas importantes no Congresso.`,
+    "Setembro": `🇧🇷 **Cenário Brasil:** Setembro de ${ano} foi marcado pela divulgação do PIB do segundo trimestre, que surpreendeu positivamente. O mercado acompanhou as discussões sobre o Orçamento para o próximo ano.`,
+    "Outubro": `🇧🇷 **Cenário Brasil:** Outubro de ${ano} foi marcado pela reta final das eleições municipais e seus desdobramentos políticos. O governo enviou o projeto de Lei Orçamentária Anual ao Congresso.`,
+    "Novembro": `🇧🇷 **Cenário Brasil:** Novembro de ${ano} foi marcado pela Black Friday e pelo início da temporada de compras de fim de ano. O varejo mostrou recuperação, enquanto a indústria segue com capacidade ociosa.`,
+    "Dezembro": `🇧🇷 **Cenário Brasil:** Dezembro de ${ano} foi marcado pela aprovação do Orçamento para ${parseInt(ano)+1} e pelos dados fiscais de fim de ano. O governo anunciou medidas de ajuste para manter a trajetória da dívida sob controle.`
   };
-  return cenarios[mes] || `🇧🇷 **Cenário Brasil:** O mês de ${mes} de ${ano} foi marcado por um ambiente de atenção às decisões de política monetária e à tramitação da agenda fiscal no Congresso. O mercado acompanhou de perto os indicadores de inflação e atividade, que seguem ditando o ritmo dos cortes da Selic.`;
+  return cenarios[mes] || `🇧🇷 **Cenário Brasil:** O mês de ${mes} de ${ano} foi marcado por um ambiente de atenção às decisões de política monetária e à tramitação da agenda fiscal no Congresso. O mercado acompanhou de perto os indicadores de inflação e atividade.`;
 }
 
 function gerarCenarioGlobal(mes, ano) {
   const cenarios = {
     "Janeiro": `🌍 **Cenário Global:** Janeiro de ${ano} começou com atenções voltadas à posse do novo governo nos EUA e às primeiras medidas da nova administração. Na Europa, a economia mostrou sinais de recuperação gradual, enquanto a China anunciou estímulos para conter a desaceleração. Os preços das commodities energéticas oscilaram com as tensões no Oriente Médio.`,
-    "Fevereiro": `🌍 **Cenário Global:** Fevereiro de ${ano} foi marcado pela divulgação dos dados de inflação e emprego nos EUA, que mantiveram a cautela sobre os próximos passos do Fed. Na Europa, o BCE iniciou debates sobre flexibilização monetária. Na China, os dados de atividade mostraram desaceleração, pressionando os preços das commodities.`,
-    "Março": `🌍 **Cenário Global:** Março de ${ano} foi marcado por forte volatilidade nos mercados internacionais. A escalada dos conflitos no Oriente Médio — com a intensificação da guerra no Irã — pressionou os preços do petróleo para cima. Nos EUA, os dados de inflação e emprego mantiveram o Fed em modo de espera. Na Europa, a recuperação econômica segue lenta, enquanto a China anunciou novos estímulos para conter a desaceleração imobiliária.`,
-    "Abril": `🌍 **Cenário Global:** Abril de ${ano} foi marcado pela temporada de balanços corporativos nos EUA e na Europa. As empresas de tecnologia surpreenderam positivamente, impulsionando os índices americanos. No front geopolítico, as tensões comerciais entre EUA e China voltaram à tona. Na Europa, a indústria alemã mostrou sinais de recuperação.`,
-    "Maio": `🌍 **Cenário Global:** Maio de ${ano} foi marcado pela decisão de política monetária do Fed, que manteve os juros inalterados. O mercado precificou cortes para o segundo semestre. Na Europa, o BCE sinalizou o início do ciclo de flexibilização ainda em ${ano}. Na China, os dados de exportação surpreenderam positivamente.`,
-    "Junho": `🌍 **Cenário Global:** Junho de ${ano} foi marcado pela reunião do Fed, que indicou cautela diante da inflação ainda elevada. Os juros americanos permaneceram no maior nível em duas décadas. Na Europa, o BCE iniciou o ciclo de cortes, enquanto a economia chinesa segue desacelerando, impactando os preços das commodities.`,
-    "Julho": `🌍 **Cenário Global:** Julho de ${ano} foi marcado pela temporada de balanços do segundo trimestre nos EUA. Os resultados mistos geraram volatilidade. O mercado de trabalho americano mostrou resiliência, adiando as expectativas de cortes de juros. Na Europa, a economia segue estagnada, enquanto a China anuncia novas medidas de estímulo.`,
-    "Agosto": `🌍 **Cenário Global:** Agosto de ${ano} foi marcado pela tradicional 'saída de verão' nos mercados americanos e europeus, reduzindo liquidez e amplificando movimentos. Nos EUA, os dados de inflação ao consumidor vieram dentro do esperado. Na Europa, a recuperação segue lenta, com a Alemanha enfrentando desafios na indústria automotiva.`,
-    "Setembro": `🌍 **Cenário Global:** Setembro de ${ano} foi marcado pela decisão do Fed sobre os juros, com o mercado aguardando o início do ciclo de cortes. O cenário eleitoral nos EUA para ${parseInt(ano)+1} começou a ganhar forma. Na Europa, o BCE seguiu com sua estratégia de flexibilização, enquanto a China lida com a crise no setor imobiliário.`,
-    "Outubro": `🌍 **Cenário Global:** Outubro de ${ano} foi marcado pelo aumento das tensões geopolíticas, com conflitos no Leste Europeu e no Oriente Médio. Os preços do petróleo e do gás natural dispararam. Nos EUA, a economia mostrou resiliência, adiando as expectativas de cortes agressivos de juros. Na Europa, a crise energética voltou ao centro das atenções.`,
-    "Novembro": `🌍 **Cenário Global:** Novembro de ${ano} foi marcado pelo resultado das eleições nos EUA e seus desdobramentos para o comércio global. O mercado reagiu com volatilidade às novas diretrizes de política externa. Na Europa, a economia mostrou sinais de estagnação, enquanto a China anunciou pacote fiscal bilionário para conter a desaceleração.`,
-    "Dezembro": `🌍 **Cenário Global:** Dezembro de ${ano} foi marcado pelas últimas decisões de política monetária do ano. O Fed manteve os juros inalterados, enquanto o BCE continuou com os cortes. Mercados globais encerraram o ano com expectativas de um ${parseInt(ano)+1} desafiador, com atenção redobrada aos conflitos geopolíticos e à trajetória da inflação.`
+    "Fevereiro": `🌍 **Cenário Global:** Fevereiro de ${ano} foi marcado pela divulgação dos dados de inflação e emprego nos EUA, que mantiveram a cautela sobre os próximos passos do Fed. Na Europa, o BCE iniciou debates sobre flexibilização monetária. Na China, os dados de atividade mostraram desaceleração.`,
+    "Março": `🌍 **Cenário Global:** Março de ${ano} foi marcado por forte volatilidade nos mercados internacionais. A escalada dos conflitos no Oriente Médio pressionou os preços do petróleo para cima. Nos EUA, os dados de inflação e emprego mantiveram o Fed em modo de espera. Na Europa, a recuperação econômica segue lenta, enquanto a China anunciou novos estímulos.`,
+    "Abril": `🌍 **Cenário Global:** Abril de ${ano} foi marcado pela temporada de balanços corporativos nos EUA e na Europa. As empresas de tecnologia surpreenderam positivamente, impulsionando os índices americanos. No front geopolítico, as tensões comerciais entre EUA e China voltaram à tona.`,
+    "Maio": `🌍 **Cenário Global:** Maio de ${ano} foi marcado pela decisão de política monetária do Fed, que manteve os juros inalterados. O mercado precificou cortes para o segundo semestre. Na Europa, o BCE sinalizou o início do ciclo de flexibilização ainda em ${ano}.`,
+    "Junho": `🌍 **Cenário Global:** Junho de ${ano} foi marcado pela reunião do Fed, que indicou cautela diante da inflação ainda elevada. Os juros americanos permaneceram no maior nível em duas décadas. Na Europa, o BCE iniciou o ciclo de cortes.`,
+    "Julho": `🌍 **Cenário Global:** Julho de ${ano} foi marcado pela temporada de balanços do segundo trimestre nos EUA. Os resultados mistos geraram volatilidade. O mercado de trabalho americano mostrou resiliência, adiando as expectativas de cortes de juros.`,
+    "Agosto": `🌍 **Cenário Global:** Agosto de ${ano} foi marcado pela tradicional 'saída de verão' nos mercados americanos e europeus, reduzindo liquidez e amplificando movimentos. Nos EUA, os dados de inflação ao consumidor vieram dentro do esperado.`,
+    "Setembro": `🌍 **Cenário Global:** Setembro de ${ano} foi marcado pela decisão do Fed sobre os juros, com o mercado aguardando o início do ciclo de cortes. O cenário eleitoral nos EUA para ${parseInt(ano)+1} começou a ganhar forma.`,
+    "Outubro": `🌍 **Cenário Global:** Outubro de ${ano} foi marcado pelo aumento das tensões geopolíticas, com conflitos no Leste Europeu e no Oriente Médio. Os preços do petróleo e do gás natural dispararam. Nos EUA, a economia mostrou resiliência.`,
+    "Novembro": `🌍 **Cenário Global:** Novembro de ${ano} foi marcado pelo resultado das eleições nos EUA e seus desdobramentos para o comércio global. O mercado reagiu com volatilidade às novas diretrizes de política externa.`,
+    "Dezembro": `🌍 **Cenário Global:** Dezembro de ${ano} foi marcado pelas últimas decisões de política monetária do ano. O Fed manteve os juros inalterados, enquanto o BCE continuou com os cortes. Mercados globais encerraram o ano com expectativas para ${parseInt(ano)+1}.`
   };
-  return cenarios[mes] || `🌍 **Cenário Global:** O mês de ${mes} de ${ano} foi marcado por atenção às decisões de política monetária dos principais bancos centrais. Nos EUA, o Fed manteve o discurso de cautela diante da inflação. Na Europa, a economia segue frágil, enquanto a China lida com a desaceleração e as tensões comerciais globais.`;
+  return cenarios[mes] || `🌍 **Cenário Global:** O mês de ${mes} de ${ano} foi marcado por atenção às decisões de política monetária dos principais bancos centrais. Nos EUA, o Fed manteve o discurso de cautela diante da inflação. Na Europa, a economia segue frágil, enquanto a China lida com a desaceleração.`;
 }
 
 function gerarRelatorioHTML() {
@@ -231,7 +229,7 @@ function gerarRelatorioHTML() {
     
     <div class="relatorio-dados">
       <p>📊 <strong>Desempenho da sua carteira:</strong></p>
-      <p>Sua carteira atravessou esse ambiente com solidez, apresentando um retorno <strong class="${sinalClasse}">${sinalRentabilidade} de ${rentabilidadeStr}</strong> no mês de ${mes} de ${ano}${pctCdi !== null ? `, equivalente a <strong>${pctCdiStr} do CDI</strong> do período.` : '.'}</p>
+      <p>Sua carteira atravessou esse ambiente com solidez, apresentando um retorno <strong class="${sinalClasse}">${sinalRentabilidade} de ${rentabilidadeStr}</strong> no mês de ${mes.toLowerCase()} de ${ano}${pctCdi !== null ? `, equivalente a <strong>${pctCdiStr} do CDI</strong> do período.` : '.'}</p>
     </div>
   `;
   
@@ -269,74 +267,52 @@ async function extrairDadosPDF(file) {
     textoCompleto += tc.items.map(item => item.str).join(' ') + ' ';
   }
   
-  dbg('=== TRECHO DO PDF (primeiros 2000 caracteres) ===');
-  dbg(textoCompleto.substring(0, 2000));
+  dbg('=== TRECHO DO PDF (primeiros 2500 caracteres) ===');
+  dbg(textoCompleto.substring(0, 2500));
   
   dadosCarteira = {
     alocacoes: {}, retornos: {}, rentabilidadeMensal: null, pctCdi: null,
     dataReferencia: "", patrimonio: 0, mesReferencia: "", anoReferencia: ""
   };
   
-  // Data
-  let dataMatch = textoCompleto.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+  // Data de Referência
+  let dataMatch = textoCompleto.match(/Data de Referência[\s]*[\d]+\s*([A-Za-z]+)\s*(\d{2})\/(\d{2})\/(\d{4})/i);
+  if (!dataMatch) dataMatch = textoCompleto.match(/(\d{2})\/(\d{2})\/(\d{4})/);
   if (dataMatch) {
     let meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-    dadosCarteira.mesReferencia = meses[parseInt(dataMatch[2])-1];
-    dadosCarteira.anoReferencia = dataMatch[3];
+    let mesNum = parseInt(dataMatch[2] || dataMatch[3]);
+    dadosCarteira.mesReferencia = meses[mesNum - 1];
+    dadosCarteira.anoReferencia = dataMatch[3] || dataMatch[4];
     dadosCarteira.dataReferencia = `${dadosCarteira.mesReferencia} de ${dadosCarteira.anoReferencia}`;
-    dbg('📅 Data: ' + dadosCarteira.dataReferencia);
+    dbg(`📅 Data: ${dadosCarteira.dataReferencia}`);
   } else {
     dadosCarteira.mesReferencia = "Março";
     dadosCarteira.anoReferencia = "2026";
     dbg('📅 Data não encontrada, usando padrão: Março/2026');
   }
   
-  // Rentabilidade e %CDI
-  let mesMatch = textoCompleto.match(/M[ÊE]S[\s\S]*?[\-\+]?\s*(\d+,\d{2})\s*%\s*([\-\+]?\s*\d+,\d{2})\s*%/i);
-  if (!mesMatch) mesMatch = textoCompleto.match(/M[ÊE]S[^\d]*(\d+,\d{2})%\s*([\-\+]?\d+,\d{2})%/i);
-  if (mesMatch) {
-    dadosCarteira.rentabilidadeMensal = parseFloat(mesMatch[1].replace(',', '.'));
-    dadosCarteira.pctCdi = parseFloat(mesMatch[2].replace(',', '.'));
-    dbg(`📈 Rentabilidade Mensal: ${dadosCarteira.rentabilidadeMensal}% | %CDI: ${dadosCarteira.pctCdi}%`);
+  // Rentabilidade MÊS (da linha RENTABILIDADE MÊS:)
+  let rentMesMatch = textoCompleto.match(/RENTABILIDADE M[ÊE]S:\s*([+-]?\s*\d+,\d{2})%/i);
+  if (rentMesMatch) {
+    dadosCarteira.rentabilidadeMensal = parseFloat(rentMesMatch[1].replace(/\s/g, '').replace(',', '.'));
+    dbg(`📈 Rentabilidade Mensal (RENTABILIDADE MÊS): ${dadosCarteira.rentabilidadeMensal}%`);
   } else {
-    dbg('⚠️ Rentabilidade mensal não encontrada no PDF');
+    // Fallback: buscar na tabela RESUMO
+    let resumoMatch = textoCompleto.match(/M[ÊE]S[\s\S]*?[\d\.]+,\d{2}\s+([+-]?\s*\d+,\d{2})%\s+([+-]?\s*\d+,\d{2})%/i);
+    if (resumoMatch) {
+      dadosCarteira.rentabilidadeMensal = parseFloat(resumoMatch[1].replace(/\s/g, '').replace(',', '.'));
+      dadosCarteira.pctCdi = parseFloat(resumoMatch[2].replace(/\s/g, '').replace(',', '.'));
+      dbg(`📈 Rentabilidade (fallback): ${dadosCarteira.rentabilidadeMensal}% | %CDI: ${dadosCarteira.pctCdi}%`);
+    }
   }
   
-  // Estratégias
-  let idx = textoCompleto.indexOf('Estratégias');
-  if (idx !== -1) {
-    let secao = textoCompleto.substring(idx, idx + 2000);
-    dbg('=== SEÇÃO Estratégias ===');
-    dbg(secao.substring(0, 1200));
-    
-    const mapping = {
-      "Pós Fixado": "Renda Fixa Pós", "Pré Fixado": "Renda Fixa Pré",
-      "Inflação": "Renda Fixa Inflação", "Multimercado": "Multiestratégia",
-      "Renda Variável Brasil": "Renda Variável", "Alternativo": "Alternativo",
-      "Renda Variável Global": "Renda Variável Global", "Fundos Listados": "Fundos Listados",
-      "Caixa": "Caixa", "Renda Fixa Global": "Renda Fixa Global"
-    };
-    
-    let lines = secao.split(/\n/);
-    for (let line of lines) {
-      let match = line.match(/([A-Za-zÀ-Úà-û\s]+?)\s*\(\s*(\d{1,3})\s*,\s*(\d{2})\s*%\)/i);
-      if (match) {
-        let nomePDF = match[1].trim();
-        let alocacao = parseFloat(match[2] + '.' + match[3]);
-        let nomeSistema = mapping[nomePDF] || nomePDF;
-        
-        let retMatch = line.match(/([\-\+]?\s*\d{1,3}\s*,\s*\d{2})\s*%/);
-        let retorno = retMatch ? parseFloat(retMatch[1].replace(/\s/g, '').replace(',', '.')) : null;
-        
-        if (nomeSistema && alocacao > 0) {
-          dadosCarteira.alocacoes[nomeSistema] = alocacao;
-          if (retorno !== null) dadosCarteira.retornos[nomeSistema] = retorno;
-          dbg(`✅ ${nomePDF} → ${nomeSistema}: ${alocacao}% | retorno: ${retorno !== null ? retorno + '%' : 'n/d'}`);
-        }
-      }
+  // %CDI da tabela RESUMO (linha MÊS)
+  if (!dadosCarteira.pctCdi) {
+    let cdiMatch = textoCompleto.match(/M[ÊE]S[\s\S]*?[\d\.]+,\d{2}\s+[\d\.]+,\d{2}%\s+([+-]?\s*\d+,\d{2})%/i);
+    if (cdiMatch) {
+      dadosCarteira.pctCdi = parseFloat(cdiMatch[1].replace(/\s/g, '').replace(',', '.'));
+      dbg(`📊 %CDI: ${dadosCarteira.pctCdi}%`);
     }
-  } else {
-    dbg('⚠️ Seção "Estratégias" não encontrada');
   }
   
   // Patrimônio
@@ -344,12 +320,79 @@ async function extrairDadosPDF(file) {
   if (patMatch) {
     dadosCarteira.patrimonio = parseFloat(patMatch[1].replace(/\./g, '').replace(',', '.'));
     dbg(`💰 Patrimônio: R$ ${dadosCarteira.patrimonio.toFixed(2)}`);
-  } else {
-    dbg('⚠️ Patrimônio não encontrado');
+  }
+  
+  // Estratégias - página 5 (seção COMPOSIÇÃO / Estratégias)
+  let estrategiasIdx = textoCompleto.indexOf('Estratégias');
+  if (estrategiasIdx === -1) estrategiasIdx = textoCompleto.indexOf('COMPOSIÇÃO');
+  
+  if (estrategiasIdx !== -1) {
+    let secao = textoCompleto.substring(estrategiasIdx, estrategiasIdx + 3000);
+    dbg('=== SEÇÃO Estratégias/COMPOSIÇÃO ===');
+    dbg(secao.substring(0, 1500));
+    
+    const mapping = {
+      "Pós Fixado": "Pós-Fixado",
+      "Pré Fixado": "Pré-Fixado", 
+      "Inflação": "Inflação",
+      "In fl ação": "Inflação",
+      "Multimercado": "Multimercado",
+      "Renda Variável Brasil": "Renda Variável Brasil",
+      "Renda Variável Global": "Renda Variável Global",
+      "Alternativo": "Alternativo",
+      "Fundos Listados": "Fundos Listados",
+      "Caixa": "Caixa",
+      "Proventos": "Proventos",
+      "Renda Fixa Global": "Renda Fixa Global"
+    };
+    
+    // Padrão: "Pós Fixado   ( 58 , 34 %)   R $   35.758,53   1 , 27 %"
+    let regex = /([A-Za-zÀ-Úà-û\s]+?)\s*\(\s*(\d{1,3})\s*,\s*(\d{2})\s*%\)\s*R\$\s*[\d\.]+,\d{2}\s+([+-]?\s*\d{1,3}\s*,\s*\d{2})\s*%/i;
+    let lines = secao.split(/\n/);
+    
+    for (let line of lines) {
+      let match = line.match(regex);
+      if (match) {
+        let nomePDF = match[1].trim();
+        let alocacao = parseFloat(match[2] + '.' + match[3]);
+        let retorno = parseFloat(match[4].replace(/\s/g, '').replace(',', '.'));
+        
+        let nomeSistema = mapping[nomePDF] || nomePDF;
+        nomeSistema = nomeSistema.replace(/[\s]+/g, ' ').trim();
+        
+        if (nomeSistema && alocacao > 0 && !isNaN(alocacao)) {
+          dadosCarteira.alocacoes[nomeSistema] = alocacao;
+          if (!isNaN(retorno)) dadosCarteira.retornos[nomeSistema] = retorno;
+          dbg(`✅ ${nomePDF} → ${nomeSistema}: ${alocacao}% | retorno: ${retorno}%`);
+        }
+      }
+    }
+    
+    // Fallback: padrão mais simples sem R$
+    let simpleRegex = /([A-Za-zÀ-Úà-û\s]+?)\s*\(\s*(\d{1,3})\s*,\s*(\d{2})\s*%\)[^%]*?([+-]?\s*\d{1,3}\s*,\s*\d{2})\s*%/i;
+    for (let line of lines) {
+      if (!line.includes('R$')) {
+        let match = line.match(simpleRegex);
+        if (match && !dadosCarteira.alocacoes[match[1]?.trim()]) {
+          let nomePDF = match[1].trim();
+          let alocacao = parseFloat(match[2] + '.' + match[3]);
+          let retorno = parseFloat(match[4].replace(/\s/g, '').replace(',', '.'));
+          let nomeSistema = mapping[nomePDF] || nomePDF;
+          if (nomeSistema && alocacao > 0 && !isNaN(alocacao)) {
+            dadosCarteira.alocacoes[nomeSistema] = alocacao;
+            if (!isNaN(retorno)) dadosCarteira.retornos[nomeSistema] = retorno;
+            dbg(`✅ (fallback) ${nomePDF} → ${nomeSistema}: ${alocacao}% | retorno: ${retorno}%`);
+          }
+        }
+      }
+    }
   }
   
   dbg('\n=== RESUMO FINAL ===');
   dbg(`Data: ${dadosCarteira.dataReferencia}`);
+  dbg(`Rentabilidade: ${dadosCarteira.rentabilidadeMensal !== null ? dadosCarteira.rentabilidadeMensal + '%' : 'não encontrada'}`);
+  dbg(`%CDI: ${dadosCarteira.pctCdi !== null ? dadosCarteira.pctCdi + '%' : 'não encontrado'}`);
+  dbg(`Patrimônio: ${dadosCarteira.patrimonio > 0 ? 'R$ ' + dadosCarteira.patrimonio : 'não encontrado'}`);
   dbg(`Alocações capturadas: ${Object.keys(dadosCarteira.alocacoes).join(', ') || 'nenhuma'}`);
   dbg(`Retornos capturados: ${Object.keys(dadosCarteira.retornos).join(', ') || 'nenhum'}`);
   
@@ -378,8 +421,6 @@ document.getElementById('btnImportar').addEventListener('click', async () => {
     if (dadosCarteira.patrimonio > 0) {
       document.getElementById('patrimVal').innerHTML = fmtBRL(dadosCarteira.patrimonio);
       document.getElementById('patrimTag').classList.add('show');
-    } else {
-      document.getElementById('patrimTag').classList.remove('show');
     }
   } catch (e) {
     setStatus('Erro ao processar PDF: ' + e.message, 'err');
