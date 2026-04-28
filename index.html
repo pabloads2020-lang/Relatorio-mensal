@@ -4,395 +4,213 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PBF · Relatório Mensal</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Atkinson+Hyperlegible:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
-:root {
-  --bg: #0e1117; --bg2: #161b25; --bg3: #1c2333;
-  --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13);
-  --gold: #f5c842; --gold2: #e0a800;
-  --text: #e8eaf0; --text2: #8b93a7; --text3: #555e72;
-  --green: #2ecc71; --green-bg: rgba(46,204,113,0.12);
-  --red: #e74c3c; --red-bg: rgba(231,76,60,0.12);
-  --amber: #f39c12; --amber-bg: rgba(243,156,18,0.12);
-  --header-bg: #161b25; --header-border: rgba(255,255,255,0.07);
-  --card-bg: #161b25; --card-border: rgba(255,255,255,0.07);
-  --debug-bg: #1c2333; --overlay-bg: rgba(14,17,23,.88);
-  --footer-border: rgba(255,255,255,0.07);
-  --relatorio-bg: linear-gradient(135deg, rgba(245,200,66,0.03) 0%, rgba(52,152,219,0.03) 100%);
-}
-body.light {
-  --bg: #f5f7fa; --bg2: #ffffff; --bg3: #f0f2f5;
-  --border: rgba(0,0,0,0.08); --border2: rgba(0,0,0,0.12);
-  --gold: #d4a017; --gold2: #b8860b;
-  --text: #1a1a2e; --text2: #4a5568; --text3: #718096;
-  --green: #27ae60; --green-bg: rgba(39,174,96,0.1);
-  --red: #e74c3c; --red-bg: rgba(231,76,60,0.1);
-  --amber: #e67e22; --amber-bg: rgba(230,126,34,0.1);
-  --header-bg: #ffffff; --header-border: rgba(0,0,0,0.08);
-  --card-bg: #ffffff; --card-border: rgba(0,0,0,0.08);
-  --debug-bg: #f7fafc; --overlay-bg: rgba(255,255,255,.95);
-  --footer-border: rgba(0,0,0,0.08);
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-.header { background: var(--header-bg); border-bottom: 1px solid var(--header-border); padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-.header-logo { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 600; }
-.dot { width: 28px; height: 28px; background: var(--gold); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #000; }
-.header-right { display: flex; align-items: center; gap: 1rem; }
-.header-date { font-size: 13px; color: var(--text3); }
-.theme-toggle { background: var(--bg3); border: 1px solid var(--border2); border-radius: 30px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; }
-.main { max-width: 900px; margin: 0 auto; padding: 2rem; }
-.card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
-.card-title { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-.upload-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
-.file-label { display: flex; align-items: center; gap: 8px; background: var(--bg3); border: 1.5px dashed var(--border2); border-radius: 8px; padding: 9px 14px; cursor: pointer; font-size: 14px; color: var(--text2); flex: 1; min-width: 180px; }
-.file-label:hover { border-color: var(--gold); color: var(--gold); }
-#filePdf { display: none; }
-.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; white-space: nowrap; }
-.btn-gold { background: var(--gold); color: #000; }
-.btn-gold:hover { background: var(--gold2); transform: translateY(-1px); }
-.btn-ghost { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
-.btn-ghost:hover { border-color: var(--red); color: var(--red); background: var(--red-bg); }
-.status { display: none; align-items: center; gap: 8px; padding: 9px 13px; border-radius: 8px; font-size: 14px; margin-top: 0.75rem; }
-.status.show { display: flex; }
-.status-ok { background: var(--green-bg); color: var(--green); border: 1px solid rgba(46, 204, 113, 0.25); }
-.status-err { background: var(--red-bg); color: var(--red); border: 1px solid rgba(231, 76, 60, 0.25); }
-.patrim-tag { display: none; align-items: center; gap: 6px; margin-top: 0.6rem; background: rgba(245, 200, 66, 0.1); border: 1px solid rgba(245, 200, 66, 0.25); border-radius: 20px; padding: 6px 14px; font-size: 14px; font-weight: 600; color: var(--gold); width: fit-content; }
-.patrim-tag.show { display: flex; }
-.btn-debug { background: transparent; border: 1px solid var(--border2); border-radius: 20px; padding: 4px 12px; font-size: 11px; font-weight: 500; cursor: pointer; color: var(--text2); display: flex; align-items: center; gap: 6px; margin-top: 1rem; }
-.btn-debug:hover { border-color: var(--gold); color: var(--gold); background: rgba(245,200,66,0.1); }
-.debug-box { display: none; background: var(--debug-bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; font-size: 12px; max-height: 400px; overflow-y: auto; white-space: pre-wrap; margin-top: 0.5rem; font-family: monospace; }
-.debug-box.show { display: block; }
-.overlay { display: none; position: fixed; inset: 0; background: var(--overlay-bg); z-index: 200; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; }
-.overlay.show { display: flex; }
-.spin { width: 40px; height: 40px; border: 3px solid var(--border2); border-top-color: var(--gold); border-radius: 50%; animation: rot 0.8s linear infinite; }
-@keyframes rot { to { transform: rotate(360deg); } }
-.footer { text-align: center; font-size: 12px; color: var(--text3); padding: 2rem; border-top: 1px solid var(--footer-border); margin-top: 1rem; }
-.arrow { transition: transform 0.2s ease; display: inline-block; }
-.arrow.rotated { transform: rotate(90deg); }
-.relatorio-container { background: var(--relatorio-bg); border-radius: 12px; padding: 1.5rem; }
-.relatorio-saudacao { font-size: 15px; margin-bottom: 1.25rem; color: var(--gold); font-weight: 500; }
-.relatorio-paragrafo { font-size: 14px; line-height: 1.6; margin-bottom: 1rem; color: var(--text); }
-.relatorio-dados { background: var(--bg3); border-radius: 10px; padding: 1rem; margin: 1rem 0; border-left: 3px solid var(--gold); }
-.relatorio-dados p { margin: 0.5rem 0; font-size: 14px; }
-.relatorio-dados strong { color: var(--gold); }
-.relatorio-classe-item { margin: 0.25rem 0; font-size: 14px; display: block; }
-.relatorio-positivo { color: var(--green); }
-.relatorio-negativo { color: var(--red); }
-.relatorio-assinatura { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 13px; color: var(--text3); font-style: italic; }
+    /* Mantendo seu estilo original para o visual continuar igual */
+    :root {
+        --bg: #0e1117; --bg2: #161b25; --bg3: #1c2333;
+        --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13);
+        --gold: #f5c842; --gold2: #e0a800;
+        --text: #e8eaf0; --text2: #8b93a7; --text3: #555e72;
+        --green: #2ecc71; --green-bg: rgba(46,204,113,0.12);
+        --red: #e74c3c; --red-bg: rgba(231,76,60,0.12);
+    }
+    body.light {
+        --bg: #f5f7fa; --bg2: #ffffff; --bg3: #f0f2f5;
+        --border: rgba(0,0,0,0.08); --gold: #d4a017;
+        --text: #1a1a2e; --text2: #4a5568; --text3: #718096;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); }
+    .header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; }
+    .main { max-width: 900px; margin: 0 auto; padding: 2rem; }
+    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .card-title { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 10px;}
+    .upload-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+    .file-label { background: var(--bg3); border: 1.5px dashed var(--border2); border-radius: 8px; padding: 9px 14px; cursor: pointer; font-size: 14px; flex: 1; }
+    #filePdf { display: none; }
+    .btn { padding: 9px 18px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; }
+    .btn-gold { background: var(--gold); color: #000; }
+    .status { display: none; padding: 9px; border-radius: 8px; font-size: 14px; margin-top: 10px; }
+    .status.show { display: block; }
+    .status-ok { background: var(--green-bg); color: var(--green); }
+    .debug-box { display: none; background: #000; color: #0f0; padding: 10px; font-family: monospace; font-size: 11px; margin-top: 10px; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+    .debug-box.show { display: block; }
+    .relatorio-container { background: rgba(255,255,255,0.02); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border); }
+    .relatorio-dados { background: var(--bg3); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--gold); margin: 15px 0; }
+    .relatorio-positivo { color: var(--green); font-weight: bold; }
+    .relatorio-negativo { color: var(--red); font-weight: bold; }
 </style>
 </head>
 <body>
 
-<div class="overlay" id="overlay"><div class="spin"></div><div>Processando PDF...</div></div>
-
 <header class="header">
-  <div class="header-logo"><div class="dot">PBF</div>Relatório Mensal</div>
-  <div class="header-right"><div class="header-date" id="hDate"></div><button class="theme-toggle" id="themeToggle">🌙</button></div>
+    <div style="font-weight: bold;">PBF Relatório</div>
+    <div id="hDate"></div>
 </header>
 
 <main class="main">
-  <div class="card">
-    <div class="card-title">📄 Importar relatório XP (PDF)</div>
-    <div class="upload-row">
-      <label class="file-label" for="filePdf">📎 <span id="fileName">Selecionar arquivo PDF...</span></label>
-      <input type="file" id="filePdf" accept=".pdf">
-      <button class="btn btn-gold" id="btnImportar">Importar PDF</button>
-      <button class="btn btn-ghost" id="btnLimpar">Limpar</button>
+    <div class="card">
+        <div class="card-title">📄 Importar relatório XP</div>
+        <div class="upload-row">
+            <label class="file-label" for="filePdf">📎 <span id="fileName">Selecionar PDF...</span></label>
+            <input type="file" id="filePdf" accept=".pdf">
+            <button class="btn btn-gold" id="btnImportar">Gerar Relatório</button>
+        </div>
+        <div id="status" class="status"></div>
+        <button style="background:none; border:none; color:var(--text3); cursor:pointer; font-size:10px; margin-top:10px;" onclick="document.getElementById('debugBox').classList.toggle('show')">Exibir Debug</button>
+        <div id="debugBox" class="debug-box"></div>
     </div>
-    <div id="status" class="status"></div>
-    <div id="patrimTag" class="patrim-tag">💰 <span id="patrimVal"></span></div>
-    
-    <button class="btn-debug" id="btnToggleDebug"><span class="arrow" id="debugArrow">▶</span> Detalhes da leitura</button>
-    <div id="debugBox" class="debug-box"></div>
-  </div>
 
-  <div class="card">
-    <div class="card-title">📈 Relatório Mensal - Análise PBF</div>
-    <div id="relatorioConteudo" class="relatorio-container">
-      <div style="text-align: center; padding: 2rem; color: var(--text3);">
-        ⚡ Importe um PDF para gerar o relatório automático
-      </div>
+    <div class="card">
+        <div class="card-title">📈 Resultado</div>
+        <div id="relatorioConteudo" class="relatorio-container">Aguardando PDF...</div>
     </div>
-  </div>
 </main>
-
-<footer class="footer">Material informativo — não constitui recomendação de investimento.</footer>
 
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-let debugLines = [];
-let dadosCarteira = {
-  alocacoes: {},
-  retornos: {},
-  rentabilidadeMensal: null,
-  pctCdi: null,
-  dataReferencia: "",
-  patrimonio: 0,
-  mesReferencia: "",
-  anoReferencia: ""
-};
+let dadosCarteira = {};
 
-function fmtPct(v) { if (v === undefined || v === null) return 'n/d'; return v.toFixed(2).replace('.', ',') + '%'; }
-function fmtBRL(v) { return 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2}); }
-function setStatus(msg, tipo) { 
-  const el = document.getElementById('status'); 
-  el.innerHTML = msg; 
-  el.className = 'status show status-' + tipo; 
-  setTimeout(() => el.classList.remove('show'), 4000); 
+function dbg(txt) { 
+    const box = document.getElementById('debugBox');
+    box.textContent += txt + '\n';
 }
-function dbg(txt) { debugLines.push(txt); document.getElementById('debugBox').textContent = debugLines.join('\n'); }
-function clearDebug() { debugLines = []; document.getElementById('debugBox').textContent = ''; }
 
-function gerarRelatorioHTML() {
-  let mes = dadosCarteira.mesReferencia || "abril";
-  let ano = dadosCarteira.anoReferencia || "2026";
-  let rentabilidade = dadosCarteira.rentabilidadeMensal;
-  let pctCdi = dadosCarteira.pctCdi;
-  let patrimonio = dadosCarteira.patrimonio;
-  let alocacoes = dadosCarteira.alocacoes;
-  let retornos = dadosCarteira.retornos;
-  
-  let classesList = [];
-  for (let nome in alocacoes) {
-    if (alocacoes[nome] > 0) {
-      classesList.push({
-        nome: nome,
-        alocacao: alocacoes[nome],
-        retorno: retornos[nome] !== undefined ? retornos[nome] : null
-      });
-    }
-  }
-  classesList.sort((a, b) => b.alocacao - a.alocacao);
-  
-  let desempenhoTexto = "";
-  for (let item of classesList) {
-    if (item.retorno !== null && item.retorno !== 0) {
-      let cor = item.retorno >= 0 ? 'relatorio-positivo' : 'relatorio-negativo';
-      let movimento = item.retorno >= 0 ? 'valorização de' : 'queda de';
-      let sinal = item.retorno >= 0 ? '+' : '';
-      desempenhoTexto += `<span class="relatorio-classe-item">• <strong>${item.nome}</strong> (${item.alocacao.toFixed(2).replace('.', ',')}% da carteira): ${movimento} <span class="${cor}">${sinal}${item.retorno.toFixed(2).replace('.', ',')}%</span> no mês</span>`;
-    }
-  }
-  
-  if (desempenhoTexto === "") {
-    desempenhoTexto = "<span class=\"relatorio-classe-item\">⚠️ Não foi possível capturar os retornos individuais das classes no PDF.</span>";
-  }
-  
-  let rentabilidadeStr = rentabilidade !== null ? `${rentabilidade.toFixed(2).replace('.', ',')}%` : "não disponível";
-  let pctCdiStr = pctCdi !== null ? `${pctCdi.toFixed(2).replace('.', ',')}%` : "não disponível";
-  let sinalRentabilidade = (rentabilidade !== null && rentabilidade >= 0) ? 'positivo' : 'negativo';
-  let sinalClasse = (rentabilidade !== null && rentabilidade >= 0) ? 'relatorio-positivo' : 'relatorio-negativo';
-  let sinalSinal = (rentabilidade !== null && rentabilidade >= 0) ? '+' : '';
-  
-  let html = `
-    <div class="relatorio-saudacao">📋 Prezado cliente, tudo bem? Segue o seu relatório mensal.</div>
-    
-    <div class="relatorio-paragrafo">
-      🇧🇷 <strong>Cenário Brasil:</strong> ${mes} de ${ano} foi marcado pela divulgação do IPCA, que veio alinhado às expectativas. O Banco Central deu início ao ciclo de flexibilização da política monetária com novos cortes na Selic, mantendo a atratividade da Renda Fixa. O mercado segue atento ao arcabouço fiscal e à trajetória da dívida pública.
-    </div>
-    
-    <div class="relatorio-paragrafo">
-      🌍 <strong>Cenário Global:</strong> ${mes} de ${ano} foi marcado por volatilidade nos mercados internacionais. As tensões geopolíticas no Oriente Médio pressionaram os preços do petróleo. Nos EUA, os dados de inflação e emprego mantêm o Federal Reserve em modo de espera, enquanto a China busca retomar o crescimento com novos estímulos.
-    </div>
-    
-    <div class="relatorio-dados">
-      <p>📊 <strong>Desempenho da sua carteira:</strong></p>
-      <p>Sua carteira atravessou esse ambiente com solidez, apresentando um retorno <strong class="${sinalClasse}">${sinalRentabilidade} de ${sinalSinal}${rentabilidadeStr}</strong> no mês de ${mes.toLowerCase()} de ${ano}, <strong>equivalente a ${pctCdiStr} do CDI</strong> do período.</p>
-    </div>
-  `;
-  
-  if (patrimonio > 0) {
-    html += `<div class="relatorio-paragrafo">💰 <strong>Patrimônio atual:</strong> ${fmtBRL(patrimonio)}</div>`;
-  }
-  
-  if (desempenhoTexto) {
-    html += `<div class="relatorio-paragrafo"><strong>📈 Desempenho por classe de ativo no mês:</strong><br>${desempenhoTexto}</div>`;
-  }
-  
-  html += `
-    <div class="relatorio-paragrafo">
-      Por fim, reforçamos a importância da disciplina na manutenção da estratégia e nos aportes focando no desenvolvimento da carteira no longo prazo. 
-      Essa postura é fundamental para atravessar diferentes ciclos de mercado, aproveitar oportunidades, reduzir os impactos das oscilações no curto prazo 
-      e manter a carteira alinhada aos seus objetivos financeiros.
-    </div>
-    
-    <div class="relatorio-assinatura">
-      Atenciosamente,<br>
-      Equipe PBF Investimentos
-    </div>
-  `;
-  
-  return html;
+function limparDados() {
+    dadosCarteira = { alocacoes: {}, retornos: {}, patrimonio: 0, rentabilidadeMensal: null, pctCdi: null, mes: "", ano: "" };
+    document.getElementById('debugBox').textContent = "";
+}
+
+// Função poderosa para limpar espaços entre letras e números
+function limparEspacos(texto) {
+    // Remove espaços entre números, vírgulas e pontos (ex: 2 8 . 9 7 8 , 3 7 -> 28.978,37)
+    let t = texto.replace(/(\d)\s+(?=\d|[\.,%])/g, '$1');
+    t = t.replace(/([\.,%])\s+(?=\d)/g, '$1');
+    // Remove espaços duplos
+    return t.replace(/\s+/g, ' ');
 }
 
 async function extrairDadosPDF(file) {
-  let ab = await file.arrayBuffer();
-  let pdf = await pdfjsLib.getDocument({ data: ab }).promise;
-  
-  dadosCarteira = {
-    alocacoes: {}, retornos: {}, rentabilidadeMensal: null, pctCdi: null,
-    dataReferencia: "", patrimonio: 0, mesReferencia: "", anoReferencia: ""
-  };
-  
-  // Processa apenas as páginas 1, 2 e 5
-  for (let p = 1; p <= Math.min(pdf.numPages, 6); p++) {
-    let page = await pdf.getPage(p);
-    let textContent = await page.getTextContent();
-    let texto = '';
-    for (let item of textContent.items) {
-      if (item.str && item.str.trim()) {
-        texto += item.str + ' ';
-      }
-    }
-    
-    // LIMPEZA AGRESSIVA: remove todos os espaços dentro dos números
-    let textoLimpo = texto;
-    textoLimpo = textoLimpo.replace(/(\d+)\s*,\s*(\d+)/g, '$1,$2');
-    textoLimpo = textoLimpo.replace(/(\d+)\s*\.\s*(\d+)/g, '$1.$2');
-    textoLimpo = textoLimpo.replace(/\s*%\s*/g, '%');
-    textoLimpo = textoLimpo.replace(/R\s*\$\s*/g, 'R$');
-    textoLimpo = textoLimpo.replace(/\s+/g, ' ');
-    
-    if (p === 1 || p === 2 || p === 5) {
-      dbg(`\n--- PÁGINA ${p} (LIMPA) ---`);
-      dbg(textoLimpo.substring(0, 1500));
-    }
-    
-    // PÁGINA 1 - Data
-    if (p === 1) {
-      let dataMatch = textoLimpo.match(/Data de Referência\s+(\d{2})\/(\d{2})\/(\d{4})/);
-      if (dataMatch) {
-        let meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-        dadosCarteira.mesReferencia = meses[parseInt(dataMatch[2]) - 1];
-        dadosCarteira.anoReferencia = dataMatch[3];
-        dbg(`📅 Data: ${dadosCarteira.mesReferencia}/${dadosCarteira.anoReferencia}`);
-      }
-    }
-    
-    // PÁGINA 2 - Patrimônio, Rentabilidade e %CDI
-    if (p === 2) {
-      // Patrimônio
-      let patMatch = textoLimpo.match(/PATRIM[OÔ]NIO\s+TOTAL\s+BRUTO:\s*R\$(\d+\.?\d*),(\d{2})/i);
-      if (patMatch) {
-        let valor = patMatch[1].replace(/\./g, '') + '.' + patMatch[2];
-        dadosCarteira.patrimonio = parseFloat(valor);
-        dbg(`💰 Patrimônio: R$ ${dadosCarteira.patrimonio.toFixed(2)}`);
-      }
-      
-      // Rentabilidade Mensal
-      let rentMatch = textoLimpo.match(/RENTABILIDADE\s+M[ÉE]S:\s*(\d+),(\d{2})%/i);
-      if (rentMatch) {
-        dadosCarteira.rentabilidadeMensal = parseFloat(rentMatch[1] + '.' + rentMatch[2]);
-        dbg(`📈 Rentabilidade Mensal: ${dadosCarteira.rentabilidadeMensal}%`);
-      }
-      
-      // %CDI
-      let cdiMatch = textoLimpo.match(/M[ÊE]S[^\d]*R\$[\d\.,]+\s+(\d+),(\d{2})%\s+(\d+),(\d{2})%/i);
-      if (cdiMatch) {
-        dadosCarteira.pctCdi = parseFloat(cdiMatch[3] + '.' + cdiMatch[4]);
-        dbg(`📊 %CDI: ${dadosCarteira.pctCdi}%`);
-      }
-    }
-    
-    // PÁGINA 5 - Estratégias
-    if (p === 5) {
-      dbg('\n--- BUSCANDO ESTRATÉGIAS NA PÁGINA 5 ---');
-      
-      // Lista de estratégias
-      let estrategias = [
-        { nome: 'Pós Fixado', final: 'Pós-Fixado' },
-        { nome: 'In fl ação', final: 'Inflação', nomeBusca: 'In fl ação' },
-        { nome: 'Pré Fixado', final: 'Pré-Fixado' },
-        { nome: 'Renda Variável Brasil', final: 'Renda Variável Brasil' },
-        { nome: 'Alternativo', final: 'Alternativo' },
-        { nome: 'Renda Variável Global', final: 'Renda Variável Global' },
-        { nome: 'Multimercado', final: 'Multimercado' }
-      ];
-      
-      for (let item of estrategias) {
-        let nomeBusca = item.nomeBusca || item.nome;
-        // Padrão: Pós Fixado (36,75%) R$761.750,29 0,66%
-        let regex = new RegExp(nomeBusca + '\\s*\\((\\d+),(\\d+)%\\)\\s*R\\$[\\d\\.]+,\\d+\\s+(\\d+),(\\d+)%', 'i');
-        let match = regex.exec(textoLimpo);
-        if (match) {
-          let alocacao = parseFloat(match[1] + '.' + match[2]);
-          let retorno = parseFloat(match[3] + '.' + match[4]);
-          dadosCarteira.alocacoes[item.final] = alocacao;
-          dadosCarteira.retornos[item.final] = retorno;
-          dbg(`✅ ${item.final}: alocação ${alocacao}%, retorno ${retorno}%`);
+    limparDados();
+    let ab = await file.arrayBuffer();
+    let pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+
+    for (let p = 1; p <= Math.min(pdf.numPages, 5); p++) {
+        let page = await pdf.getPage(p);
+        let content = await page.getTextContent();
+        let textoOriginal = content.items.map(i => i.str).join(' ');
+        let texto = limparEspacos(textoOriginal);
+        
+        dbg(`--- PÁGINA ${p} (Processada) ---`);
+        dbg(texto.substring(0, 500));
+
+        // 1. DATA (Pág 1 ou 2)
+        let dataMatch = texto.match(/Data\s+de\s+Refer[êe]ncia\s+(\d{2})\/(\d{2})\/(\d{4})/i);
+        if (dataMatch && !dadosCarteira.mes) {
+            const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+            dadosCarteira.mes = meses[parseInt(dataMatch[2]) - 1];
+            dadosCarteira.ano = dataMatch[3];
         }
-      }
+
+        // 2. PATRIMÔNIO (Pág 2)
+        let patMatch = texto.match(/PATRIM[OÔ]NIO\s+TOTAL\s+BRUTO:\s*R\$\s*([\d\.]+,\d{2})/i);
+        if (patMatch) {
+            dadosCarteira.patrimonio = patMatch[1];
+            dbg(`Achou Patr: ${patMatch[1]}`);
+        }
+
+        // 3. RENTABILIDADE E %CDI (Pág 2 - Tabela de Resumo)
+        // Busca na linha do "MÊS" os valores financeiros e percentuais
+        let resumoMatch = texto.match(/M[ÊE]S\s*R\$\s*[\d\.]+,\d{2}\s*([\d,]+)\s*%\s*([\d,]+)\s*%/i);
+        if (resumoMatch) {
+            dadosCarteira.rentabilidadeMensal = resumoMatch[1];
+            dadosCarteira.pctCdi = resumoMatch[2];
+            dbg(`Achou Rent: ${resumoMatch[1]}% e CDI: ${resumoMatch[2]}%`);
+        }
+
+        // 4. ESTRATÉGIAS (Pág 5)
+        if (p >= 4) {
+            const itens = [
+                { id: 'Pós Fixado', regex: /P[oó]s\s*Fixado/i },
+                { id: 'Inflação', regex: /In\s*f\s*l\s*a\s*[çc]\s*[ãa]o/i },
+                { id: 'Pré Fixado', regex: /Pr[ée]\s*Fixado/i },
+                { id: 'Renda Variável Brasil', regex: /Renda\s*Vari[áa]vel\s*Brasil/i },
+                { id: 'Renda Variável Global', regex: /Renda\s*Vari[áa]vel\s*Global/i },
+                { id: 'Multimercado', regex: /Multimercado/i },
+                { id: 'Alternativo', regex: /Alternativo/i }
+            ];
+
+            itens.forEach(item => {
+                // Regex para capturar: Nome ( Aloc% ) R$ Valor Rent%
+                let regEstrat = new RegExp(`${item.regex.source}\\s*\\(\\s*([\\d,]+)\\s*%\\s*\\)\\s*R\\$\\s*[\\d\\.\\s]+,\\d{2}\\s*([\\d,+-]+)\\s*%`, 'i');
+                let m = texto.match(regEstrat);
+                if (m) {
+                    dadosCarteira.alocacoes[item.id] = m[1];
+                    dadosCarteira.retornos[item.id] = m[2];
+                    dbg(`Estratégia: ${item.id} -> ${m[1]}% aloc / ${m[2]}% retorno`);
+                }
+            });
+        }
     }
-  }
-  
-  dbg('\n=== RESUMO FINAL ===');
-  dbg(`Data: ${dadosCarteira.mesReferencia}/${dadosCarteira.anoReferencia}`);
-  dbg(`Rentabilidade Mensal: ${dadosCarteira.rentabilidadeMensal !== null ? dadosCarteira.rentabilidadeMensal + '%' : 'não encontrada'}`);
-  dbg(`%CDI: ${dadosCarteira.pctCdi !== null ? dadosCarteira.pctCdi + '%' : 'não encontrado'}`);
-  dbg(`Patrimônio: ${dadosCarteira.patrimonio > 0 ? 'R$ ' + dadosCarteira.patrimonio : 'não encontrado'}`);
-  dbg('Alocações:', JSON.stringify(dadosCarteira.alocacoes));
-  dbg('Retornos:', JSON.stringify(dadosCarteira.retornos));
-  
-  return { alocacoes: dadosCarteira.alocacoes, patrimonio: dadosCarteira.patrimonio };
+    gerarHTML();
+}
+
+function gerarHTML() {
+    if (!dadosCarteira.patrimonio) {
+        document.getElementById('relatorioConteudo').innerHTML = "Erro ao ler dados. Verifique o log de debug.";
+        return;
+    }
+
+    let estrs = "";
+    for (let nome in dadosCarteira.alocacoes) {
+        let ret = dadosCarteira.retornos[nome] || "0,00";
+        let cor = ret.includes('-') ? 'relatorio-negativo' : 'relatorio-positivo';
+        estrs += `• <strong>${nome}</strong> (${dadosCarteira.alocacoes[nome]}% da carteira): <span class="${cor}">${ret}% no mês</span><br>`;
+    }
+
+    let html = `
+        <div style="color:var(--gold); font-weight:bold; margin-bottom:15px;">📋 Prezado cliente, segue o resumo do seu portfólio.</div>
+        <p style="font-size:14px; margin-bottom:10px;">O mês de <strong>${dadosCarteira.mes} de ${dadosCarteira.ano}</strong> apresentou os seguintes resultados:</p>
+        
+        <div class="relatorio-dados">
+            <p>💰 <strong>Patrimônio Total:</strong> R$ ${dadosCarteira.patrimonio}</p>
+            <p>📈 <strong>Rentabilidade:</strong> ${dadosCarteira.rentabilidadeMensal}% (${dadosCarteira.pctCdi}% do CDI)</p>
+        </div>
+
+        <p style="font-size:14px; margin-top:15px;"><strong>Desempenho por classe:</strong></p>
+        <div style="font-size:13px; line-height:1.6; margin-top:5px;">${estrs}</div>
+        
+        <div style="margin-top:20px; font-size:12px; border-top:1px solid var(--border); padding-top:10px; color:var(--text3);">
+            Atenciosamente,<br><strong>Equipe PBF Investimentos</strong>
+        </div>
+    `;
+    document.getElementById('relatorioConteudo').innerHTML = html;
 }
 
 // Eventos
-document.getElementById('btnToggleDebug').addEventListener('click', () => {
-  document.getElementById('debugBox').classList.toggle('show');
-  document.getElementById('debugArrow').classList.toggle('rotated');
+document.getElementById('btnImportar').addEventListener('click', async () => {
+    let file = document.getElementById('filePdf').files[0];
+    if (!file) return alert("Selecione um PDF");
+    document.getElementById('status').innerHTML = "Processando...";
+    document.getElementById('status').className = "status show";
+    
+    try {
+        await extrairDadosPDF(file);
+        document.getElementById('status').innerHTML = "✅ Relatório Gerado!";
+        document.getElementById('status').className = "status show status-ok";
+    } catch (e) {
+        document.getElementById('status').innerHTML = "❌ Erro: " + e.message;
+        dbg("ERRO: " + e.stack);
+    }
 });
 
 document.getElementById('filePdf').addEventListener('change', function() {
-  document.getElementById('fileName').textContent = this.files[0]?.name || 'Selecionar arquivo PDF...';
+    document.getElementById('fileName').textContent = this.files[0]?.name || 'Selecionar PDF...';
 });
-
-document.getElementById('btnImportar').addEventListener('click', async () => {
-  let file = document.getElementById('filePdf').files[0];
-  if (!file) { setStatus('Selecione um arquivo PDF primeiro.', 'err'); return; }
-  clearDebug();
-  document.getElementById('overlay').classList.add('show');
-  try {
-    await extrairDadosPDF(file);
-    document.getElementById('relatorioConteudo').innerHTML = gerarRelatorioHTML();
-    setStatus('✅ PDF importado com sucesso! Relatório gerado.', 'ok');
-    if (dadosCarteira.patrimonio > 0) {
-      document.getElementById('patrimVal').innerHTML = fmtBRL(dadosCarteira.patrimonio);
-      document.getElementById('patrimTag').classList.add('show');
-    }
-  } catch (e) {
-    setStatus('Erro ao processar PDF: ' + e.message, 'err');
-    dbg('ERRO: ' + e.message);
-  } finally {
-    document.getElementById('overlay').classList.remove('show');
-  }
-});
-
-document.getElementById('btnLimpar').addEventListener('click', () => {
-  dadosCarteira = {
-    alocacoes: {}, retornos: {}, rentabilidadeMensal: null, pctCdi: null,
-    dataReferencia: "", patrimonio: 0, mesReferencia: "", anoReferencia: ""
-  };
-  document.getElementById('status').classList.remove('show');
-  document.getElementById('patrimTag').classList.remove('show');
-  document.getElementById('relatorioConteudo').innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text3);">⚡ Importe um PDF para gerar o relatório automático</div>';
-  clearDebug();
-  document.getElementById('filePdf').value = '';
-  document.getElementById('fileName').textContent = 'Selecionar arquivo PDF...';
-});
-
-document.getElementById('themeToggle').addEventListener('click', () => {
-  document.body.classList.toggle('light');
-  localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
-  document.getElementById('themeToggle').textContent = document.body.classList.contains('light') ? '☀️' : '🌙';
-});
-
-(function init() {
-  if (localStorage.getItem('theme') === 'light') document.body.classList.add('light');
-  document.getElementById('hDate').textContent = new Date().toLocaleDateString('pt-BR');
-})();
 </script>
+
 </body>
 </html>
