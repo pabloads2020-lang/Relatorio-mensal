@@ -15,7 +15,7 @@
         .container { max-width: 850px; margin: 0 auto; }
         .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
         .title { font-size: 12px; font-weight: 700; color: #555e72; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-        textarea { width: 100%; background: var(--bg3); color: var(--text2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 14px; margin-top: 10px; resize: vertical; border: 1px solid rgba(255,255,255,0.1); }
+        textarea { width: 100%; background: var(--bg3); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 14px; margin-top: 10px; resize: vertical; outline: none; }
         .btn { padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: 0.3s; width: 100%; margin-top: 10px; }
         .btn-gold { background: var(--gold); color: #000; }
         .btn-gold:hover { background: #e0a800; }
@@ -29,28 +29,27 @@
 
 <div class="container">
     <div class="card">
-        <div class="title">1. Cenário Macro</div>
-        <textarea id="textoCenario" rows="4">O mês de abril de 2026 foi marcado por uma postura mais cautelosa nos mercados. No Brasil, o foco esteve na divulgação do IPCA. No cenário global, a resiliência da economia americana adiou o início da flexibilização por parte do Fed.</textarea>
+        <div class="title">1. Cenário Macro do Mês</div>
+        <textarea id="textoCenario" rows="6">O mês de abril de 2026 foi marcado por uma consolidação das expectativas econômicas globais e locais. No Brasil, o foco permaneceu na trajetória da inflação e no compromisso fiscal, fatores que influenciam diretamente o ritmo de queda da taxa Selic pelo Banco Central. No cenário global, a resiliência da economia norte-americana e a manutenção dos juros em patamares elevados pelo Fed continuam ditando o ritmo dos mercados, somadas às tensões geopolíticas que adicionam volatilidade aos preços das commodities e à percepção de risco dos investidores.</textarea>
     </div>
 
     <div class="card">
         <div class="title">2. Relatório XP</div>
         <label class="file-label" for="filePdf" id="labelPdf">Selecionar PDF da XP...</label>
         <input type="file" id="filePdf" accept=".pdf">
-        <button class="btn btn-gold" id="btnProcessar">GERAR RELATÓRIO</button>
+        <button class="btn btn-gold" id="btnProcessar">GERAR RELATÓRIO COMPLETO</button>
     </div>
 
     <div class="card">
-        <div class="title">3. Resultado</div>
-        <div id="relatorioFinal" class="output">Aguardando arquivo...</div>
-        <button class="btn btn-dark" onclick="copiar()">Copiar Texto</button>
+        <div class="title">3. Texto Final</div>
+        <div id="relatorioFinal" class="output">Aguardando processamento do arquivo...</div>
+        <button class="btn btn-dark" onclick="copiar()">Copiar para WhatsApp</button>
     </div>
 </div>
 
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-// Função crucial para limpar a sujeira de espaços que a XP gera
 function superLimpeza(t) {
     return t.replace(/\s+/g, '');
 }
@@ -69,19 +68,15 @@ async function processar() {
         const textoOriginal = content.items.map(it => it.str).join(' ');
         const t = superLimpeza(textoOriginal);
 
-        // 1. Patrimônio (Âncora: PATRIMÔNIOTOTALBRUTO:R$)
         let mPat = t.match(/PATRIMÔNIOTOTALBRUTO:R\$([\d\.]+,\d{2})/i);
         if (mPat) d.patrimonio = mPat[1];
 
-        // 2. Rentabilidade e CDI do Mês (Página 4 - Tabela Evolução)
-        // Buscamos o padrão de fechamento da linha: ValorR$ GanhoR$ Rent% CDI%
         let mRent = t.match(/R\$[\d\.]+,\d{2}([\d,+-]+)%([\d,]+)%/i);
         if (mRent && !d.rentMes) {
             d.rentMes = mRent[1];
             d.cdiMes = mRent[2];
         }
 
-        // 3. Estratégias (Página 5)
         const classes = [
             { id: 'Pós-fixada', ref: 'PósFixado' },
             { id: 'Inflação', ref: 'Inflação' },
@@ -92,7 +87,6 @@ async function processar() {
         ];
 
         classes.forEach(c => {
-            // Procura a classe, a porcentagem de alocação entre parênteses, o R$ e a rentabilidade no final
             let reg = new RegExp(`${c.ref}\\(([\\d,]+)%\\)R\\$[\\d\\.]+,\\d{2}([\\d,+-]+)%`, 'i');
             let m = t.match(reg);
             if (m) {
@@ -126,7 +120,7 @@ Sua carteira atravessou esse ambiente com solidez. No mês de abril, o portfóli
 
 No desempenho por estratégias:
 ${resumoAtivos}
-Por fim, reforçamos a importância da disciplina na manutenção da estratégia focando no desenvolvimento da carteira no longo prazo.
+Por fim, reforçamos a importância da disciplina na manutenção da estratégia focando no desenvolvimento da carteira no longo prazo. Essa postura é fundamental para atravessar diferentes ciclos de mercado, aproveitar oportunidades, reduzir os impactos das oscilações no curto prazo e manter a carteira alinhada aos seus objetivos financeiros.
 
 Atenciosamente,
 Equipe PBF Investimentos`;
@@ -136,7 +130,7 @@ Equipe PBF Investimentos`;
 
 function copiar() {
     navigator.clipboard.writeText(document.getElementById('relatorioFinal').innerText);
-    alert("Copiado!");
+    alert("Texto copiado com sucesso!");
 }
 
 document.getElementById('filePdf').addEventListener('change', function() {
