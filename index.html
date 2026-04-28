@@ -200,11 +200,12 @@ async function extrairDadosPDF(file) {
     ];
     
     for (let item of classes) {
-      let regex = new RegExp(item.busca + '\\((\\d+),(\\d+)%\\)R\\$[\\d\\.]+,\\d+(\\d+),(\\d+)%', 'i');
+      // Regex agora captura sinal negativo também: (\\d+),(\\d+) ou -?(\\d+),(\\d+)
+      let regex = new RegExp(item.busca + '\\((\\d+),(\\d+)%\\)R\\$[\\d\\.]+,\\d+(-?(\\d+),(\\d+))%', 'i');
       let match = regex.exec(textoLimpo);
       if (match) {
         let alocacao = match[1] + ',' + match[2];
-        let retorno = match[3] + ',' + match[4];
+        let retorno = match[3];
         dados.alocacoes[item.nome] = alocacao;
         dados.retornos[item.nome] = retorno;
         dbg(`✅ ${item.nome}: alocação ${alocacao}%, retorno ${retorno}%`);
@@ -234,8 +235,11 @@ function gerarRelatorioTexto(dados) {
       let aloc = alocacoes[nome].replace(',', '.');
       let ret = retornos[nome].replace(',', '.');
       let retNum = parseFloat(ret);
-      let movimento = retNum >= 0 ? 'subiu' : 'recuou';
-      desempenhoTexto += `${nome} (${aloc}% da carteira) ${movimento} ${ret}%; `;
+      // Verifica se o retorno é negativo (começa com -)
+      let isNegativo = retornos[nome].startsWith('-') || retNum < 0;
+      let movimento = isNegativo ? 'recuou' : 'subiu';
+      let retornoAbs = isNegativo ? ret.replace('-', '') : ret;
+      desempenhoTexto += `${nome} (${aloc}% da carteira) ${movimento} ${retornoAbs}%; `;
     }
   }
   
