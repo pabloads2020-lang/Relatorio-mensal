@@ -237,7 +237,7 @@ async function extrairDadosPDF(file) {
     dataReferencia: "", patrimonio: 0, mesReferencia: "", anoReferencia: ""
   };
   
-  // Mapeamento de páginas específicas que queremos processar (1, 2, 5)
+  // Processa apenas as páginas 1, 2 e 5
   let paginasParaProcessar = [1, 2, 5];
   
   for (let p of paginasParaProcessar) {
@@ -253,7 +253,7 @@ async function extrairDadosPDF(file) {
     }
     
     dbg(`\n--- PÁGINA ${p} ---`);
-    dbg(texto.substring(0, 1500));
+    dbg(texto.substring(0, 2000));
     
     // PÁGINA 1 - Data
     if (p === 1) {
@@ -276,49 +276,56 @@ async function extrairDadosPDF(file) {
         dbg(`💰 Patrimônio: R$ ${dadosCarteira.patrimonio.toFixed(2)}`);
       }
       
-      // Rentabilidade Mensal - busca exata
+      // Rentabilidade Mensal
       let rentMatch = texto.match(/RENTABILIDADE\s+M[ÉE]S:\s*(\d+),(\d{2})%/i);
       if (rentMatch) {
         dadosCarteira.rentabilidadeMensal = parseFloat(rentMatch[1] + '.' + rentMatch[2]);
         dbg(`📈 Rentabilidade Mensal: ${dadosCarteira.rentabilidadeMensal}%`);
       }
       
-      // %CDI - busca na tabela RESUMO
-      // Padrão: "MÊS R $ 28 . 978 , 37 1 , 40 % 197 , 26 %"
-      let cdiMatch = texto.match(/M[ÊE]S[^\d]*R\s*\$\s*[\d\s\.]+,?\d+\s+(\d+),(\d{2})%\s+(\d+),(\d{2})%/i);
+      // %CDI - busca manual
+      let cdiMatch = texto.match(/M[ÊE]S[^\d]*R\s*\$\s*[\d\s\.]+,?\d+\s+(\d+)\s*,\s*(\d{2})\s*%\s+(\d+)\s*,\s*(\d{2})\s*%/i);
       if (cdiMatch) {
         dadosCarteira.pctCdi = parseFloat(cdiMatch[3] + '.' + cdiMatch[4]);
         dbg(`📊 %CDI: ${dadosCarteira.pctCdi}%`);
       }
     }
     
-    // PÁGINA 5 - Estratégias (COMPOSIÇÃO)
+    // PÁGINA 5 - Estratégias (busca manual para cada classe)
     if (p === 5) {
-      // Lista de estratégias para buscar
+      dbg('\n--- BUSCANDO ESTRATÉGIAS ---');
+      
+      // Função auxiliar para extrair valores
+      function extrairDados(texto, nomeBusca) {
+        // Busca padrão: "Pós Fixado ( 36 , 75 %) R $ 761 . 750 , 29 0 , 66 %"
+        let regex = new RegExp(nomeBusca + '\\s*\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*%\\)[\\s\\S]*?R\\s*\\$[\\s\\d\\.]+,\\d+\\s+(\\d+)\\s*,\\s*(\\d+)\\s*%', 'i');
+        let match = regex.exec(texto);
+        if (match) {
+          return {
+            alocacao: parseFloat(match[1] + '.' + match[2]),
+            retorno: parseFloat(match[3] + '.' + match[4])
+          };
+        }
+        return null;
+      }
+      
+      // Lista de estratégias
       let estrategias = [
-        { nome: 'Pós Fixado', nomeFinal: 'Pós-Fixado' },
-        { nome: 'In fl ação', nomeFinal: 'Inflação' },
-        { nome: 'Pré Fixado', nomeFinal: 'Pré-Fixado' },
-        { nome: 'Renda Variável Brasil', nomeFinal: 'Renda Variável Brasil' },
-        { nome: 'Alternativo', nomeFinal: 'Alternativo' },
-        { nome: 'Renda Variável Global', nomeFinal: 'Renda Variável Global' },
-        { nome: 'Multimercado', nomeFinal: 'Multimercado' }
+        { nome: 'Pós Fixado', final: 'Pós-Fixado' },
+        { nome: 'In fl ação', final: 'Inflação' },
+        { nome: 'Pré Fixado', final: 'Pré-Fixado' },
+        { nome: 'Renda Variável Brasil', final: 'Renda Variável Brasil' },
+        { nome: 'Alternativo', final: 'Alternativo' },
+        { nome: 'Renda Variável Global', final: 'Renda Variável Global' },
+        { nome: 'Multimercado', final: 'Multimercado' }
       ];
       
       for (let item of estrategias) {
-        // Padrão: "Pós Fixado ( 36 , 75 %) R $ 761 . 750 , 29 0 , 66 %"
-        let regex = new RegExp(item.nome + '\\s*\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*%\\)[\\s\\S]*?R\\s*\\$[\\s\\d\\.]+,\\d+\\s+(\\d+)\\s*,\\s*(\\d+)\\s*%', 'i');
-        let match = regex.exec(texto);
-        
-        if (match) {
-          let alocacao = parseFloat(match[1] + '.' + match[2]);
-          let retorno = parseFloat(match[3] + '.' + match[4]);
-          
-          if (alocacao > 0 && alocacao <= 100) {
-            dadosCarteira.alocacoes[item.nomeFinal] = alocacao;
-            dadosCarteira.retornos[item.nomeFinal] = retorno;
-            dbg(`✅ ${item.nomeFinal}: alocação ${alocacao}%, retorno ${retorno}%`);
-          }
+        let dados = extrairDados(texto, item.nome);
+        if (dados) {
+          dadosCarteira.alocacoes[item.final] = dados.alocacao;
+          dadosCarteira.retornos[item.final] = dados.retorno;
+          dbg(`✅ ${item.final}: alocação ${dados.alocacao}%, retorno ${dados.retorno}%`);
         }
       }
     }
