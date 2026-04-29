@@ -181,7 +181,8 @@ async function extrairDadosPDF(file) {
       dbg(`💰 Patrimônio: R$ ${dados.patrimonio}`);
     }
     
-    let rentMatch = textoLimpo.match(/R\$[\d\.]+,\d{2}([\d,]+)%([\d,]+)%/i);
+    // 🔥 CORREÇÃO: Adicionado -? para capturar números negativos
+    let rentMatch = textoLimpo.match(/R\$[\d\.]+,\d{2}(-?[\d,]+)%(-?[\d,]+)%/i);
     if (rentMatch && !dados.rentabilidadeMensal) {
       dados.rentabilidadeMensal = rentMatch[1].replace(',', '.');
       dados.pctCdi = rentMatch[2].replace(',', '.');
