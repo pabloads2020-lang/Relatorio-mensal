@@ -181,7 +181,7 @@ async function extrairDadosPDF(file) {
       dbg(`💰 Patrimônio: R$ ${dados.patrimonio}`);
     }
     
-    // 🔥 CORREÇÃO: Adicionado -? para capturar números negativos
+    // Captura rentabilidade e %CDI (com sinal negativo)
     let rentMatch = textoLimpo.match(/R\$[\d\.]+,\d{2}(-?[\d,]+)%(-?[\d,]+)%/i);
     if (rentMatch && !dados.rentabilidadeMensal) {
       dados.rentabilidadeMensal = rentMatch[1].replace(',', '.');
@@ -197,6 +197,9 @@ async function extrairDadosPDF(file) {
       let nome = match[1];
       let alocacao = match[2] + ',' + match[3];
       let retorno = match[4] + ',' + match[5];
+      
+      // 🔥 CORREÇÃO: Remove o 'M' inicial APENAS do "MPósFixado"
+      if (nome === 'MPósFixado') nome = 'PósFixado';
       
       // Limpa e padroniza o nome
       if (nome === 'PósFixado') nome = 'Pós-Fixado';
