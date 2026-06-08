@@ -90,7 +90,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
 <main class="main">
   <div class="card">
     <div class="card-title">📝 Cenário Macro do Mês</div>
-    <textarea id="textoCenario" class="cenario-textarea" rows="6">O mês de abril de 2026 foi marcado por uma consolidação das expectativas econômicas globais e locais. No Brasil, o foco permaneceu na trajetória da inflação e no compromisso fiscal, fatores que influenciam diretamente o ritmo de queda da taxa Selic pelo Banco Central. No cenário global, a resiliência da economia norte-americana e a manutenção dos juros em patamares elevados pelo Fed continuam ditando o ritmo dos mercados, somadas às tensões geopolíticas que adicionam volatilidade aos preços das commodities e à percepção de risco dos investidores.</textarea>
+    <textarea id="textoCenario" class="cenario-textarea" rows="6">O mercado financeiro brasileiro em maio operou sob maior cautela, com o Ibovespa passando por uma realização de lucros após a estabilidade do mês anterior e o dólar voltando a registrar valorização diante das incertezas locais e globais. Na política monetária, o Banco Central manteve uma postura vigilante devido às expectativas desancoradas de inflação, o que reduziu o otimismo sobre a velocidade dos próximos cortes da taxa Selic; esse cenário de juros ainda elevados continuou mantendo os rendimentos de renda fixa em patamares muito atrativos para os investidores, porém, com marcação a mercado em títulos atrelados a inflação e também nos títulos prefixados.
+No cenário internacional, o foco se dividiu entre os desdobramentos geopolíticos e os indicadores econômicos dos Estados Unidos, reforçando o debate de que os juros americanos devem permanecer altos por mais tempo ("higher for longer"). Apesar dessa pressão e da consequente volatilidade nas bolsas globais, os mercados externos demonstraram seletividade, com as principais praças mostrando resiliência e premiando empresas com balanços sólidos e forte geração de caixa.</textarea>
   </div>
 
   <div class="card">
@@ -270,7 +271,7 @@ function gerarRelatorioTexto(dados) {
 
 ${cenario}
 
-Considerando toda volatilidade do mês de abril e a forte correção do mercado, sua carteira atravessou esse ambiente com solidez, apresentando um retorno de ${rentabilidadeStr} no mês de ${mes.toLowerCase()} de ${ano}, equivalente a ${pctCdiStr} do CDI do período.${patrimonioStr ? ` O patrimônio atual é de ${patrimonioStr}.` : ''}
+Considerando toda volatilidade do mês e a forte correção do mercado, sua carteira atravessou esse ambiente com resiliência, apresentando um retorno de ${rentabilidadeStr} no mês de ${mes.toLowerCase()} de ${ano}, equivalente a ${pctCdiStr} do CDI do período.${patrimonioStr ? ` O patrimônio atual é de ${patrimonioStr}.` : ''}
 No desempenho por classe de ativo: ${desempenhoTexto}
 
 Por fim, reforçamos a importância da disciplina na manutenção da estratégia e nos aportes focando no desenvolvimento da carteira no longo prazo. Essa postura é fundamental para atravessar diferentes ciclos de mercado, aproveitar oportunidades, reduzir os impactos das oscilações no curto prazo e manter a carteira alinhada aos seus objetivos financeiros.`;
