@@ -217,6 +217,11 @@ body.light .hub-topbar {
 .btn-gold:hover { background: var(--gold2); transform: translateY(-1px); }
 .btn-ghost { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
 .btn-ghost:hover { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+.btn-elegant { background: rgba(245,200,66,0.08); border: 1px solid rgba(245,200,66,0.35); color: var(--gold); transition: background 0.2s, border-color 0.2s, transform 0.15s; }
+.btn-elegant:hover { background: rgba(245,200,66,0.16); border-color: var(--gold); transform: translateY(-1px); }
+.btn-elegant:active { transform: translateY(0); }
+.btn-elegant.btn-processing { background: var(--green-bg); border-color: var(--green); color: var(--green); pointer-events: none; }
+.btn-elegant:disabled { opacity: 0.7; cursor: default; }
 .status { display: none; align-items: center; gap: 8px; padding: 9px 13px; border-radius: 8px; font-size: 14px; margin-top: 0.75rem; }
 .status.show { display: flex; }
 .status-ok { background: var(--green-bg); color: var(--green); border: 1px solid rgba(46, 204, 113, 0.25); }
@@ -238,6 +243,52 @@ body.light .hub-topbar {
 .relatorio-texto { font-size: 14px; line-height: 1.6; color: var(--text); white-space: pre-wrap; }
 .cenario-textarea { width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; padding: 12px; color: var(--text); font-size: 14px; font-family: 'DM Sans', sans-serif; resize: vertical; margin-top: 0.5rem; }
 .cenario-textarea:focus { outline: none; border-color: var(--gold); }
+
+/* ===== BATCH / LISTA DE CLIENTES ===== */
+.batch-toolbar { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.batch-counter { font-size: 13px; color: var(--text2); background: var(--bg3); border: 1px solid var(--border2); border-radius: 20px; padding: 6px 14px; }
+.batch-counter b { color: var(--gold); }
+.filter-tabs { display: flex; gap: 6px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; padding: 3px; }
+.filter-tab { border: 1px solid transparent; background: transparent; color: var(--text2); font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: inherit; transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease; }
+.filter-tab:hover { color: var(--gold); background: rgba(245,200,66,0.08); }
+.filter-tab.active { background: rgba(245,200,66,0.14); border-color: rgba(245,200,66,0.4); color: var(--gold); }
+.progress-wrap { display: none; margin-top: 0.75rem; }
+.progress-wrap.show { display: block; }
+.progress-bar-bg { width: 100%; height: 6px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+.progress-bar-fill { height: 100%; background: var(--gold); width: 0%; transition: width 0.2s; }
+.progress-label { font-size: 12px; color: var(--text2); margin-top: 4px; }
+.client-list { display: flex; flex-direction: column; gap: 10px; }
+.client-empty { text-align: center; padding: 2rem; color: var(--text3); }
+.client-card { background: var(--bg3); border: 1px solid var(--border2); border-radius: 10px; overflow: hidden; }
+.client-card.enviado { opacity: 0.6; }
+.client-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; flex-wrap: wrap; }
+.client-arrow { transition: transform 0.2s; color: var(--text3); flex-shrink: 0; }
+.client-arrow.open { transform: rotate(90deg); }
+.client-name-input { background: transparent; border: none; border-bottom: 1px dashed transparent; color: var(--text); font-size: 14px; font-weight: 600; font-family: inherit; padding: 2px 0; flex: 1; min-width: 120px; }
+.client-name-input:hover, .client-name-input:focus { border-bottom-color: var(--border2); outline: none; }
+.client-codigo { font-size: 11px; color: var(--text3); background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 2px 8px; white-space: nowrap; }
+.client-pill { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+.client-pill.pendente { background: var(--amber-bg); color: var(--amber); }
+.client-pill.enviado-pill { background: var(--green-bg); color: var(--green); }
+.client-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 7px; }
+.btn-check { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
+.btn-check:hover { border-color: var(--green); color: var(--green); background: var(--green-bg); }
+.btn-check.active { background: var(--green); color: #fff; border-color: var(--green); }
+.client-body { display: none; padding: 0 14px 14px; border-top: 1px solid var(--border); }
+.client-body.open { display: block; }
+.client-textarea { width: 100%; background: var(--bg2); border: 1px solid var(--border2); border-radius: 8px; padding: 12px; color: var(--text); font-size: 13px; line-height: 1.5; font-family: 'DM Sans', sans-serif; resize: vertical; margin-top: 12px; min-height: 160px; }
+.client-textarea:focus { outline: none; border-color: var(--gold); }
+.client-meta-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+.client-patrim { font-size: 12px; color: var(--gold); background: rgba(245,200,66,0.1); border: 1px solid rgba(245,200,66,0.25); border-radius: 20px; padding: 4px 10px; }
+.client-debug-toggle { font-size: 11px; color: var(--text3); background: none; border: 1px solid var(--border2); border-radius: 20px; padding: 3px 10px; cursor: pointer; font-family: inherit; }
+.client-debug-toggle:hover { color: var(--gold); border-color: var(--gold); }
+.client-debug-box { display: none; background: var(--debug-bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem; font-size: 11px; max-height: 260px; overflow-y: auto; white-space: pre-wrap; margin-top: 8px; font-family: monospace; }
+.client-debug-box.show { display: block; }
+@media (max-width: 560px) {
+  .client-head { padding: 10px; }
+  .client-actions { width: 100%; justify-content: space-between; }
+}
 </style>
 </head>
 <body>
@@ -266,38 +317,58 @@ body.light .hub-topbar {
 </div>
 <!-- ==================== FIM TOPBAR ==================== -->
 
-<div class="overlay" id="overlay"><div class="spin"></div><div>Processando PDF...</div></div>
+<div class="overlay" id="pwOverlay">
+  <div class="card" style="max-width:360px; width:90%;">
+    <div class="card-title">🔒 Confirmar senha</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:10px;line-height:1.5;">Digite a senha para salvar a frase do mês e gerar o novo HTML para publicar no GitHub.</p>
+    <input type="password" id="inputSenhaModal" class="cenario-textarea" style="resize:none;" placeholder="Senha" autocomplete="off">
+    <div id="senhaErro" style="display:none;color:var(--red);font-size:12px;margin-top:6px;">❌ Senha incorreta.</div>
+    <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;">
+      <button class="btn btn-ghost" id="btnCancelarSenha">Cancelar</button>
+      <button class="btn btn-gold" id="btnConfirmarSenha">Confirmar</button>
+    </div>
+  </div>
+</div>
 
 <main class="main">
   <div class="card">
     <div class="card-title">📝 Cenário Macro do Mês</div>
     <textarea id="textoCenario" class="cenario-textarea" rows="6">No mês de junho no cenário internacional, a economia norte-americana seguiu resiliente, com atividade aquecida e inflação controlada. Esse panorama impulsionou as bolsas globais, enquanto investidores calibram as expectativas para o início do corte de juros nos EUA e acompanham as tensões geopolíticas.
 Já no Brasil, o destaque foi a *redução da Selic em 0,25 p.p., para 14,25% ao ano.* O Copom adotou um tom cauteloso diante das incertezas fiscais e de projeções de inflação ainda acima da meta. Apesar da queda dos juros atuais, os juros futuros subiram consideravelmente, impactando novamente todas as variáveis, refletindo em maior aversão ao risco local, com o Ibovespa fechando o mês com uma leve queda de 1,01%.</textarea>
+    <div style="display:flex; justify-content:flex-end; margin-top:0.75rem;">
+      <button class="btn btn-elegant" id="btnSalvarFrase">💾 Salvar frase e gerar novo HTML</button>
+    </div>
   </div>
 
   <div class="card">
-    <div class="card-title">📄 Importar relatório XP (PDF)</div>
+    <div class="card-title">📄 Importar relatórios XP (PDF) — em massa</div>
     <div class="upload-row">
-      <label class="file-label" for="filePdf">📎 <span id="fileName">Selecionar arquivo PDF...</span></label>
-      <input type="file" id="filePdf" accept=".pdf">
-      <button class="btn btn-gold" id="btnImportar">GERAR RELATÓRIO COMPLETO</button>
-      <button class="btn btn-ghost" id="btnLimpar">Limpar</button>
+      <label class="file-label" for="filePdf">📎 <span id="fileName">Selecionar um ou vários PDFs...</span></label>
+      <input type="file" id="filePdf" accept=".pdf" multiple>
+      <button class="btn btn-elegant" id="btnImportar"><span id="btnImportarLabel">PROCESSAR TODOS</span></button>
+      <button class="btn btn-ghost" id="btnLimpar">Limpar lista</button>
     </div>
     <div id="status" class="status"></div>
-    <div id="patrimTag" class="patrim-tag">💰 <span id="patrimVal"></span></div>
-    
-    <button class="btn-debug" id="btnToggleDebug"><span class="arrow" id="debugArrow">▶</span> Detalhes da leitura</button>
-    <div id="debugBox" class="debug-box"></div>
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+      <div class="progress-label" id="progressLabel"></div>
+    </div>
   </div>
 
   <div class="card">
-    <div class="card-title">📈 Relatório Mensal - Análise PBF</div>
-    <div id="relatorioConteudo" class="relatorio-container">
-      <div style="text-align: center; padding: 2rem; color: var(--text3);">
-        ⚡ Importe um PDF para gerar o relatório automático
+    <div class="card-title">📈 Lista de Clientes</div>
+    <div class="batch-toolbar">
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filtro="todos">Todos</button>
+        <button class="filter-tab" data-filtro="pendentes">Pendentes</button>
+        <button class="filter-tab" data-filtro="enviados">Enviados</button>
       </div>
+      <div class="batch-counter" id="batchCounter">0 clientes</div>
+      <button class="btn btn-ghost btn-sm" id="btnAtualizarCenario">🔄 Atualizar cenário em pendentes</button>
     </div>
-    <button class="btn btn-ghost" id="btnCopiar" style="margin-top: 1rem; width: auto;">📋 Copiar para WhatsApp</button>
+    <div class="client-list" id="clientList">
+      <div class="client-empty">⚡ Importe os PDFs para gerar a lista de relatórios</div>
+    </div>
   </div>
 </main>
 
@@ -355,10 +426,7 @@ function initTheme() {
 }
 initTheme();
 
-// ========== FUNÇÕES ORIGINAIS ==========
-let debugLines = [];
-let dadosProcessados = null;
-
+// ========== FUNÇÕES ORIGINAIS (adaptadas para lote) ==========
 function fmtBRL(v) { return 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2}); }
 function setStatus(msg, tipo) { 
   const el = document.getElementById('status'); 
@@ -366,14 +434,14 @@ function setStatus(msg, tipo) {
   el.className = 'status show status-' + tipo; 
   setTimeout(() => el.classList.remove('show'), 4000); 
 }
-function dbg(txt) { debugLines.push(txt); document.getElementById('debugBox').textContent = debugLines.join('\n'); }
-function clearDebug() { debugLines = []; document.getElementById('debugBox').textContent = ''; }
 
 function superLimpeza(texto) {
     return texto.replace(/\s+/g, '');
 }
 
-async function extrairDadosPDF(file) {
+// extrai os dados do PDF; log[] recebe as linhas de debug individuais deste arquivo
+async function extrairDadosPDF(file, log) {
+  log = log || [];
   let ab = await file.arrayBuffer();
   let pdf = await pdfjsLib.getDocument({ data: ab }).promise;
   
@@ -393,8 +461,8 @@ async function extrairDadosPDF(file) {
     let textoOriginal = textContent.items.map(item => item.str).join(' ');
     let textoLimpo = superLimpeza(textoOriginal);
     
-    dbg(`\n--- PÁGINA ${p} (LIMPA) ---`);
-    dbg(textoLimpo.substring(0, 1000));
+    log.push(`\n--- PÁGINA ${p} (LIMPA) ---`);
+    log.push(textoLimpo.substring(0, 1000));
     
     if (p === 1) {
       let dataMatch = textoLimpo.match(/DataDeReferência(\d{2})\/(\d{2})\/(\d{4})/);
@@ -402,22 +470,22 @@ async function extrairDadosPDF(file) {
         let meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
         dados.mesReferencia = meses[parseInt(dataMatch[2]) - 1];
         dados.anoReferencia = dataMatch[3];
-        dbg(`📅 Data: ${dados.mesReferencia}/${dados.anoReferencia}`);
+        log.push(`📅 Data: ${dados.mesReferencia}/${dados.anoReferencia}`);
       }
     }
     
     let patMatch = textoLimpo.match(/PATRIMÔNIOTOTALBRUTO:R\$([\d\.]+,\d{2})/i);
     if (patMatch) {
       dados.patrimonio = patMatch[1];
-      dbg(`💰 Patrimônio: R$ ${dados.patrimonio}`);
+      log.push(`💰 Patrimônio: R$ ${dados.patrimonio}`);
     }
     
     let rentMatch = textoLimpo.match(/R\$[\d\.]+,\d{2}(-?[\d,]+)%(-?[\d,]+)%/i);
     if (rentMatch && !dados.rentabilidadeMensal) {
       dados.rentabilidadeMensal = rentMatch[1].replace(',', '.');
       dados.pctCdi = rentMatch[2].replace(',', '.');
-      dbg(`📈 Rentabilidade Mensal: ${dados.rentabilidadeMensal}%`);
-      dbg(`📊 %CDI: ${dados.pctCdi}%`);
+      log.push(`📈 Rentabilidade Mensal: ${dados.rentabilidadeMensal}%`);
+      log.push(`📊 %CDI: ${dados.pctCdi}%`);
     }
     
     let regexClasse = /([A-Za-zÀ-Úà-û]+?)\((\d+),(\d+)%\)R\$[\d\.]+,\d+(-?\d+),(\d+)%/gi;
@@ -444,7 +512,7 @@ async function extrairDadosPDF(file) {
       if (alocacao && retorno && !dados.alocacoes[nome]) {
         dados.alocacoes[nome] = alocacao;
         dados.retornos[nome] = retorno;
-        dbg(`✅ ${nome}: alocação ${alocacao}%, retorno ${retorno}%`);
+        log.push(`✅ ${nome}: alocação ${alocacao}%, retorno ${retorno}%`);
       }
     }
   }
@@ -452,7 +520,21 @@ async function extrairDadosPDF(file) {
   return dados;
 }
 
-function gerarRelatorioTexto(dados) {
+// tenta identificar nome do cliente e código a partir do nome do arquivo
+// aceita padrões como "Nome Cliente - 123456.pdf", "Nome_Cliente_123456.pdf", "Nome-Cliente-123456.pdf"
+function parseClienteDoNomeArquivo(filename) {
+  let base = filename.replace(/\.pdf$/i, '');
+  let nome = base, codigo = '';
+  let m = base.match(/^(.*?)[\s_\-]+(\d{3,})$/);
+  if (m) {
+    nome = m[1];
+    codigo = m[2];
+  }
+  nome = nome.replace(/[_\-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  return { nome: nome || base, codigo };
+}
+
+function gerarRelatorioTexto(dados, cenarioOverride) {
   let mes = dados.mesReferencia || "maio";
   let ano = dados.anoReferencia || "2026";
   let rentabilidade = dados.rentabilidadeMensal;
@@ -461,7 +543,7 @@ function gerarRelatorioTexto(dados) {
   let alocacoes = dados.alocacoes;
   let retornos = dados.retornos;
   
-  let cenario = document.getElementById('textoCenario').value;
+  let cenario = cenarioOverride !== undefined ? cenarioOverride : document.getElementById('textoCenario').value;
   
   let desempenhoTexto = "";
   let classesList = [];
@@ -495,7 +577,7 @@ function gerarRelatorioTexto(dados) {
 
 ${cenario}
 
-Considerando toda volatilidade do mês e a forte correção do mercado, sua carteira atravessou esse ambiente com resiliência, apresentando um retorno de ${rentabilidadeStr} no mês de ${mes.toLowerCase()} de ${ano}, equivalente a ${pctCdiStr} do CDI do período.${patrimonioStr ? ` O patrimônio atual é de ${patrimonioStr}.` : ''}
+Considerando toda volatilidade do mês e a forte correção do mercado, sua carteira atravessou esse ambiente com resiliência, apresentando um retorno de ${rentabilidadeStr}, equivalente a ${pctCdiStr} do CDI do período.${patrimonioStr ? ` O patrimônio atual é de ${patrimonioStr}.` : ''}
 No desempenho por classe de ativo: ${desempenhoTexto}
 
 Por fim, reforçamos a importância da disciplina na manutenção da estratégia e nos aportes focando no desenvolvimento da carteira no longo prazo. Essa postura é fundamental para atravessar diferentes ciclos de mercado, aproveitar oportunidades, reduzir os impactos das oscilações no curto prazo e manter a carteira alinhada aos seus objetivos financeiros.`;
@@ -503,58 +585,318 @@ Por fim, reforçamos a importância da disciplina na manutenção da estratégia
   return texto;
 }
 
-// ========== EVENTOS ORIGINAIS ==========
-document.getElementById('btnToggleDebug').addEventListener('click', () => {
-  document.getElementById('debugBox').classList.toggle('show');
-  document.getElementById('debugArrow').classList.toggle('rotated');
+// ========== LOTE DE CLIENTES ==========
+const LS_KEY = 'pbfRelatorioBatchState_v1';
+let clientes = []; // { id, fileName, nome, codigo, dados, texto, enviado, log }
+let filtroAtual = 'todos';
+let idSeq = 1;
+
+function novoId() { return 'c' + (idSeq++) + '_' + Date.now(); }
+
+function salvarEstado() {
+  try {
+    let serial = clientes.map(c => ({
+      id: c.id, fileName: c.fileName, nome: c.nome, codigo: c.codigo,
+      dados: c.dados, texto: c.texto, enviado: c.enviado
+    }));
+    localStorage.setItem(LS_KEY, JSON.stringify(serial));
+  } catch (e) { /* silencioso */ }
+}
+
+function carregarEstado() {
+  try {
+    let raw = localStorage.getItem(LS_KEY);
+    if (!raw) return;
+    let serial = JSON.parse(raw);
+    clientes = serial.map(c => ({ ...c, log: [] }));
+    if (clientes.length) renderLista();
+  } catch (e) { /* silencioso */ }
+}
+
+function contagem() {
+  let total = clientes.length;
+  let enviados = clientes.filter(c => c.enviado).length;
+  return { total, enviados, pendentes: total - enviados };
+}
+
+function atualizarContador() {
+  let { total, enviados, pendentes } = contagem();
+  document.getElementById('batchCounter').innerHTML = `<b>${pendentes}</b> pendente(s) · <b>${enviados}</b> enviado(s) · ${total} no total`;
+}
+
+function escapeHtml(s) {
+  return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function renderLista() {
+  const cont = document.getElementById('clientList');
+  atualizarContador();
+
+  let lista = clientes.filter(c => {
+    if (filtroAtual === 'pendentes') return !c.enviado;
+    if (filtroAtual === 'enviados') return c.enviado;
+    return true;
+  });
+
+  if (lista.length === 0) {
+    cont.innerHTML = `<div class="client-empty">⚡ ${clientes.length === 0 ? 'Importe os PDFs para gerar a lista de relatórios' : 'Nenhum cliente nesse filtro'}</div>`;
+    return;
+  }
+
+  cont.innerHTML = lista.map(c => {
+    let patrimHtml = c.dados && c.dados.patrimonio
+      ? `<span class="client-patrim">💰 ${fmtBRL(parseFloat(c.dados.patrimonio.replace(/\./g, '').replace(',', '.')))}</span>`
+      : '';
+    return `
+    <div class="client-card ${c.enviado ? 'enviado' : ''}" data-id="${c.id}">
+      <div class="client-head" data-toggle="${c.id}">
+        <span class="client-arrow" id="arrow_${c.id}">▶</span>
+        <input class="client-name-input" data-nome="${c.id}" value="${escapeHtml(c.nome)}">
+        ${c.codigo ? `<span class="client-codigo">#${escapeHtml(c.codigo)}</span>` : ''}
+        <span class="client-pill ${c.enviado ? 'enviado-pill' : 'pendente'}">${c.enviado ? 'Enviado' : 'Pendente'}</span>
+        <div class="client-actions">
+          <button class="btn btn-ghost btn-sm" data-copiar="${c.id}">📋 Copiar</button>
+          <button class="btn-check btn-sm ${c.enviado ? 'active' : ''}" data-check="${c.id}">${c.enviado ? '✓ Enviado' : 'Marcar enviado'}</button>
+        </div>
+      </div>
+      <div class="client-body" id="body_${c.id}">
+        <textarea class="client-textarea" data-texto="${c.id}">${c.texto}</textarea>
+        <div class="client-meta-row">
+          ${patrimHtml}
+          <button class="client-debug-toggle" data-debugtoggle="${c.id}">Ver leitura do PDF</button>
+        </div>
+        <div class="client-debug-box" id="debug_${c.id}">${escapeHtml((c.log || []).join('\n')) || 'Sem detalhes de leitura salvos (recarregue processando o PDF novamente).'}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // eventos dos cards renderizados
+  cont.querySelectorAll('[data-toggle]').forEach(el => {
+    el.addEventListener('click', (ev) => {
+      if (ev.target.tagName === 'INPUT') return;
+      let id = el.getAttribute('data-toggle');
+      document.getElementById('body_' + id).classList.toggle('open');
+      document.getElementById('arrow_' + id).classList.toggle('open');
+    });
+  });
+  cont.querySelectorAll('[data-nome]').forEach(el => {
+    el.addEventListener('click', ev => ev.stopPropagation());
+    el.addEventListener('change', () => {
+      let id = el.getAttribute('data-nome');
+      let c = clientes.find(x => x.id === id);
+      if (c) { c.nome = el.value.trim() || c.nome; salvarEstado(); }
+    });
+  });
+  cont.querySelectorAll('[data-texto]').forEach(el => {
+    el.addEventListener('input', () => {
+      let id = el.getAttribute('data-texto');
+      let c = clientes.find(x => x.id === id);
+      if (c) { c.texto = el.value; salvarEstado(); }
+    });
+  });
+  cont.querySelectorAll('[data-copiar]').forEach(el => {
+    el.addEventListener('click', async (ev) => {
+      ev.stopPropagation();
+      let id = el.getAttribute('data-copiar');
+      let c = clientes.find(x => x.id === id);
+      if (!c) return;
+      try {
+        await navigator.clipboard.writeText(c.texto);
+        setStatus(`✅ Texto de ${escapeHtml(c.nome)} copiado!`, 'ok');
+      } catch (e) {
+        setStatus('❌ Erro ao copiar texto', 'err');
+      }
+    });
+  });
+  cont.querySelectorAll('[data-check]').forEach(el => {
+    el.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      let id = el.getAttribute('data-check');
+      let c = clientes.find(x => x.id === id);
+      if (!c) return;
+      c.enviado = !c.enviado;
+      salvarEstado();
+      renderLista();
+    });
+  });
+  cont.querySelectorAll('[data-debugtoggle]').forEach(el => {
+    el.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      let id = el.getAttribute('data-debugtoggle');
+      document.getElementById('debug_' + id).classList.toggle('show');
+    });
+  });
+}
+
+document.querySelectorAll('.filter-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    filtroAtual = tab.getAttribute('data-filtro');
+    renderLista();
+  });
 });
 
 document.getElementById('filePdf').addEventListener('change', function() {
-  document.getElementById('fileName').textContent = this.files[0]?.name || 'Selecionar arquivo PDF...';
-});
-
-document.getElementById('btnCopiar').addEventListener('click', async () => {
-  const texto = document.getElementById('relatorioConteudo').innerText;
-  try {
-    await navigator.clipboard.writeText(texto);
-    setStatus('✅ Texto copiado para a área de transferência!', 'ok');
-  } catch (err) {
-    setStatus('❌ Erro ao copiar texto', 'err');
-  }
+  let n = this.files.length;
+  document.getElementById('fileName').textContent = n === 0
+    ? 'Selecionar um ou vários PDFs...'
+    : (n === 1 ? this.files[0].name : `${n} arquivos selecionados`);
 });
 
 document.getElementById('btnImportar').addEventListener('click', async () => {
-  let file = document.getElementById('filePdf').files[0];
-  if (!file) { setStatus('Selecione um arquivo PDF primeiro.', 'err'); return; }
-  clearDebug();
-  document.getElementById('overlay').classList.add('show');
-  try {
-    let dados = await extrairDadosPDF(file);
-    dadosProcessados = dados;
-    let textoFinal = gerarRelatorioTexto(dados);
-    document.getElementById('relatorioConteudo').innerHTML = `<div class="relatorio-texto">${textoFinal.replace(/\n/g, '<br>')}</div>`;
-    setStatus('✅ PDF importado com sucesso! Relatório gerado.', 'ok');
-    if (dados.patrimonio) {
-      document.getElementById('patrimVal').innerHTML = fmtBRL(parseFloat(dados.patrimonio.replace(/\./g, '').replace(',', '.')));
-      document.getElementById('patrimTag').classList.add('show');
+  let files = Array.from(document.getElementById('filePdf').files);
+  if (!files.length) { setStatus('Selecione ao menos um arquivo PDF.', 'err'); return; }
+
+  const btnImportar = document.getElementById('btnImportar');
+  const btnImportarLabel = document.getElementById('btnImportarLabel');
+  btnImportar.classList.add('btn-processing');
+  btnImportar.disabled = true;
+  btnImportarLabel.textContent = '✓ PROCESSANDO...';
+
+  const progressWrap = document.getElementById('progressWrap');
+  const progressFill = document.getElementById('progressFill');
+  const progressLabel = document.getElementById('progressLabel');
+  progressWrap.classList.add('show');
+
+  let ok = 0, falhas = [];
+  for (let i = 0; i < files.length; i++) {
+    let file = files[i];
+    progressLabel.textContent = `Processando ${i + 1} de ${files.length}: ${file.name}`;
+    progressFill.style.width = Math.round(((i) / files.length) * 100) + '%';
+    let log = [];
+    try {
+      let dados = await extrairDadosPDF(file, log);
+      let { nome, codigo } = parseClienteDoNomeArquivo(file.name);
+      let texto = gerarRelatorioTexto(dados);
+      clientes.push({
+        id: novoId(), fileName: file.name, nome, codigo, dados, texto, enviado: false, log
+      });
+      ok++;
+    } catch (e) {
+      falhas.push(file.name + ' (' + e.message + ')');
     }
-  } catch (e) {
-    setStatus('Erro ao processar PDF: ' + e.message, 'err');
-    dbg('ERRO: ' + e.message);
-  } finally {
-    document.getElementById('overlay').classList.remove('show');
+  }
+  progressFill.style.width = '100%';
+  progressWrap.classList.remove('show');
+  document.getElementById('filePdf').value = '';
+  document.getElementById('fileName').textContent = 'Selecionar um ou vários PDFs...';
+
+  btnImportar.classList.remove('btn-processing');
+  btnImportar.disabled = false;
+  btnImportarLabel.textContent = 'PROCESSAR TODOS';
+
+  salvarEstado();
+  renderLista();
+
+  if (falhas.length) {
+    setStatus(`⚠️ ${ok} processado(s), ${falhas.length} falharam: ${falhas.join('; ')}`, 'err');
+  } else {
+    setStatus(`✅ ${ok} relatório(s) gerado(s) com sucesso!`, 'ok');
   }
 });
 
-document.getElementById('btnLimpar').addEventListener('click', () => {
-  dadosProcessados = null;
-  document.getElementById('status').classList.remove('show');
-  document.getElementById('patrimTag').classList.remove('show');
-  document.getElementById('relatorioConteudo').innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text3);">⚡ Importe um PDF para gerar o relatório automático</div>';
-  clearDebug();
-  document.getElementById('filePdf').value = '';
-  document.getElementById('fileName').textContent = 'Selecionar arquivo PDF...';
+document.getElementById('btnAtualizarCenario').addEventListener('click', () => {
+  let cenarioAtual = document.getElementById('textoCenario').value;
+  let n = 0;
+  clientes.forEach(c => {
+    if (!c.enviado && c.dados) {
+      c.texto = gerarRelatorioTexto(c.dados, cenarioAtual);
+      n++;
+    }
+  });
+  salvarEstado();
+  renderLista();
+  setStatus(`🔄 Cenário atualizado em ${n} cliente(s) pendente(s).`, 'ok');
 });
+
+document.getElementById('btnLimpar').addEventListener('click', () => {
+  if (clientes.length && !confirm('Isso vai apagar toda a lista de clientes processados. Confirma?')) return;
+  clientes = [];
+  salvarEstado();
+  renderLista();
+  document.getElementById('status').classList.remove('show');
+  document.getElementById('filePdf').value = '';
+  document.getElementById('fileName').textContent = 'Selecionar um ou vários PDFs...';
+});
+
+// ========== SALVAR FRASE / GERAR NOVO HTML ==========
+const SENHA_SALVAR = 'carteiras2025';
+
+function abrirModalSenha() {
+  document.getElementById('inputSenhaModal').value = '';
+  document.getElementById('senhaErro').classList.remove('show');
+  document.getElementById('pwOverlay').classList.add('show');
+  document.getElementById('inputSenhaModal').focus();
+}
+function fecharModalSenha() {
+  document.getElementById('pwOverlay').classList.remove('show');
+}
+
+function escapeHtmlFrase(s) {
+  return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+async function gerarNovoHTMLComFrase(novaFrase) {
+  let sourceHtml;
+  try {
+    let url = window.location.href.split('#')[0].split('?')[0] + '?_cb=' + Date.now();
+    let resp = await fetch(url, { cache: 'no-store' });
+    if (!resp.ok) throw new Error('não foi possível buscar o HTML original (' + resp.status + ')');
+    sourceHtml = await resp.text();
+  } catch (e) {
+    // fallback: serializa o documento atual (pode incluir a lista de clientes em tela)
+    sourceHtml = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  }
+
+  let escaped = escapeHtmlFrase(novaFrase);
+  let regex = /(<textarea id="textoCenario"[^>]*>)([\s\S]*?)(<\/textarea>)/;
+  if (!regex.test(sourceHtml)) {
+    throw new Error('não encontrei o campo da frase no HTML original para atualizar');
+  }
+  return sourceHtml.replace(regex, (m, abre, meio, fecha) => abre + escaped + fecha);
+}
+
+function baixarArquivo(conteudo, nomeArquivo) {
+  let blob = new Blob([conteudo], { type: 'text/html;charset=utf-8' });
+  let url = URL.createObjectURL(blob);
+  let a = document.createElement('a');
+  a.href = url;
+  a.download = nomeArquivo;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+document.getElementById('btnSalvarFrase').addEventListener('click', abrirModalSenha);
+document.getElementById('btnCancelarSenha').addEventListener('click', fecharModalSenha);
+document.getElementById('pwOverlay').addEventListener('click', (ev) => {
+  if (ev.target.id === 'pwOverlay') fecharModalSenha();
+});
+document.getElementById('inputSenhaModal').addEventListener('keydown', (ev) => {
+  if (ev.key === 'Enter') document.getElementById('btnConfirmarSenha').click();
+});
+
+document.getElementById('btnConfirmarSenha').addEventListener('click', async () => {
+  let senha = document.getElementById('inputSenhaModal').value;
+  if (senha !== SENHA_SALVAR) {
+    document.getElementById('senhaErro').classList.add('show');
+    return;
+  }
+  fecharModalSenha();
+  setStatus('⏳ Gerando novo HTML...', 'ok');
+  try {
+    let novaFrase = document.getElementById('textoCenario').value;
+    let novoHtml = await gerarNovoHTMLComFrase(novaFrase);
+    baixarArquivo(novoHtml, 'index.html');
+    setStatus('✅ Novo HTML baixado! Suba o arquivo no seu repositório do GitHub.', 'ok');
+  } catch (e) {
+    setStatus('❌ Erro ao gerar HTML: ' + e.message, 'err');
+  }
+});
+
+carregarEstado();
 </script>
 </body>
 </html>
