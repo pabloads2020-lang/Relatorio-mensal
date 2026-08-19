@@ -9,18 +9,18 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
 :root {
-  --bg: #0e1117; --bg2: #161b25; --bg3: #1c2333;
-  --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13);
+  --bg: #07080B; --bg2: #0D0F14; --bg3: #12151C;
+  --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.18);
   --gold: #f5c842; --gold2: #e0a800;
-  --text: #e8eaf0; --text2: #8b93a7; --text3: #555e72;
+  --text: #F5F6F8; --text2: #9CA1AC; --text3: #767C8A;
   --green: #2ecc71; --green-bg: rgba(46,204,113,0.12);
   --red: #e74c3c; --red-bg: rgba(231,76,60,0.12);
   --amber: #f39c12; --amber-bg: rgba(243,156,18,0.12);
   --blue: #3498db; --blue-bg: rgba(52,152,219,0.12);
-  --header-bg: #161b25; --header-border: rgba(255,255,255,0.07);
-  --card-bg: #161b25; --card-border: rgba(255,255,255,0.07);
+  --header-bg: #0D0F14; --header-border: rgba(255,255,255,0.08);
+  --card-bg: #0D0F14; --card-border: rgba(255,255,255,0.08);
   --debug-bg: #1c2333; --overlay-bg: rgba(14,17,23,.88);
-  --footer-border: rgba(255,255,255,0.07);
+  --footer-border: rgba(255,255,255,0.05);
   --relatorio-bg: linear-gradient(135deg, rgba(245,200,66,0.03) 0%, rgba(52,152,219,0.03) 100%);
 }
 body.light {
@@ -49,8 +49,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
   --gold-topbar: #f5c842;
   --amber-topbar: #e0ac2c;
   font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
-  background: var(--bg-topbar);
-  border-bottom: 1px solid var(--border-topbar);
+  background: rgba(20,23,32,.3);
+  border-bottom: 1px solid rgba(255,255,255,.14);
+  box-shadow: 0 4px 16px -8px rgba(0,0,0,0.4), inset 0 -1px 0 rgba(255,255,255,.05);
   height: 52px;
   display: flex;
   align-items: center;
@@ -60,6 +61,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
   position: sticky;
   top: 0;
   z-index: 200;
+  backdrop-filter: blur(8px) saturate(200%);
+  -webkit-backdrop-filter: blur(8px) saturate(200%);
 }
 body.light .hub-topbar {
   --bg-topbar: #ffffff;
@@ -69,6 +72,11 @@ body.light .hub-topbar {
   --text3-topbar: #8a90a8;
   --gold-topbar: #b8860b;
   --amber-topbar: #c47d00;
+  background: #ffffff;
+  border-bottom: 1px solid #d4d8e2;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 .hub-topbar-left, .hub-topbar-right {
   display: flex;
@@ -213,8 +221,8 @@ body.light .hub-topbar {
 .file-label:hover { border-color: var(--gold); color: var(--gold); }
 #filePdf { display: none; }
 .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; white-space: nowrap; }
-.btn-gold { background: var(--gold); color: #000; }
-.btn-gold:hover { background: var(--gold2); transform: translateY(-1px); }
+.btn-gold { background: rgba(245,200,66,.12); border: 1px solid rgba(245,200,66,.45); color: var(--gold); }
+.btn-gold:hover { background: rgba(245,200,66,.2); border-color: rgba(245,200,66,.7); transform: translateY(-1px); }
 .btn-ghost { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
 .btn-ghost:hover { border-color: var(--red); color: var(--red); background: var(--red-bg); }
 .btn-elegant { background: rgba(245,200,66,0.08); border: 1px solid rgba(245,200,66,0.35); color: var(--gold); transition: background 0.2s, border-color 0.2s, transform 0.15s; }
@@ -234,6 +242,9 @@ body.light .hub-topbar {
 .debug-box.show { display: block; }
 .overlay { display: none; position: fixed; inset: 0; background: var(--overlay-bg); z-index: 200; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; }
 .overlay.show { display: flex; }
+#pwOverlay .card { background: rgba(20,23,32,.55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,.1); box-shadow: 0 30px 70px -20px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.06); }
+#inputSenhaModal { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.1); }
+#inputSenhaModal:focus { border-color: rgba(255,255,255,.25); box-shadow: none; }
 .spin { width: 40px; height: 40px; border: 3px solid var(--border2); border-top-color: var(--gold); border-radius: 50%; animation: rot 0.8s linear infinite; }
 @keyframes rot { to { transform: rotate(360deg); } }
 .footer { text-align: center; font-size: 12px; color: var(--text3); padding: 2rem; border-top: 1px solid var(--footer-border); margin-top: 1rem; }
@@ -319,7 +330,7 @@ body.light .hub-topbar {
 
 <div class="overlay" id="pwOverlay">
   <div class="card" style="max-width:360px; width:90%;">
-    <div class="card-title">🔒 Confirmar senha</div>
+    <div class="card-title"><span style="display:inline-flex;align-items:center;gap:6px;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="flex-shrink:0;"><rect x="4" y="11" width="16" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Confirmar senha</span></div>
     <p style="font-size:13px;color:var(--text2);margin-bottom:10px;line-height:1.5;">Digite a senha para salvar a frase do mês e gerar o novo HTML para publicar no GitHub.</p>
     <input type="password" id="inputSenhaModal" class="cenario-textarea" style="resize:none;" placeholder="Senha" autocomplete="off">
     <div id="senhaErro" style="display:none;color:var(--red);font-size:12px;margin-top:6px;">❌ Senha incorreta.</div>
@@ -384,7 +395,7 @@ document.getElementById('hubBackBtn')?.addEventListener('click', () => {
   if (window.self !== window.top) {
     window.parent.postMessage({ action: 'hubNavigate', target: 'home' }, '*');
   } else {
-    window.location.href = "https://pabloads2020-lang.github.io/Dashboard-Ferramentas-Integradas/";
+    window.location.href = "https://pabloads2020-lang.github.io/Dashboard-Ferramentas-Integradas/dashboard.html";
   }
 });
 document.getElementById('hubNewTabBtn')?.addEventListener('click', () => {
@@ -647,7 +658,7 @@ function renderLista() {
 
   cont.innerHTML = lista.map(c => {
     let patrimHtml = c.dados && c.dados.patrimonio
-      ? `<span class="client-patrim">💰 ${fmtBRL(parseFloat(c.dados.patrimonio.replace(/\./g, '').replace(',', '.')))}</span>`
+      ? `<span class="client-patrim">${fmtBRL(parseFloat(c.dados.patrimonio.replace(/\./g, '').replace(',', '.')))}</span>`
       : '';
     return `
     <div class="client-card ${c.enviado ? 'enviado' : ''}" data-id="${c.id}">
