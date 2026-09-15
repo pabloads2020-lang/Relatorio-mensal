@@ -297,6 +297,9 @@ body.light .hub-theme-btn .hub-theme-knob {
 .client-name-input { background: transparent; border: none; border-bottom: 1px dashed transparent; color: var(--text); font-size: 14px; font-weight: 600; font-family: inherit; padding: 2px 0; flex: 1; min-width: 120px; }
 .client-name-input:hover, .client-name-input:focus { border-bottom-color: var(--border2); outline: none; }
 .client-codigo { font-size: 11px; color: var(--text3); background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 2px 8px; white-space: nowrap; }
+.client-tel-input { width: 150px; background: var(--bg2); border: 1px solid var(--border2); border-radius: 8px; padding: 4px 8px; font-size: 12px; color: var(--text); font-family: inherit; }
+.client-tel-input:focus { outline: none; border-color: var(--gold); }
+.client-tel-input::placeholder { color: var(--text3); }
 .client-pill { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
 .client-pill.pendente { background: var(--amber-bg); color: var(--amber); }
 .client-pill.enviado-pill { background: var(--green-bg); color: var(--green); }
@@ -352,7 +355,7 @@ body.light .hub-theme-btn .hub-theme-knob {
     <div class="card-title"><span style="display:inline-flex;align-items:center;gap:6px;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="flex-shrink:0;"><rect x="4" y="11" width="16" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Confirmar senha</span></div>
     <p style="font-size:13px;color:var(--text2);margin-bottom:10px;line-height:1.5;">Digite a senha para salvar a frase do mês e gerar o novo HTML para publicar no GitHub.</p>
     <input type="password" id="inputSenhaModal" class="cenario-textarea" style="resize:none;" placeholder="Senha" autocomplete="off">
-    <div id="senhaErro" style="display:none;color:var(--red);font-size:12px;margin-top:6px;">❌ Senha incorreta.</div>
+    <div id="senhaErro" style="display:none;color:var(--red);font-size:12px;margin-top:6px;">Senha incorreta.</div>
     <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;">
       <button class="btn btn-ghost" id="btnCancelarSenha">Cancelar</button>
       <button class="btn btn-gold" id="btnConfirmarSenha">Confirmar</button>
@@ -362,20 +365,20 @@ body.light .hub-theme-btn .hub-theme-knob {
 
 <main class="main">
   <div class="card">
-    <div class="card-title">📝 Cenário Macro do Mês</div>
+    <div class="card-title">Cenário Macro do Mês</div>
     <textarea id="textoCenario" class="cenario-textarea" rows="6">No mês de agosto, no cenário internacional, os mercados permaneceram atentos à trajetória da inflação e à condução da política monetária nos Estados Unidos. Ao longo do mês, a resiliência da economia americana e a persistência de pressões inflacionárias mantiveram as incertezas sobre os próximos passos do Federal Reserve, especialmente após um tom mais cauteloso adotado pelo Fed no simpósio de Jackson Hole. As tensões geopolíticas no Oriente Médio também contribuíram para a volatilidade dos mercados, com impactos sobre os preços do petróleo e sobre os juros globais.
 
 Já no Brasil, o destaque ficou para a decisão do Banco Central de reduzir a Selic em 0,25 ponto percentual, para 14,00% ao ano, em um cenário de desaceleração gradual da atividade e da inflação, embora as expectativas inflacionárias ainda permanecessem acima da meta. Na bolsa, após um início de mês mais pressionado, o Ibovespa apresentou forte recuperação na segunda metade de agosto, encerrando o mês praticamente estável, com queda de 0,33%. A melhora do fluxo estrangeiro e a valorização das ações ligadas ao petróleo, especialmente Petrobras, ajudaram a compensar parte das perdas observadas ao longo do mês.
 </textarea>
     <div style="display:flex; justify-content:flex-end; margin-top:0.75rem;">
-      <button class="btn btn-elegant" id="btnSalvarFrase">💾 Salvar frase e gerar novo HTML</button>
+      <button class="btn btn-elegant" id="btnSalvarFrase">Salvar frase e gerar novo HTML</button>
     </div>
   </div>
 
   <div class="card">
-    <div class="card-title">📄 Importar relatórios XP (PDF) — em massa</div>
+    <div class="card-title">Importar relatórios XP (PDF) — em massa</div>
     <div class="upload-row">
-      <label class="file-label" for="filePdf">📎 <span id="fileName">Selecionar um ou vários PDFs...</span></label>
+      <label class="file-label" for="filePdf"><span id="fileName">Selecionar um ou vários PDFs...</span></label>
       <input type="file" id="filePdf" accept=".pdf" multiple>
       <button class="btn btn-elegant" id="btnImportar"><span id="btnImportarLabel">PROCESSAR TODOS</span></button>
       <button class="btn btn-ghost" id="btnLimpar">Limpar lista</button>
@@ -388,7 +391,19 @@ Já no Brasil, o destaque ficou para a decisão do Banco Central de reduzir a Se
   </div>
 
   <div class="card">
-    <div class="card-title">📈 Lista de Clientes</div>
+    <div class="card-title">Telefones e Grupos dos Clientes<span id="telCount" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text2);font-size:12px;"></span></div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:10px;line-height:1.5;">Cadastre uma vez o telefone (e, se quiser, o nome do grupo do WhatsApp) de cada cliente — depois disso já é reconhecido todo mês pelo código. Cole aqui direto do Excel, nas colunas <b>código, nome, telefone, grupo</b>. Telefone e grupo são opcionais — pode deixar a célula em branco no Excel para o cliente que não tiver (ex: um cliente só recebe no grupo, outro só recebe no número dele). Digitando à mão, use espaçamento livre ou <code>;</code> entre os campos. Também dá pra editar direto no card de cada cliente, na lista abaixo.</p>
+    <textarea id="telefonesBulk" class="cenario-textarea" rows="4" placeholder="18863640	LEONARDO GRISI GUEDES	5511999998888	Família Guedes - Investimentos&#10;18898403	VALDENICE BEZERRA ALVES	5511988887777	"></textarea>
+    <div style="display:flex; gap:0.5rem; margin-top:0.75rem; flex-wrap:wrap;">
+      <button class="btn btn-elegant" id="btnSalvarTelefones">Salvar telefones/grupos</button>
+      <button class="btn btn-ghost" id="btnLimparCampoTelefones">Limpar campo</button>
+      <button class="btn btn-ghost" id="btnBaixarTelefones">Baixar backup</button>
+      <label class="btn btn-ghost" style="cursor:pointer;">Importar backup<input type="file" id="fileTelefones" accept=".json" style="display:none;"></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Lista de Clientes</div>
     <div class="batch-toolbar">
       <div class="filter-tabs">
         <button class="filter-tab active" data-filtro="todos">Todos</button>
@@ -396,10 +411,11 @@ Já no Brasil, o destaque ficou para a decisão do Banco Central de reduzir a Se
         <button class="filter-tab" data-filtro="enviados">Enviados</button>
       </div>
       <div class="batch-counter" id="batchCounter">0 clientes</div>
-      <button class="btn btn-ghost btn-sm" id="btnAtualizarCenario">🔄 Atualizar cenário em pendentes</button>
+      <button class="btn btn-ghost btn-sm" id="btnAtualizarCenario">Atualizar cenário em pendentes</button>
+      <button class="btn btn-gold btn-sm" id="btnExportarEnvio">Exportar para envio (WhatsApp)</button>
     </div>
     <div class="client-list" id="clientList">
-      <div class="client-empty">⚡ Importe os PDFs para gerar a lista de relatórios</div>
+      <div class="client-empty">Importe os PDFs para gerar a lista de relatórios</div>
     </div>
   </div>
 </main>
@@ -498,22 +514,22 @@ async function extrairDadosPDF(file, log) {
         let meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
         dados.mesReferencia = meses[parseInt(dataMatch[2]) - 1];
         dados.anoReferencia = dataMatch[3];
-        log.push(`📅 Data: ${dados.mesReferencia}/${dados.anoReferencia}`);
+        log.push(`Data: ${dados.mesReferencia}/${dados.anoReferencia}`);
       }
     }
     
     let patMatch = textoLimpo.match(/PATRIMÔNIOTOTALBRUTO:R\$([\d\.]+,\d{2})/i);
     if (patMatch) {
       dados.patrimonio = patMatch[1];
-      log.push(`💰 Patrimônio: R$ ${dados.patrimonio}`);
+      log.push(`Patrimônio: R$ ${dados.patrimonio}`);
     }
     
     let rentMatch = textoLimpo.match(/R\$[\d\.]+,\d{2}(-?[\d,]+)%(-?[\d,]+)%/i);
     if (rentMatch && !dados.rentabilidadeMensal) {
       dados.rentabilidadeMensal = rentMatch[1].replace(',', '.');
       dados.pctCdi = rentMatch[2].replace(',', '.');
-      log.push(`📈 Rentabilidade Mensal: ${dados.rentabilidadeMensal}%`);
-      log.push(`📊 %CDI: ${dados.pctCdi}%`);
+      log.push(`Rentabilidade Mensal: ${dados.rentabilidadeMensal}%`);
+      log.push(`%CDI: ${dados.pctCdi}%`);
     }
     
     let regexClasse = /([A-Za-zÀ-Úà-û]+?)\((\d+),(\d+)%\)R\$[\d\.]+,\d+(-?\d+),(\d+)%/gi;
@@ -540,7 +556,7 @@ async function extrairDadosPDF(file, log) {
       if (alocacao && retorno && !dados.alocacoes[nome]) {
         dados.alocacoes[nome] = alocacao;
         dados.retornos[nome] = retorno;
-        log.push(`✅ ${nome}: alocação ${alocacao}%, retorno ${retorno}%`);
+        log.push(`${nome}: alocação ${alocacao}%, retorno ${retorno}%`);
       }
     }
   }
@@ -551,13 +567,24 @@ async function extrairDadosPDF(file, log) {
 // tenta identificar nome do cliente e código a partir do nome do arquivo
 // aceita padrões como "Nome Cliente - 123456.pdf", "Nome_Cliente_123456.pdf", "Nome-Cliente-123456.pdf"
 function parseClienteDoNomeArquivo(filename) {
-  let base = filename.replace(/\.pdf$/i, '');
+  let base = filename.replace(/\.pdf$/i, '').trim();
   let nome = base, codigo = '';
-  let m = base.match(/^(.*?)[\s_\-]+(\d{3,})$/);
-  if (m) {
-    nome = m[1];
-    codigo = m[2];
+
+  // Padrão XP atual: "XPerformance - 18863640 - LEONARDO GRISI GUEDES"
+  // ou "XPerformance 18898403 VALDENICE BEZERRA ALVES" (com ou sem traços)
+  let mNovo = base.match(/XPerformance[\s_\-]*(\d{3,})[\s_\-]+(.+)$/i);
+  if (mNovo) {
+    codigo = mNovo[1];
+    nome = mNovo[2];
+  } else {
+    // Padrão antigo: "Nome Cliente - 123456"
+    let mAntigo = base.match(/^(.*?)[\s_\-]+(\d{3,})$/);
+    if (mAntigo) {
+      nome = mAntigo[1];
+      codigo = mAntigo[2];
+    }
   }
+
   nome = nome.replace(/[_\-]+/g, ' ').replace(/\s+/g, ' ').trim();
   return { nome: nome || base, codigo };
 }
@@ -577,36 +604,61 @@ function gerarRelatorioTexto(dados, cenarioOverride) {
   let classesList = [];
   
   for (let nome in alocacoes) {
-    if (alocacoes[nome]) {
+    if (alocacoes[nome] && retornos[nome]) {
       let alocNum = parseFloat(alocacoes[nome].replace(',', '.'));
-      classesList.push({ nome: nome, alocacao: alocNum, alocStr: alocacoes[nome], retorno: retornos[nome] });
+      let retNum = parseFloat(retornos[nome].replace(',', '.'));
+      classesList.push({ nome: nome, alocacao: alocNum, alocStr: alocacoes[nome], retorno: retornos[nome], retNum: retNum });
     }
   }
   classesList.sort((a, b) => b.alocacao - a.alocacao);
   
-  for (let item of classesList) {
-    let ret = item.retorno.replace(',', '.');
-    let retNum = parseFloat(ret);
-    let isNegativo = ret.startsWith('-') || retNum < 0;
-    let movimento = isNegativo ? 'recuou' : 'subiu';
-    let retornoAbs = isNegativo ? ret.replace('-', '') : ret;
-    desempenhoTexto += `${item.nome} (${item.alocStr}% da carteira) ${movimento} ${retornoAbs}%; `;
-  }
-  
-  if (desempenhoTexto === "") {
+  if (classesList.length > 0) {
+    let maxRet = Math.max(...classesList.map(c => c.retNum));
+    let minRet = Math.min(...classesList.map(c => c.retNum));
+    let melhores = classesList.filter(c => c.retNum === maxRet);
+    let piores = classesList.filter(c => c.retNum === minRet);
+    
+    function nomesUnidos(lista) {
+      let nomes = lista.map(c => c.nome);
+      if (nomes.length === 1) return nomes[0];
+      return nomes.slice(0, -1).join(', ') + ' e ' + nomes[nomes.length - 1];
+    }
+    function retornoAbs(retNum) {
+      return Math.abs(retNum).toString().replace('.', ',');
+    }
+    
+    let melhorPlural = melhores.length > 1;
+    let piorPlural = piores.length > 1;
+    
+    let trechoMelhor = maxRet >= 0
+      ? `o principal destaque positivo ${melhorPlural ? 'foram as classes' : 'foi a classe'} ${nomesUnidos(melhores)}, com alta de ${retornoAbs(maxRet)}%.`
+      : `o principal destaque ${melhorPlural ? 'foram as classes' : 'foi a classe'} ${nomesUnidos(melhores)}, com o menor recuo, de ${retornoAbs(maxRet)}%.`;
+    
+    let trechoPior = minRet < 0
+      ? `Já ${piorPlural ? 'as classes' : 'a classe'} ${nomesUnidos(piores)} ${piorPlural ? 'foram as maiores detratoras' : 'foi a maior detratora'} do mês, com retorno de -${retornoAbs(minRet)}%.`
+      : `Já ${nomesUnidos(piores)} ${piorPlural ? 'tiveram' : 'teve'} a menor alta, de ${retornoAbs(minRet)}%.`;
+    
+    desempenhoTexto = `${trechoMelhor} ${trechoPior}`;
+  } else {
     desempenhoTexto = "Não foi possível capturar os retornos individuais das classes no PDF.";
   }
   
   let rentabilidadeStr = rentabilidade ? `${rentabilidade.replace(',', '.')}%` : "não disponível";
   let pctCdiStr = pctCdi ? `${pctCdi.replace(',', '.')}%` : "não disponível";
-  let patrimonioStr = patrimonio ? fmtBRL(parseFloat(patrimonio.replace(/\./g, '').replace(',', '.'))) : "";
+  let pctCdiNum = pctCdi ? parseFloat(pctCdi.replace(',', '.')) : null;
+  
+  let qualificador = "um retorno de";
+  if (pctCdiNum !== null) {
+    if (pctCdiNum > 110) qualificador = "um excelente retorno de";
+    else if (pctCdiNum > 100) qualificador = "um bom retorno de";
+  }
   
   let texto = `Prezado cliente, tudo bem? Segue o seu relatório mensal.
 
 ${cenario}
 
-Considerando toda volatilidade do mês e a forte correção do mercado, sua carteira atravessou esse ambiente com resiliência, apresentando um retorno de ${rentabilidadeStr}, equivalente a ${pctCdiStr} do CDI do período.${patrimonioStr ? ` O patrimônio atual é de ${patrimonioStr}.` : ''}
-No desempenho por classe de ativo: ${desempenhoTexto}
+Considerando toda volatilidade do mês no mercado sua carteira apresentou ${qualificador} ${rentabilidadeStr}, equivalente a ${pctCdiStr} do CDI do período.
+No desempenho por classe de ativo ${desempenhoTexto}
 
 Por fim, reforçamos a importância da disciplina na manutenção da estratégia e nos aportes focando no desenvolvimento da carteira no longo prazo. Essa postura é fundamental para atravessar diferentes ciclos de mercado, aproveitar oportunidades, reduzir os impactos das oscilações no curto prazo e manter a carteira alinhada aos seus objetivos financeiros.`;
   
@@ -618,6 +670,186 @@ const LS_KEY = 'pbfRelatorioBatchState_v1';
 let clientes = []; // { id, fileName, nome, codigo, dados, texto, enviado, log }
 let filtroAtual = 'todos';
 let idSeq = 1;
+
+// ========== CADASTRO DE TELEFONES (codigo -> telefone) E GRUPOS (codigo -> nome do grupo) ==========
+const TEL_LS_KEY = 'pbfTelefones_v1';
+const GRUPO_LS_KEY = 'pbfGrupos_v1';
+let telefones = {};
+let grupos = {};
+
+function normalizarTelefone(v) {
+  return (v || '').replace(/\D/g, '');
+}
+
+function carregarTelefones() {
+  try {
+    let raw = localStorage.getItem(TEL_LS_KEY);
+    telefones = raw ? JSON.parse(raw) : {};
+  } catch (e) { telefones = {}; }
+  try {
+    let rawG = localStorage.getItem(GRUPO_LS_KEY);
+    grupos = rawG ? JSON.parse(rawG) : {};
+  } catch (e) { grupos = {}; }
+  atualizarTelCount();
+}
+
+function salvarTelefones() {
+  try { localStorage.setItem(TEL_LS_KEY, JSON.stringify(telefones)); } catch (e) { /* silencioso */ }
+  try { localStorage.setItem(GRUPO_LS_KEY, JSON.stringify(grupos)); } catch (e) { /* silencioso */ }
+  atualizarTelCount();
+}
+
+function atualizarTelCount() {
+  let el = document.getElementById('telCount');
+  if (!el) return;
+  let n = Object.keys(telefones).filter(k => telefones[k]).length;
+  let ng = Object.keys(grupos).filter(k => grupos[k]).length;
+  el.textContent = n ? ` · ${n} telefone(s), ${ng} grupo(s)` : '';
+}
+
+document.getElementById('btnSalvarTelefones').addEventListener('click', () => {
+  let linhas = document.getElementById('telefonesBulk').value.split('\n');
+  let add = 0;
+  linhas.forEach(l => {
+    l = l.trim();
+    if (!l) return;
+
+    // Preserva colunas vazias (não colapsa ; , ou tab repetidos) — isso permite
+    // deixar telefone ou grupo em branco de propósito (ex: "18863640;;;Grupo X"
+    // pula nome e telefone). Cola do Excel usa tab entre TODAS as colunas,
+    // inclusive vazias, então a posição de cada valor fica preservada.
+    let partes = l.split(/\t|;|,/).map(s => s.trim());
+
+    // Se não tem nenhum separador (digitado à mão só com espaços), tenta
+    // separar por 2+ espaços seguidos (assume espaço simples = parte do nome).
+    if (partes.length === 1) {
+      let porEspacos = l.split(/ {2,}/).map(s => s.trim()).filter(Boolean);
+      if (porEspacos.length > 1) partes = porEspacos;
+    }
+
+    let codigo = (partes[0] || '').replace(/\D/g, '');
+    if (!codigo) return;
+
+    let telefone = '', grupo = '';
+    if (partes.length >= 4) {
+      // código, nome, telefone, grupo — posições fixas (aceita qualquer uma vazia)
+      telefone = normalizarTelefone(partes[2]);
+      grupo = (partes[3] || '').trim();
+    } else if (partes.length === 3) {
+      // código, nome, telefone (sem grupo)
+      telefone = normalizarTelefone(partes[2]);
+    } else if (partes.length === 2) {
+      // código + 1 valor: decide sozinho se parece telefone ou nome de grupo
+      let digs = normalizarTelefone(partes[1]);
+      if (digs.length >= 10) telefone = digs;
+      else grupo = (partes[1] || '').trim();
+    }
+
+    if (telefone) { telefones[codigo] = telefone; add++; }
+    if (grupo) { grupos[codigo] = grupo; add++; }
+  });
+  if (add === 0) { setStatus('Nenhuma linha válida encontrada. Use código;nome;telefone;grupo (deixe em branco o que não tiver).', 'err'); return; }
+  salvarTelefones();
+  document.getElementById('telefonesBulk').value = '';
+  renderLista();
+  setStatus(`${add} informação(ões) salva(s)/atualizada(s).`, 'ok');
+});
+
+document.getElementById('btnLimparCampoTelefones').addEventListener('click', () => {
+  document.getElementById('telefonesBulk').value = '';
+  let temAlgo = Object.keys(telefones).length > 0 || Object.keys(grupos).length > 0;
+  if (!temAlgo) return;
+  let confirmar = confirm('Isso vai apagar TODOS os telefones e grupos já salvos (não só o texto da caixa). Tem certeza?');
+  if (!confirmar) return;
+  telefones = {};
+  grupos = {};
+  salvarTelefones();
+  renderLista();
+  setStatus('Telefones e grupos salvos foram apagados.', 'ok');
+});
+
+document.getElementById('btnBaixarTelefones').addEventListener('click', () => {
+  let blob = new Blob([JSON.stringify({ telefones, grupos }, null, 2)], { type: 'application/json' });
+  let url = URL.createObjectURL(blob);
+  let a = document.createElement('a');
+  a.href = url;
+  a.download = 'telefones_clientes_backup.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+document.getElementById('fileTelefones').addEventListener('change', async function () {
+  let file = this.files[0];
+  if (!file) return;
+  try {
+    let txt = await file.text();
+    let obj = JSON.parse(txt);
+    let n = 0;
+    if (obj && (obj.telefones || obj.grupos)) {
+      // formato novo: { telefones: {...}, grupos: {...} }
+      for (let k in (obj.telefones || {})) { telefones[k] = normalizarTelefone(obj.telefones[k]); n++; }
+      for (let k in (obj.grupos || {})) { grupos[k] = obj.grupos[k]; }
+    } else {
+      // formato antigo: { codigo: telefone }
+      for (let k in obj) { telefones[k] = normalizarTelefone(obj[k]); n++; }
+    }
+    salvarTelefones();
+    renderLista();
+    setStatus(`${n} telefone(s) importado(s) do backup.`, 'ok');
+  } catch (e) {
+    setStatus('Erro ao importar backup: ' + e.message, 'err');
+  }
+  this.value = '';
+});
+
+// ========== EXPORTAR PARA ENVIO (WHATSAPP) — EM MASSA ==========
+document.getElementById('btnExportarEnvio').addEventListener('click', () => {
+  let lista = clientes.filter(c => {
+    if (filtroAtual === 'pendentes') return !c.enviado;
+    if (filtroAtual === 'enviados') return c.enviado;
+    return true;
+  });
+
+  if (!lista.length) {
+    setStatus('Nenhum cliente no filtro atual para exportar.', 'err');
+    return;
+  }
+
+  let semContato = [];
+  let pacote = lista.map(c => {
+    let tel = c.codigo ? (telefones[c.codigo] || '') : '';
+    let grupo = c.codigo ? (grupos[c.codigo] || '') : '';
+    if (!tel && !grupo) semContato.push(c.nome);
+    return {
+      codigo: c.codigo,
+      nome: c.nome,
+      telefone: tel,
+      grupo: grupo,
+      texto: c.texto,
+      fileName: c.fileName
+    };
+  });
+
+  let dataStr = new Date().toISOString().slice(0, 10);
+  let nomeArq = `envio_whatsapp_${dataStr}.json`;
+  let blob = new Blob([JSON.stringify(pacote, null, 2)], { type: 'application/json' });
+  let url = URL.createObjectURL(blob);
+  let a = document.createElement('a');
+  a.href = url;
+  a.download = nomeArq;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+  if (semContato.length) {
+    setStatus(`${pacote.length} exportado(s), mas ${semContato.length} sem telefone nem grupo cadastrado: ${semContato.join(', ')}`, 'err');
+  } else {
+    setStatus(`${pacote.length} cliente(s) exportado(s) para envio!`, 'ok');
+  }
+});
 
 function novoId() { return 'c' + (idSeq++) + '_' + Date.now(); }
 
@@ -667,7 +899,7 @@ function renderLista() {
   });
 
   if (lista.length === 0) {
-    cont.innerHTML = `<div class="client-empty">⚡ ${clientes.length === 0 ? 'Importe os PDFs para gerar a lista de relatórios' : 'Nenhum cliente nesse filtro'}</div>`;
+    cont.innerHTML = `<div class="client-empty">${clientes.length === 0 ? 'Importe os PDFs para gerar a lista de relatórios' : 'Nenhum cliente nesse filtro'}</div>`;
     return;
   }
 
@@ -681,10 +913,12 @@ function renderLista() {
         <span class="client-arrow" id="arrow_${c.id}">▶</span>
         <input class="client-name-input" data-nome="${c.id}" value="${escapeHtml(c.nome)}">
         ${c.codigo ? `<span class="client-codigo">#${escapeHtml(c.codigo)}</span>` : ''}
+        <input class="client-tel-input" data-tel="${c.id}" placeholder="Telefone (DDI+DDD)" value="${escapeHtml((c.codigo && telefones[c.codigo]) || '')}">
+        <input class="client-tel-input" data-grupo="${c.id}" placeholder="Grupo (opcional)" value="${escapeHtml((c.codigo && grupos[c.codigo]) || '')}" style="width:170px;">
         <span class="client-pill ${c.enviado ? 'enviado-pill' : 'pendente'}">${c.enviado ? 'Enviado' : 'Pendente'}</span>
         <div class="client-actions">
-          <button class="btn btn-ghost btn-sm" data-copiar="${c.id}">📋 Copiar</button>
-          <button class="btn-check btn-sm ${c.enviado ? 'active' : ''}" data-check="${c.id}">${c.enviado ? '✓ Enviado' : 'Marcar enviado'}</button>
+          <button class="btn btn-ghost btn-sm" data-copiar="${c.id}">Copiar</button>
+          <button class="btn-check btn-sm ${c.enviado ? 'active' : ''}" data-check="${c.id}">${c.enviado ? 'Enviado' : 'Marcar enviado'}</button>
         </div>
       </div>
       <div class="client-body" id="body_${c.id}">
@@ -730,9 +964,36 @@ function renderLista() {
       if (!c) return;
       try {
         await navigator.clipboard.writeText(c.texto);
-        setStatus(`✅ Texto de ${escapeHtml(c.nome)} copiado!`, 'ok');
+        setStatus(`Texto de ${escapeHtml(c.nome)} copiado!`, 'ok');
       } catch (e) {
-        setStatus('❌ Erro ao copiar texto', 'err');
+        setStatus('Erro ao copiar texto', 'err');
+      }
+    });
+  });
+  cont.querySelectorAll('[data-tel]').forEach(el => {
+    el.addEventListener('click', ev => ev.stopPropagation());
+    el.addEventListener('change', () => {
+      let id = el.getAttribute('data-tel');
+      let c = clientes.find(x => x.id === id);
+      if (!c) return;
+      let tel = normalizarTelefone(el.value);
+      el.value = tel;
+      if (c.codigo) {
+        if (tel) telefones[c.codigo] = tel; else delete telefones[c.codigo];
+        salvarTelefones();
+      }
+    });
+  });
+  cont.querySelectorAll('[data-grupo]').forEach(el => {
+    el.addEventListener('click', ev => ev.stopPropagation());
+    el.addEventListener('change', () => {
+      let id = el.getAttribute('data-grupo');
+      let c = clientes.find(x => x.id === id);
+      if (!c) return;
+      let grupo = el.value.trim();
+      if (c.codigo) {
+        if (grupo) grupos[c.codigo] = grupo; else delete grupos[c.codigo];
+        salvarTelefones();
       }
     });
   });
@@ -780,7 +1041,7 @@ document.getElementById('btnImportar').addEventListener('click', async () => {
   const btnImportarLabel = document.getElementById('btnImportarLabel');
   btnImportar.classList.add('btn-processing');
   btnImportar.disabled = true;
-  btnImportarLabel.textContent = '✓ PROCESSANDO...';
+  btnImportarLabel.textContent = 'PROCESSANDO...';
 
   const progressWrap = document.getElementById('progressWrap');
   const progressFill = document.getElementById('progressFill');
@@ -818,9 +1079,9 @@ document.getElementById('btnImportar').addEventListener('click', async () => {
   renderLista();
 
   if (falhas.length) {
-    setStatus(`⚠️ ${ok} processado(s), ${falhas.length} falharam: ${falhas.join('; ')}`, 'err');
+    setStatus(`${ok} processado(s), ${falhas.length} falharam: ${falhas.join('; ')}`, 'err');
   } else {
-    setStatus(`✅ ${ok} relatório(s) gerado(s) com sucesso!`, 'ok');
+    setStatus(`${ok} relatório(s) gerado(s) com sucesso!`, 'ok');
   }
 });
 
@@ -835,7 +1096,7 @@ document.getElementById('btnAtualizarCenario').addEventListener('click', () => {
   });
   salvarEstado();
   renderLista();
-  setStatus(`🔄 Cenário atualizado em ${n} cliente(s) pendente(s).`, 'ok');
+  setStatus(`Cenário atualizado em ${n} cliente(s) pendente(s).`, 'ok');
 });
 
 document.getElementById('btnLimpar').addEventListener('click', () => {
@@ -918,12 +1179,13 @@ document.getElementById('btnConfirmarSenha').addEventListener('click', async () 
     let novaFrase = document.getElementById('textoCenario').value;
     let novoHtml = await gerarNovoHTMLComFrase(novaFrase);
     baixarArquivo(novoHtml, 'index.html');
-    setStatus('✅ Novo HTML baixado! Suba o arquivo no seu repositório do GitHub.', 'ok');
+    setStatus('Novo HTML baixado! Suba o arquivo no seu repositório do GitHub.', 'ok');
   } catch (e) {
-    setStatus('❌ Erro ao gerar HTML: ' + e.message, 'err');
+    setStatus('Erro ao gerar HTML: ' + e.message, 'err');
   }
 });
 
+carregarTelefones();
 carregarEstado();
 </script>
 </body>
