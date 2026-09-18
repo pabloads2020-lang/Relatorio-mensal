@@ -376,9 +376,9 @@ Já no Brasil, o destaque ficou para a decisão do Banco Central de reduzir a Se
   </div>
 
   <div class="card">
-    <div class="card-title">Importar relatórios XP (PDF) — em massa</div>
+    <div class="card-title">Importar relatórios (XPerformance + Quantum/Pleno) — em massa</div>
     <div class="upload-row">
-      <label class="file-label" for="filePdf"><span id="fileName">Selecionar um ou vários PDFs...</span></label>
+      <label class="file-label" for="filePdf"><span id="fileName">Selecionar um ou vários PDFs (XP ou Quantum)...</span></label>
       <input type="file" id="filePdf" accept=".pdf" multiple>
       <button class="btn btn-elegant" id="btnImportar"><span id="btnImportarLabel">PROCESSAR TODOS</span></button>
       <button class="btn btn-ghost" id="btnLimpar">Limpar lista</button>
@@ -483,13 +483,28 @@ function superLimpeza(texto) {
     return texto.replace(/\s+/g, '');
 }
 
-// extrai os dados do PDF; log[] recebe as linhas de debug individuais deste arquivo
+const MESES_PT = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const MESES_ABREV = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+
+function normalizarNomeClasse(nome) {
+  nome = (nome || '').trim();
+  if (nome === 'MPósFixado' || nome === 'PósFixado' || nome === 'PosFixado' || nome === 'Pósfixado') return 'Pós-Fixado';
+  if (nome === 'PréFixado' || nome === 'PreFixado' || nome === 'Prefixado') return 'Pré-Fixado';
+  if (nome === 'RendaVariávelBrasil') return 'Renda Variável Brasil';
+  if (nome === 'RendaVariávelGlobal') return 'Renda Variável Global';
+  if (nome === 'RendaFixaGlobal') return 'Renda Fixa Global';
+  if (nome === 'FundosListados') return 'Fundos Listados';
+  return nome;
+}
+
+// extrai os dados do PDF (XPerformance OU Quantum/Pleno); log[] recebe debug
 async function extrairDadosPDF(file, log) {
   log = log || [];
   let ab = await file.arrayBuffer();
   let pdf = await pdfjsLib.getDocument({ data: ab }).promise;
-  
+
   let dados = {
+    tipo: null, // 'xp' | 'quantum'
     alocacoes: {},
     retornos: {},
     patrimonio: null,
@@ -498,170 +513,486 @@ async function extrairDadosPDF(file, log) {
     mesReferencia: "",
     anoReferencia: ""
   };
-  
-  for (let p = 1; p <= Math.min(pdf.numPages, 6); p++) {
+
+  let textoCompletoLimpo = '';
+  let maxPaginas = Math.min(pdf.numPages, 8);
+
+  for (let p = 1; p <= maxPaginas; p++) {
     let page = await pdf.getPage(p);
     let textContent = await page.getTextContent();
     let textoOriginal = textContent.items.map(item => item.str).join(' ');
     let textoLimpo = superLimpeza(textoOriginal);
-    
+    textoCompletoLimpo += textoLimpo + '\n';
+
     log.push(`\n--- PÁGINA ${p} (LIMPA) ---`);
-    log.push(textoLimpo.substring(0, 1000));
-    
-    if (p === 1) {
-      let dataMatch = textoLimpo.match(/DataDeReferência(\d{2})\/(\d{2})\/(\d{4})/);
-      if (dataMatch) {
-        let meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-        dados.mesReferencia = meses[parseInt(dataMatch[2]) - 1];
-        dados.anoReferencia = dataMatch[3];
-        log.push(`Data: ${dados.mesReferencia}/${dados.anoReferencia}`);
-      }
-    }
-    
-    let patMatch = textoLimpo.match(/PATRIMÔNIOTOTALBRUTO:R\$([\d\.]+,\d{2})/i);
-    if (patMatch) {
-      dados.patrimonio = patMatch[1];
-      log.push(`Patrimônio: R$ ${dados.patrimonio}`);
-    }
-    
-    let rentMatch = textoLimpo.match(/R\$[\d\.]+,\d{2}(-?[\d,]+)%(-?[\d,]+)%/i);
-    if (rentMatch && !dados.rentabilidadeMensal) {
-      dados.rentabilidadeMensal = rentMatch[1].replace(',', '.');
-      dados.pctCdi = rentMatch[2].replace(',', '.');
-      log.push(`Rentabilidade Mensal: ${dados.rentabilidadeMensal}%`);
-      log.push(`%CDI: ${dados.pctCdi}%`);
-    }
-    
-    let regexClasse = /([A-Za-zÀ-Úà-û]+?)\((\d+),(\d+)%\)R\$[\d\.]+,\d+(-?\d+),(\d+)%/gi;
-    let match;
-    while ((match = regexClasse.exec(textoLimpo)) !== null) {
-      let nome = match[1];
-      let alocacao = match[2] + ',' + match[3];
-      let retorno = match[4] + ',' + match[5];
-      
-      if (nome === 'MPósFixado') nome = 'PósFixado';
-      
-      if (nome === 'PósFixado') nome = 'Pós-Fixado';
-      else if (nome === 'PréFixado') nome = 'Pré-Fixado';
-      else if (nome === 'Inflação') nome = 'Inflação';
-      else if (nome === 'RendaVariávelBrasil') nome = 'Renda Variável Brasil';
-      else if (nome === 'RendaVariávelGlobal') nome = 'Renda Variável Global';
-      else if (nome === 'RendaFixaGlobal') nome = 'Renda Fixa Global';
-      else if (nome === 'Alternativo') nome = 'Alternativo';
-      else if (nome === 'Multimercado') nome = 'Multimercado';
-      else if (nome === 'FundosListados') nome = 'Fundos Listados';
-      else if (nome === 'Caixa') nome = 'Caixa';
-      else if (nome === 'Proventos') nome = 'Proventos';
-      
-      if (alocacao && retorno && !dados.alocacoes[nome]) {
-        dados.alocacoes[nome] = alocacao;
-        dados.retornos[nome] = retorno;
-        log.push(`${nome}: alocação ${alocacao}%, retorno ${retorno}%`);
-      }
-    }
+    log.push(textoLimpo.substring(0, 1200));
   }
-  
+
+  // Detecta tipo de PDF
+  let isQuantum = /Database:\d{2}\/\d{2}\/\d{4}/i.test(textoCompletoLimpo)
+    || /Retornos\|Rentabilidade/i.test(textoCompletoLimpo)
+    || /RentabilidadeeGanhoFinanceiroporEstratégia/i.test(textoCompletoLimpo)
+    || /PLENOFINANCE/i.test(textoCompletoLimpo)
+    || /AlocaçãoporEstratégia/i.test(textoCompletoLimpo);
+  let isXP = /DataDeReferência\d{2}\/\d{2}\/\d{4}/i.test(textoCompletoLimpo)
+    || /PATRIMÔNIOTOTALBRUTO/i.test(textoCompletoLimpo)
+    || /XPerformance/i.test(file.name);
+
+  if (isQuantum) {
+    dados.tipo = 'quantum';
+    log.push('\n>>> FORMATO DETECTADO: Quantum / Pleno Finance');
+    extrairDadosQuantum(textoCompletoLimpo, dados, log);
+  } else {
+    dados.tipo = 'xp';
+    log.push('\n>>> FORMATO DETECTADO: XPerformance (XP)');
+    extrairDadosXP(textoCompletoLimpo, dados, log);
+  }
+
   return dados;
 }
 
-// tenta identificar nome do cliente e código a partir do nome do arquivo
-// aceita padrões como "Nome Cliente - 123456.pdf", "Nome_Cliente_123456.pdf", "Nome-Cliente-123456.pdf"
+function extrairDadosXP(textoLimpo, dados, log) {
+  let dataMatch = textoLimpo.match(/DataDeReferência(\d{2})\/(\d{2})\/(\d{4})/);
+  if (dataMatch) {
+    dados.mesReferencia = MESES_PT[parseInt(dataMatch[2], 10) - 1];
+    dados.anoReferencia = dataMatch[3];
+    log.push(`Data: ${dados.mesReferencia}/${dados.anoReferencia}`);
+  }
+
+  let patMatch = textoLimpo.match(/PATRIMÔNIOTOTALBRUTO:R\$([\d\.]+,\d{2})/i);
+  if (patMatch) {
+    dados.patrimonio = patMatch[1];
+    log.push(`Patrimônio: R$ ${dados.patrimonio}`);
+  }
+
+  let rentMatch = textoLimpo.match(/R\$[\d\.]+,\d{2}(-?[\d,]+)%(-?[\d,]+)%/i);
+  if (rentMatch && !dados.rentabilidadeMensal) {
+    dados.rentabilidadeMensal = rentMatch[1].replace(',', '.');
+    dados.pctCdi = rentMatch[2].replace(',', '.');
+    log.push(`Rentabilidade Mensal: ${dados.rentabilidadeMensal}%`);
+    log.push(`%CDI: ${dados.pctCdi}%`);
+  }
+
+  let regexClasse = /([A-Za-zÀ-Úà-û]+?)\((\d+),(\d+)%\)R\$[\d\.]+,\d+(-?\d+),(\d+)%/gi;
+  let match;
+  while ((match = regexClasse.exec(textoLimpo)) !== null) {
+    let nome = normalizarNomeClasse(match[1]);
+    let alocacao = match[2] + ',' + match[3];
+    let retorno = match[4] + ',' + match[5];
+    if (alocacao && retorno && !dados.alocacoes[nome]) {
+      dados.alocacoes[nome] = alocacao;
+      dados.retornos[nome] = retorno;
+      log.push(`${nome}: alocação ${alocacao}%, retorno ${retorno}%`);
+    }
+  }
+}
+
+function extrairDadosQuantum(textoLimpo, dados, log) {
+  // Texto normalizado
+  let t = textoLimpo
+    .replace(/[\u200b\u200c\u200d\ufeff]/g, '')
+    .replace(/[–—]/g, '-')
+    .replace(/[∕⁄]/g, '/');
+
+  const RE_MES = '(?:jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)';
+
+  // =====================================================================
+  // O QUE PRECISAMOS (em ordem):
+  //  1) Data base → mês/ano de referência
+  //  2) Retorno do portfólio NAQUELE mês
+  //  3) % do CDI NAQUELE mês
+  //  4) Retorno de cada classe no mês (seção Estratégia)
+  //  5) Patrimônio (opcional)
+  // Qualquer variação de layout é contornada com estratégias em cascata.
+  // =====================================================================
+
+  // ----- 1) DATA BASE (canto superior direito de todas as páginas) -----
+  let candidatos = [];
+  let dm, reData = /Database:(\d{2})\/(\d{2})\/(\d{4})/gi;
+  while ((dm = reData.exec(t)) !== null) {
+    candidatos.push({ mes: parseInt(dm[2], 10), ano: dm[3] });
+  }
+  if (!candidatos.length) {
+    let reAlt = /(?:base|referência|referencia)[^\d]{0,10}(\d{2})\/(\d{2})\/(\d{4})/gi;
+    while ((dm = reAlt.exec(t)) !== null) {
+      candidatos.push({ mes: parseInt(dm[2], 10), ano: dm[3] });
+    }
+  }
+  // Último recurso: datas dd/mm/aaaa repetidas no texto
+  if (!candidatos.length) {
+    let reQ = /(\d{2})\/(\d{2})\/(20\d{2})/g;
+    let bag = {};
+    while ((dm = reQ.exec(t)) !== null) {
+      let m = parseInt(dm[2], 10);
+      if (m >= 1 && m <= 12) {
+        let k = m + '/' + dm[3];
+        bag[k] = (bag[k] || 0) + 1;
+      }
+    }
+    let top = Object.keys(bag).sort((a, b) => bag[b] - bag[a])[0];
+    if (top) {
+      candidatos.push({ mes: parseInt(top.split('/')[0], 10), ano: top.split('/')[1] });
+      log.push('Data base inferida pela data mais frequente no PDF');
+    }
+  }
+
+  let mesNum = 0, ano4 = '', ano2 = '', mesAbrev = '', alvo = '';
+  if (candidatos.length) {
+    let freq = {};
+    candidatos.forEach(c => {
+      if (c.mes >= 1 && c.mes <= 12) {
+        let k = c.mes + '/' + c.ano;
+        freq[k] = (freq[k] || 0) + 1;
+      }
+    });
+    let melhor = Object.keys(freq).sort((a, b) => freq[b] - freq[a])[0];
+    mesNum = parseInt(melhor.split('/')[0], 10);
+    ano4 = melhor.split('/')[1];
+    ano2 = ano4.slice(-2);
+    mesAbrev = MESES_ABREV[mesNum - 1];
+    alvo = mesAbrev + '/' + ano2;
+    dados.mesReferencia = MESES_PT[mesNum - 1];
+    dados.anoReferencia = ano4;
+    log.push(`✓ Data base → ${dados.mesReferencia}/${ano4} → alvo "${alvo}" (${candidatos.length} ocorrência(s))`);
+  } else {
+    log.push('❌ Não foi possível determinar a Data base');
+  }
+
+  // ----- 2) Seção de rentabilidade mensal -----
+  let secao = t;
+  let idxRent = t.search(/Retornos\|Rentabilidade/i);
+  if (idxRent >= 0) {
+    let resto = t.substring(idxRent + 10);
+    let fim = resto.search(/Retornos\|Evolu|RentabilidadeeGanho|AnálisedeLiquidez/i);
+    secao = fim > 0 ? t.substring(idxRent, idxRent + 10 + fim) : t.substring(idxRent, idxRent + 4000);
+    log.push(`Seção Rentabilidade isolada (${secao.length} chars)`);
+  } else {
+    log.push('⚠️ Título Retornos|Rentabilidade ausente — usando texto amplo');
+  }
+
+  // ----- helpers -----
+  function extrairMeses(texto) {
+    let list = [];
+    let m = texto.match(new RegExp('12meses((?:' + RE_MES + '\\/\\d{2,4})+)', 'i'));
+    if (m) list = m[1].match(new RegExp(RE_MES + '\\/\\d{2,4}', 'gi')) || [];
+    if (!list.length) {
+      let m2 = texto.match(new RegExp('((?:' + RE_MES + '\\/\\d{2}){6,})', 'i'));
+      if (m2) list = m2[1].match(new RegExp(RE_MES + '\\/\\d{2}', 'gi')) || [];
+    }
+    return list.map(x => x.toLowerCase().replace(/\/20(\d{2})$/, '/$1'));
+  }
+
+  function extrairPercentsApos(texto, ancoraRegex) {
+    let m = texto.match(ancoraRegex);
+    if (!m) return [];
+    return (m[1].match(/-?\d+,\d+%/g) || []);
+  }
+
+  function idxDoAlvo(meses, alvoStr) {
+    if (!alvoStr || !meses.length) return -1;
+    let a = alvoStr.toLowerCase();
+    for (let i = 0; i < meses.length; i++) {
+      if (meses[i] === a) return i;
+    }
+    // só abreviação do mês
+    let ab = a.split('/')[0];
+    for (let i = 0; i < meses.length; i++) {
+      if (meses[i].startsWith(ab + '/')) return i;
+    }
+    return -1;
+  }
+
+  function setRetorno(val, origem) {
+    if (dados.rentabilidadeMensal != null || val == null) return;
+    dados.rentabilidadeMensal = String(val).replace('%', '').replace(',', '.');
+    log.push(`✓ Retorno do mês = ${dados.rentabilidadeMensal}%  [${origem}]`);
+  }
+  function setCdi(val, origem) {
+    if (dados.pctCdi != null || val == null) return;
+    dados.pctCdi = String(val).replace('%', '').replace(',', '.');
+    log.push(`✓ % CDI do mês = ${dados.pctCdi}%  [${origem}]`);
+  }
+
+  // =====================================================================
+  // ESTRATÉGIA A — cabeçalho de meses + linhas CONSOLIDADO / %DOCDI
+  // Detecta se existe coluna "12 meses" no início dos valores
+  // =====================================================================
+  let meses = extrairMeses(secao);
+  if (!meses.length) meses = extrairMeses(t);
+  log.push('Meses no cabeçalho: ' + (meses.length ? meses.join(' | ') : '(nenhum)'));
+
+  let rentVals = extrairPercentsApos(secao, /(?:CONSOLIDADO|CONSOLIDADA)((?:-?\d+,\d+%){3,})/i);
+  if (!rentVals.length) rentVals = extrairPercentsApos(t, /(?:CONSOLIDADO|CONSOLIDADA)((?:-?\d+,\d+%){3,})/i);
+  let cdiVals = extrairPercentsApos(secao, /%DOCDI((?:-?\d+,\d+%){3,})/i);
+  if (!cdiVals.length) cdiVals = extrairPercentsApos(t, /%DOCDI((?:-?\d+,\d+%){3,})/i);
+
+  let tem12mInicio = /12meses(?:jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\//i.test(secao);
+  // Heurística: se há 1 valor a mais que meses e o texto tem 12meses no início
+  if (!tem12mInicio && rentVals.length === meses.length + 1 && /12meses/i.test(secao)) {
+    tem12mInicio = true;
+  }
+  // Heurística inversa (Piquet): valores == meses ou meses+1 (período no FIM)
+  if (tem12mInicio && meses.length && rentVals.length === meses.length) {
+    tem12mInicio = false;
+  }
+
+  let posCab = idxDoAlvo(meses, alvo);
+  if (posCab < 0 && meses.length) posCab = 0;
+
+  if (posCab >= 0 && (rentVals.length || cdiVals.length)) {
+    let idx = tem12mInicio ? posCab + 1 : posCab;
+    // Se última coluna é período acumulado e idx estourou, mantém posCab
+    if (idx >= rentVals.length && !tem12mInicio) idx = posCab;
+    log.push(`Estratégia A: col="${meses[posCab] || '?'}" idx=${idx} (12mInicio=${tem12mInicio})`);
+    if (rentVals[idx] !== undefined) setRetorno(rentVals[idx], 'estratégia A — tabela');
+    if (cdiVals[idx] !== undefined) setCdi(cdiVals[idx], 'estratégia A — tabela');
+  }
+
+  // =====================================================================
+  // ESTRATÉGIA B — se A falhou, tenta alinhar pela quantidade de colunas
+  // vals.length === meses.length → idx = posCab
+  // vals.length === meses.length + 1 → decide se +1 está no início ou no fim
+  // =====================================================================
+  if (dados.rentabilidadeMensal == null && meses.length && rentVals.length) {
+    let idx = posCab >= 0 ? posCab : 0;
+    if (rentVals.length === meses.length + 1) {
+      // Se o 1º valor parece "12 meses" (geralmente maior) E tem12mInicio
+      if (tem12mInicio) idx = (posCab >= 0 ? posCab : 0) + 1;
+      // senão o extra está no fim (período) — idx permanece posCab
+    }
+    log.push(`Estratégia B: idx=${idx}`);
+    if (rentVals[idx] !== undefined) setRetorno(rentVals[idx], 'estratégia B');
+    if (cdiVals[idx] !== undefined) setCdi(cdiVals[idx], 'estratégia B');
+  }
+
+  // =====================================================================
+  // ESTRATÉGIA C — procura o rótulo do mês (ago/26) e pega a sequência
+  // de % que vem depois do nome CONSOLIDADO, usando a posição do rótulo
+  // entre todos os rótulos de mês na seção
+  // =====================================================================
+  if (dados.rentabilidadeMensal == null && alvo) {
+    let todosMeses = secao.match(new RegExp(RE_MES + '\\/\\d{2}', 'gi')) || [];
+    let pos = -1;
+    for (let i = 0; i < todosMeses.length; i++) {
+      if (todosMeses[i].toLowerCase() === alvo) { pos = i; break; }
+    }
+    // só considera a primeira "faixa" contínua de meses (cabeçalho da tabela)
+    if (pos >= 0 && pos < 16 && rentVals.length > pos) {
+      // sem 12m: pos direto; com 12m e rentVals maior: pos+1
+      let idx = (tem12mInicio && rentVals.length > meses.length) ? pos + 1 : pos;
+      if (rentVals[idx] !== undefined) setRetorno(rentVals[idx], 'estratégia C — posição do rótulo');
+      if (cdiVals[idx] !== undefined) setCdi(cdiVals[idx], 'estratégia C — posição do rótulo');
+    }
+  }
+
+  // =====================================================================
+  // ESTRATÉGIA D — gráfico da 1ª página "Mês" (barra do portfólio)
+  // Menos preciso, só se ainda não temos retorno
+  // =====================================================================
+  if (dados.rentabilidadeMensal == null) {
+    // No gráfico Portfólio x Indexadores, o valor do mês do consolidado
+    // costuma aparecer perto de "Mês" junto com CDI/Dólar/Ibovespa
+    let mGraf = secao.match(/Mês[^%]{0,30}(-?\d+,\d+)%/i)
+      || t.match(/(?:Portf[oó]lioxIndexadores|Portf[oó]lio x Indexadores)[\s\S]{0,200}?(-?\d+,\d+)%/i);
+    // fallback: primeiro percentual após CONSOLIDADO se só restar isso
+    if (!mGraf && rentVals.length) {
+      setRetorno(rentVals[tem12mInicio ? 1 : 0], 'estratégia D — 1ª coluna mensal');
+    }
+  }
+
+  // %CDI ainda faltando: mesma posição do retorno nas linhas já lidas
+  if (dados.pctCdi == null && cdiVals.length && dados.rentabilidadeMensal != null && rentVals.length) {
+    let alvoVal = dados.rentabilidadeMensal.replace('.', ',') + '%';
+    // tenta achar índice em rentVals que bate com o retorno já definido
+    for (let i = 0; i < rentVals.length; i++) {
+      let v = rentVals[i].replace('%', '').replace(',', '.');
+      if (Math.abs(parseFloat(v) - parseFloat(dados.rentabilidadeMensal)) < 0.001) {
+        if (cdiVals[i] !== undefined) setCdi(cdiVals[i], 'estratégia alinhamento retorno↔%cdi');
+        break;
+      }
+    }
+  }
+
+  if (dados.rentabilidadeMensal == null) log.push('❌ Retorno do mês não encontrado após todas as estratégias');
+  if (dados.pctCdi == null) log.push('❌ % CDI do mês não encontrado após todas as estratégias');
+  log.push(`Resultado: retorno=${dados.rentabilidadeMensal != null ? dados.rentabilidadeMensal + '%' : '?'} | %CDI=${dados.pctCdi != null ? dados.pctCdi + '%' : '?'} | mês=${dados.mesReferencia || '?'}/${dados.anoReferencia || '?'}`);
+
+  // ----- 5) Patrimônio -----
+  let patMatch = t.match(/(?:SaldoBrutoAcumulado|SaldoAplicado)R\$([\d\.]+,\d{2})/i)
+    || t.match(/R\$([\d\.]+,\d{2})100,00%/);
+  if (patMatch) {
+    dados.patrimonio = patMatch[1];
+    log.push(`Patrimônio: R$ ${dados.patrimonio}`);
+  }
+
+  // ----- 6) Classes (coluna Mês da seção Estratégia = mês da Data base) -----
+  const classesAlvo = [
+    'Alternativo', 'Inflação', 'Multimercado', 'Prefixado', 'Pós-fixado',
+    'PósFixado', 'RendaFixaGlobal', 'Renda Fixa Global',
+    'RendaVariávelBrasil', 'RendaVariávelGlobal', 'Caixa'
+  ];
+
+  for (let classe of classesAlvo) {
+    let nomeNorm = normalizarNomeClasse(classe);
+    if (dados.retornos[nomeNorm]) continue;
+    let nomeFlex = classe
+      .replace(/[áàâã]/gi, 'a').replace(/[éê]/gi, 'e')
+      .replace(/[í]/gi, 'i').replace(/[óôõ]/gi, 'o')
+      .replace(/[ú]/gi, 'u').replace(/ç/gi, 'c')
+      .replace(/[\s\-]/g, '');
+    let re = new RegExp(
+      '(' + nomeFlex + '|' + classe.replace(/[\s\-]/g, '') + ')' +
+      '(-?\\d+,\\d+)%R\\$',
+      'i'
+    );
+    let m = t.match(re);
+    if (m) {
+      dados.retornos[nomeNorm] = m[2];
+      dados.alocacoes[nomeNorm] = '0,00';
+      log.push(`${nomeNorm}: ${m[2]}%`);
+    }
+  }
+
+  if (Object.keys(dados.retornos).length === 0) {
+    let reGen = /(Alternativo|Inflação|Multimercado|Prefixado|Pós-?Fixado|RendaFixaGlobal|RendaVariávelBrasil|RendaVariávelGlobal)(-?\d+,\d+)%/gi;
+    let m;
+    while ((m = reGen.exec(t)) !== null) {
+      let nomeNorm = normalizarNomeClasse(m[1]);
+      if (!dados.retornos[nomeNorm]) {
+        dados.retornos[nomeNorm] = m[2];
+        dados.alocacoes[nomeNorm] = '0,00';
+        log.push(`${nomeNorm}: ${m[2]}% (genérico)`);
+      }
+    }
+  }
+}
+
+
 function parseClienteDoNomeArquivo(filename) {
   let base = filename.replace(/\.pdf$/i, '').trim();
   let nome = base, codigo = '';
 
   // Padrão XP atual: "XPerformance - 18863640 - LEONARDO GRISI GUEDES"
-  // ou "XPerformance 18898403 VALDENICE BEZERRA ALVES" (com ou sem traços)
   let mNovo = base.match(/XPerformance[\s_\-]*(\d{3,})[\s_\-]+(.+)$/i);
   if (mNovo) {
     codigo = mNovo[1];
     nome = mNovo[2];
   } else {
-    // Padrão antigo: "Nome Cliente - 123456"
-    let mAntigo = base.match(/^(.*?)[\s_\-]+(\d{3,})$/);
-    if (mAntigo) {
-      nome = mAntigo[1];
-      codigo = mAntigo[2];
+    // Quantum/Pleno: "WERNECK E TATIANA CARVALHO CONSOLIDADO-20260918153152"
+    let mQuantum = base.match(/^(.+?)\s*CONSOLIDADO[-_\s]*\d{8,}/i);
+    if (mQuantum) {
+      nome = mQuantum[1].trim();
+    } else {
+      // Padrão antigo XP: "Nome Cliente - 123456"
+      let mAntigo = base.match(/^(.*?)[\s_\-]+(\d{3,})$/);
+      if (mAntigo) {
+        nome = mAntigo[1];
+        codigo = mAntigo[2];
+      }
     }
   }
 
   nome = nome.replace(/[_\-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  nome = nome.replace(/\s+CONSOLIDADO$/i, '').trim();
   return { nome: nome || base, codigo };
 }
 
 function gerarRelatorioTexto(dados, cenarioOverride) {
-  let mes = dados.mesReferencia || "maio";
-  let ano = dados.anoReferencia || "2026";
   let rentabilidade = dados.rentabilidadeMensal;
   let pctCdi = dados.pctCdi;
-  let patrimonio = dados.patrimonio;
   let alocacoes = dados.alocacoes;
   let retornos = dados.retornos;
-  
+  let isQuantum = dados.tipo === 'quantum';
+
   let cenario = cenarioOverride !== undefined ? cenarioOverride : document.getElementById('textoCenario').value;
-  
+
   let desempenhoTexto = "";
   let classesList = [];
-  
-  for (let nome in alocacoes) {
-    if (alocacoes[nome] && retornos[nome]) {
-      let alocNum = parseFloat(alocacoes[nome].replace(',', '.'));
-      let retNum = parseFloat(retornos[nome].replace(',', '.'));
-      classesList.push({ nome: nome, alocacao: alocNum, alocStr: alocacoes[nome], retorno: retornos[nome], retNum: retNum });
+
+  for (let nome in retornos) {
+    if (retornos[nome]) {
+      let retNum = parseFloat(String(retornos[nome]).replace(',', '.'));
+      let alocNum = alocacoes[nome] ? parseFloat(String(alocacoes[nome]).replace(',', '.')) : 0;
+      classesList.push({
+        nome: nome,
+        alocacao: alocNum,
+        alocStr: alocacoes[nome] || '',
+        retorno: String(retornos[nome]).replace('.', ','),
+        retNum: retNum
+      });
     }
   }
-  classesList.sort((a, b) => b.alocacao - a.alocacao);
-  
+  if (isQuantum) {
+    classesList.sort((a, b) => Math.abs(b.retNum) - Math.abs(a.retNum));
+  } else {
+    classesList.sort((a, b) => b.alocacao - a.alocacao);
+  }
+
   if (classesList.length > 0) {
     let maxRet = Math.max(...classesList.map(c => c.retNum));
     let minRet = Math.min(...classesList.map(c => c.retNum));
     let melhores = classesList.filter(c => c.retNum === maxRet);
     let piores = classesList.filter(c => c.retNum === minRet);
-    
+
     function nomesUnidos(lista) {
       let nomes = lista.map(c => c.nome);
       if (nomes.length === 1) return nomes[0];
       return nomes.slice(0, -1).join(', ') + ' e ' + nomes[nomes.length - 1];
     }
     function retornoAbs(retNum) {
-      return Math.abs(retNum).toString().replace('.', ',');
+      return Math.abs(retNum).toFixed(2).replace('.', ',');
     }
-    
+
     let melhorPlural = melhores.length > 1;
     let piorPlural = piores.length > 1;
-    
+
     let trechoMelhor = maxRet >= 0
       ? `o principal destaque positivo ${melhorPlural ? 'foram as classes' : 'foi a classe'} ${nomesUnidos(melhores)}, com alta de ${retornoAbs(maxRet)}%.`
       : `o principal destaque ${melhorPlural ? 'foram as classes' : 'foi a classe'} ${nomesUnidos(melhores)}, com o menor recuo, de ${retornoAbs(maxRet)}%.`;
-    
+
     let trechoPior = minRet < 0
       ? `Já ${piorPlural ? 'as classes' : 'a classe'} ${nomesUnidos(piores)} ${piorPlural ? 'foram as maiores detratoras' : 'foi a maior detratora'} do mês, com retorno de -${retornoAbs(minRet)}%.`
       : `Já ${nomesUnidos(piores)} ${piorPlural ? 'tiveram' : 'teve'} a menor alta, de ${retornoAbs(minRet)}%.`;
-    
-    desempenhoTexto = `${trechoMelhor} ${trechoPior}`;
+
+    if (isQuantum) {
+      desempenhoTexto = `No desempenho consolidado por classe de ativo ${trechoMelhor} ${trechoPior}`;
+    } else {
+      desempenhoTexto = `No desempenho por classe de ativo ${trechoMelhor} ${trechoPior}`;
+    }
   } else {
-    desempenhoTexto = "Não foi possível capturar os retornos individuais das classes no PDF.";
+    desempenhoTexto = isQuantum
+      ? "No desempenho consolidado por classe de ativo não foi possível capturar os retornos individuais das classes no PDF."
+      : "No desempenho por classe de ativo não foi possível capturar os retornos individuais das classes no PDF.";
   }
-  
-  let rentabilidadeStr = rentabilidade ? `${rentabilidade.replace(',', '.')}%` : "não disponível";
-  let pctCdiStr = pctCdi ? `${pctCdi.replace(',', '.')}%` : "não disponível";
-  let pctCdiNum = pctCdi ? parseFloat(pctCdi.replace(',', '.')) : null;
-  
+
+  function fmtPct(v) {
+    if (v === null || v === undefined || v === '') return "não disponível";
+    let n = parseFloat(String(v).replace(',', '.'));
+    if (isNaN(n)) return "não disponível";
+    return n.toFixed(2).replace('.', ',') + '%';
+  }
+
+  let rentabilidadeStr = fmtPct(rentabilidade);
+  let pctCdiStr = fmtPct(pctCdi);
+  let pctCdiNum = pctCdi ? parseFloat(String(pctCdi).replace(',', '.')) : null;
+
   let qualificador = "um retorno de";
   if (pctCdiNum !== null) {
     if (pctCdiNum > 110) qualificador = "um excelente retorno de";
     else if (pctCdiNum > 100) qualificador = "um bom retorno de";
   }
-  
+
+  let carteiraLabel = isQuantum ? 'sua carteira consolidada' : 'sua carteira';
+
   let texto = `Prezado cliente, tudo bem? Segue o seu relatório mensal.
 
 ${cenario}
 
-Considerando toda volatilidade do mês no mercado sua carteira apresentou ${qualificador} ${rentabilidadeStr}, equivalente a ${pctCdiStr} do CDI do período.
-No desempenho por classe de ativo ${desempenhoTexto}
+Considerando toda volatilidade do mês no mercado ${carteiraLabel} apresentou ${qualificador} ${rentabilidadeStr}, equivalente a ${pctCdiStr} do CDI do período.
+${desempenhoTexto}
 
 Por fim, reforçamos a importância da disciplina na manutenção da estratégia e nos aportes focando no desenvolvimento da carteira no longo prazo. Essa postura é fundamental para atravessar diferentes ciclos de mercado, aproveitar oportunidades, reduzir os impactos das oscilações no curto prazo e manter a carteira alinhada aos seus objetivos financeiros.`;
-  
+
   return texto;
 }
 
@@ -817,16 +1148,52 @@ document.getElementById('btnExportarEnvio').addEventListener('click', () => {
     return;
   }
 
+  // Sincroniza valores digitados nos inputs (mesmo sem blur) antes de exportar
+  document.querySelectorAll('[data-tel]').forEach(el => {
+    let id = el.getAttribute('data-tel');
+    let c = clientes.find(x => x.id === id);
+    if (c) {
+      c.telefone = normalizarTelefone(el.value);
+      if (c.codigo) {
+        if (c.telefone) telefones[c.codigo] = c.telefone; else delete telefones[c.codigo];
+      }
+    }
+  });
+  document.querySelectorAll('[data-grupo]').forEach(el => {
+    let id = el.getAttribute('data-grupo');
+    let c = clientes.find(x => x.id === id);
+    if (c) {
+      c.grupo = (el.value || '').trim();
+      if (c.codigo) {
+        if (c.grupo) grupos[c.codigo] = c.grupo; else delete grupos[c.codigo];
+      }
+    }
+  });
+  salvarTelefones();
+  salvarEstado();
+
   let semContato = [];
-  let pacote = lista.map(c => {
-    let tel = c.codigo ? (telefones[c.codigo] || '') : '';
-    let grupo = c.codigo ? (grupos[c.codigo] || '') : '';
+  let pacote = lista.map((c, idx) => {
+    let tel = (c.telefone || '').trim() || (c.codigo ? (telefones[c.codigo] || '') : '');
+    let grupo = (c.grupo || '').trim() || (c.codigo ? (grupos[c.codigo] || '') : '');
+    // Código real do PDF, ou sintético estável (Tampermonkey muitas vezes exige codigo)
+    let codigo = (c.codigo || '').trim();
+    if (!codigo) {
+      // Gera código a partir do nome (só dígitos/letras) + índice — sempre preenchido
+      let base = (c.nome || 'cliente').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 12);
+      if (!base) base = 'CLIENTE';
+      codigo = 'Q' + base + String(idx + 1).padStart(3, '0');
+    }
     if (!tel && !grupo) semContato.push(c.nome);
     return {
-      codigo: c.codigo,
+      codigo: codigo,
       nome: c.nome,
       telefone: tel,
       grupo: grupo,
+      // Campos extras para facilitar o Tampermonkey
+      destino: grupo ? 'grupo' : (tel ? 'telefone' : ''),
+      enviar: !!(tel || grupo),
       texto: c.texto,
       fileName: c.fileName
     };
@@ -857,7 +1224,8 @@ function salvarEstado() {
   try {
     let serial = clientes.map(c => ({
       id: c.id, fileName: c.fileName, nome: c.nome, codigo: c.codigo,
-      dados: c.dados, texto: c.texto, enviado: c.enviado
+      dados: c.dados, texto: c.texto, enviado: c.enviado,
+      telefone: c.telefone || '', grupo: c.grupo || ''
     }));
     localStorage.setItem(LS_KEY, JSON.stringify(serial));
   } catch (e) { /* silencioso */ }
@@ -868,7 +1236,12 @@ function carregarEstado() {
     let raw = localStorage.getItem(LS_KEY);
     if (!raw) return;
     let serial = JSON.parse(raw);
-    clientes = serial.map(c => ({ ...c, log: [] }));
+    clientes = serial.map(c => ({
+      ...c,
+      log: [],
+      telefone: c.telefone || (c.codigo && telefones[c.codigo]) || '',
+      grupo: c.grupo || (c.codigo && grupos[c.codigo]) || ''
+    }));
     if (clientes.length) renderLista();
   } catch (e) { /* silencioso */ }
 }
@@ -913,8 +1286,8 @@ function renderLista() {
         <span class="client-arrow" id="arrow_${c.id}">▶</span>
         <input class="client-name-input" data-nome="${c.id}" value="${escapeHtml(c.nome)}">
         ${c.codigo ? `<span class="client-codigo">#${escapeHtml(c.codigo)}</span>` : ''}
-        <input class="client-tel-input" data-tel="${c.id}" placeholder="Telefone (DDI+DDD)" value="${escapeHtml((c.codigo && telefones[c.codigo]) || '')}">
-        <input class="client-tel-input" data-grupo="${c.id}" placeholder="Grupo (opcional)" value="${escapeHtml((c.codigo && grupos[c.codigo]) || '')}" style="width:170px;">
+        <input class="client-tel-input" data-tel="${c.id}" placeholder="Telefone (DDI+DDD)" value="${escapeHtml(c.telefone || (c.codigo && telefones[c.codigo]) || '')}">
+        <input class="client-tel-input" data-grupo="${c.id}" placeholder="Grupo (opcional)" value="${escapeHtml(c.grupo || (c.codigo && grupos[c.codigo]) || '')}" style="width:170px;">
         <span class="client-pill ${c.enviado ? 'enviado-pill' : 'pendente'}">${c.enviado ? 'Enviado' : 'Pendente'}</span>
         <div class="client-actions">
           <button class="btn btn-ghost btn-sm" data-copiar="${c.id}">Copiar</button>
@@ -972,30 +1345,38 @@ function renderLista() {
   });
   cont.querySelectorAll('[data-tel]').forEach(el => {
     el.addEventListener('click', ev => ev.stopPropagation());
-    el.addEventListener('change', () => {
+    const salvarTel = () => {
       let id = el.getAttribute('data-tel');
       let c = clientes.find(x => x.id === id);
       if (!c) return;
       let tel = normalizarTelefone(el.value);
       el.value = tel;
+      c.telefone = tel;
       if (c.codigo) {
         if (tel) telefones[c.codigo] = tel; else delete telefones[c.codigo];
         salvarTelefones();
       }
-    });
+      salvarEstado();
+    };
+    el.addEventListener('change', salvarTel);
+    el.addEventListener('blur', salvarTel);
   });
   cont.querySelectorAll('[data-grupo]').forEach(el => {
     el.addEventListener('click', ev => ev.stopPropagation());
-    el.addEventListener('change', () => {
+    const salvarGrupo = () => {
       let id = el.getAttribute('data-grupo');
       let c = clientes.find(x => x.id === id);
       if (!c) return;
       let grupo = el.value.trim();
+      c.grupo = grupo;
       if (c.codigo) {
         if (grupo) grupos[c.codigo] = grupo; else delete grupos[c.codigo];
         salvarTelefones();
       }
-    });
+      salvarEstado();
+    };
+    el.addEventListener('change', salvarGrupo);
+    el.addEventListener('blur', salvarGrupo);
   });
   cont.querySelectorAll('[data-check]').forEach(el => {
     el.addEventListener('click', (ev) => {
@@ -1058,8 +1439,11 @@ document.getElementById('btnImportar').addEventListener('click', async () => {
       let dados = await extrairDadosPDF(file, log);
       let { nome, codigo } = parseClienteDoNomeArquivo(file.name);
       let texto = gerarRelatorioTexto(dados);
+      let telInit = codigo ? (telefones[codigo] || '') : '';
+      let grupoInit = codigo ? (grupos[codigo] || '') : '';
       clientes.push({
-        id: novoId(), fileName: file.name, nome, codigo, dados, texto, enviado: false, log
+        id: novoId(), fileName: file.name, nome, codigo, dados, texto, enviado: false, log,
+        telefone: telInit, grupo: grupoInit
       });
       ok++;
     } catch (e) {
