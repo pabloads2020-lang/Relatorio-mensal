@@ -300,6 +300,12 @@ body.light .hub-theme-btn .hub-theme-knob {
 .client-tel-input { width: 150px; background: var(--bg2); border: 1px solid var(--border2); border-radius: 8px; padding: 4px 8px; font-size: 12px; color: var(--text); font-family: inherit; }
 .client-tel-input:focus { outline: none; border-color: var(--gold); }
 .client-tel-input::placeholder { color: var(--text3); }
+.grupo-card { border-left: 3px solid var(--gold); }
+.grupo-titulo { font-size: 14px; font-weight: 700; color: var(--text); flex: 1; min-width: 160px; }
+.client-card.membro-grupo { margin-left: 18px; }
+.client-trat-select { background: var(--bg2); border: 1px solid var(--border2); border-radius: 8px; padding: 4px 6px; font-size: 12px; color: var(--text); font-family: inherit; cursor: pointer; }
+.client-trat-select:focus { outline: none; border-color: var(--gold); }
+.client-trat-select.warn { border-color: var(--amber); background: var(--amber-bg); color: var(--amber); font-weight: 700; }
 .client-pill { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
 .client-pill.pendente { background: var(--amber-bg); color: var(--amber); }
 .client-pill.enviado-pill { background: var(--green-bg); color: var(--green); }
@@ -570,12 +576,14 @@ function extrairDadosXP(textoLimpo, dados, log) {
     log.push(`%CDI: ${dados.pctCdi}%`);
   }
 
-  let regexClasse = /([A-Za-zÀ-Úà-û]+?)\((\d+),(\d+)%\)R\$[\d\.]+,\d+(-?\d+),(\d+)%/gi;
+  // Centavos do saldo = exatamente 2 dígitos (\d{2}). Antes era \d+, e como o texto vem sem
+  // espaços ("R$55.813,2410,75%"), o \d+ guloso engolia o "1" de 10,75% e lia 0,75%.
+  let regexClasse = /([A-Za-zÀ-Úà-û]+?)\((\d+),(\d+)%\)R\$[\d\.]+,\d{2}(-?\d+(?:\.\d{3})*),(\d{2})%/gi;
   let match;
   while ((match = regexClasse.exec(textoLimpo)) !== null) {
     let nome = normalizarNomeClasse(match[1]);
     let alocacao = match[2] + ',' + match[3];
-    let retorno = match[4] + ',' + match[5];
+    let retorno = match[4].replace(/\./g, '') + ',' + match[5]; // remove ponto de milhar (1.245,87 -> 1245,87)
     if (alocacao && retorno && !dados.alocacoes[nome]) {
       dados.alocacoes[nome] = alocacao;
       dados.retornos[nome] = retorno;
@@ -650,9 +658,9 @@ function extrairDadosQuantum(textoLimpo, dados, log) {
     alvo = mesAbrev + '/' + ano2;
     dados.mesReferencia = MESES_PT[mesNum - 1];
     dados.anoReferencia = ano4;
-    log.push(`✓ Data base → ${dados.mesReferencia}/${ano4} → alvo "${alvo}" (${candidatos.length} ocorrência(s))`);
+    log.push(`OK: Data base → ${dados.mesReferencia}/${ano4} → alvo "${alvo}" (${candidatos.length} ocorrência(s))`);
   } else {
-    log.push('❌ Não foi possível determinar a Data base');
+    log.push('ERRO: Não foi possível determinar a Data base');
   }
 
   // ----- 2) Seção de rentabilidade mensal -----
@@ -664,7 +672,7 @@ function extrairDadosQuantum(textoLimpo, dados, log) {
     secao = fim > 0 ? t.substring(idxRent, idxRent + 10 + fim) : t.substring(idxRent, idxRent + 4000);
     log.push(`Seção Rentabilidade isolada (${secao.length} chars)`);
   } else {
-    log.push('⚠️ Título Retornos|Rentabilidade ausente — usando texto amplo');
+    log.push('Aviso: Título Retornos|Rentabilidade ausente — usando texto amplo');
   }
 
   // ----- helpers -----
@@ -702,12 +710,12 @@ function extrairDadosQuantum(textoLimpo, dados, log) {
   function setRetorno(val, origem) {
     if (dados.rentabilidadeMensal != null || val == null) return;
     dados.rentabilidadeMensal = String(val).replace('%', '').replace(',', '.');
-    log.push(`✓ Retorno do mês = ${dados.rentabilidadeMensal}%  [${origem}]`);
+    log.push(`OK: Retorno do mês = ${dados.rentabilidadeMensal}%  [${origem}]`);
   }
   function setCdi(val, origem) {
     if (dados.pctCdi != null || val == null) return;
     dados.pctCdi = String(val).replace('%', '').replace(',', '.');
-    log.push(`✓ % CDI do mês = ${dados.pctCdi}%  [${origem}]`);
+    log.push(`OK: % CDI do mês = ${dados.pctCdi}%  [${origem}]`);
   }
 
   // =====================================================================
@@ -810,8 +818,8 @@ function extrairDadosQuantum(textoLimpo, dados, log) {
     }
   }
 
-  if (dados.rentabilidadeMensal == null) log.push('❌ Retorno do mês não encontrado após todas as estratégias');
-  if (dados.pctCdi == null) log.push('❌ % CDI do mês não encontrado após todas as estratégias');
+  if (dados.rentabilidadeMensal == null) log.push('ERRO: Retorno do mês não encontrado após todas as estratégias');
+  if (dados.pctCdi == null) log.push('ERRO: % CDI do mês não encontrado após todas as estratégias');
   log.push(`Resultado: retorno=${dados.rentabilidadeMensal != null ? dados.rentabilidadeMensal + '%' : '?'} | %CDI=${dados.pctCdi != null ? dados.pctCdi + '%' : '?'} | mês=${dados.mesReferencia || '?'}/${dados.anoReferencia || '?'}`);
 
   // ----- 5) Patrimônio -----
@@ -911,7 +919,92 @@ function primeiroNomeSaudacao(nomeCompleto) {
   return cap(partes[0]);
 }
 
-function gerarRelatorioTexto(dados, cenarioOverride, nomeCliente) {
+// ========== TRATAMENTO (Prezado / Prezada) PELO GÊNERO DO PRIMEIRO NOME ==========
+// Nomes conhecidos (sem acento, minúsculos). O que não estiver aqui é decidido pela terminação;
+// se nem a terminação der segurança, retorna '' e o card mostra o campo "Escolher" para você marcar.
+const NOMES_MASC = new Set(('joao jose antonio francisco carlos paulo pedro lucas luiz luis marcos marcelo luciano gabriel rafael daniel bruno ' +
+  'eduardo felipe rodrigo fernando fabio ricardo roberto sergio andre alexandre anderson thiago tiago diego leonardo leandro gustavo guilherme ' +
+  'henrique vinicius mateus matheus rogerio renato claudio cesar julio jorge jair ivan igor hugo helio heitor davi david caio caue breno arthur ' +
+  'artur arnaldo augusto adriano adilson alan alberto alex alexsandro alisson allan amaro ananias anselmo arlindo armando benedito benjamin ' +
+  'bernardo cassio celso cristiano cristovao dante denis dennis diogo edson edgar edmilson elias emerson enzo erick erik evandro fabricio flavio ' +
+  'geraldo gilberto gilmar giovani giovanni giuseppe glauber heber hermes horacio humberto isaac ismael jackson jeferson jefferson jeremias jonas ' +
+  'jonatas jonathan josue juliano kleber laercio lauro leo levi lourenco lucio luan manoel manuel mario mauricio mauro max miguel murilo nelson ' +
+  'nicolas nilton noel otavio octavio orlando oscar osvaldo otto patrick raimundo ramon raul reginaldo reinaldo renan robson rubens ruy samuel ' +
+  'saulo sebastiao severino silvio simao tales tarcisio teodoro thales theo tomas ubirajara valdemar valter walter vanderlei vicente victor vitor ' +
+  'wagner wallace washington welington wellington wesley wilson yuri werneck gilson givaldo ailton airton ayrton wilton edvaldo ednaldo ' +
+  'abel abraao adalberto aderbal adriel afonso agostinho aguinaldo ajax alessandro alfredo aloisio altair alvaro amilcar anderley anibal ' +
+  'antenor aristides aurelio baltazar bento boris brian bryan bruce cairo caetano calebe camilo carlito cleber clovis cleiton cleverson ' +
+  'conrado cosme dagoberto dalton damiao danilo darci dario deivid deivison demetrio derick dilson dimas dionisio douglas durval eder ' +
+  'edinaldo edmundo elton elvis emanuel emilio ernesto estevao eugenio evaristo ezequiel fabiano felix fidelis flaviano frederico gael ' +
+  'gaspar gelson genaro george gerson gian gildo gleison gregorio guto haroldo heraldo hilario hudson iago inacio ivo jacinto jaime jamil ' +
+  'jason jeronimo joaquim joel jorginho josias judson junior kaio kaique kauan kevin lazaro lenin lincoln lorenzo luciano maicon marlon ' +
+  'marcio marco mariano matias mauricio messias michel moacir moises natan nathan neto nestor nivaldo nuno odair olavo omar osmar ' +
+  'osmir pablo paulino pietro plinio quintino rael reynaldo rian rildo rolando romario romeu ronaldo ronan rosalvo rui salvador sandro ' +
+  'santiago saul schultz sidnei sidney silas solon tadeu tarso telmo tertuliano thomas tobias ulisses valdir valmir vando vagner ' +
+  'venancio vilmar virgilio vladimir wander wendel wendell wilian william willian xavier yago zacarias zeca').split(' '));
+const NOMES_FEM = new Set(('maria ana francisca antonia adriana juliana marcia fernanda patricia aline sandra camila amanda bruna jessica leticia julia ' +
+  'luciana vanessa mariana gabriela rafaela beatriz isabel isabela isabella larissa carolina carla cristina claudia daniela debora denise eliane ' +
+  'elisa elisabete elizabeth fabiana fatima flavia gisele giselle giovana giovanna helena heloisa ingrid iracema irene isadora janaina joana ' +
+  'jussara karen karina katia kelly laura lais lara lidia livia lorena luana luisa luiza madalena manuela marcela margarida marilia marina marta ' +
+  'michelle michele monica natalia nathalia nicole paula priscila priscilla rafaella raquel regina renata rita roberta rosa rosana rosangela ' +
+  'sabrina sheila silvia sonia stella suzana tais tatiana tatiane thais valeria vera veronica viviane vitoria yasmin alice solange daiane ' +
+  'joyce monique miriam mirian ruth sarah sara lilian lillian liliane jaqueline jacqueline kellen carmen carmem marlene celine ester esther ' +
+  'ines iris luz cristiane cristiani daniele danielle rosane rosemeire rosimeire roseli rosely eunice elaine lorraine abigail adelaide ' +
+  'agatha aida alessandra alexandra amelia anabela anamaria angela angelica anita antonieta aparecida ariane arlete augusta aurora barbara ' +
+  'benedita bianca bruna cacilda camille carine carmela cassia catarina cecilia celia celina cintia clara clarice cleide cleusa clotilde ' +
+  'conceicao consuelo cynthia dalila dayane dina dolores dora doris edna edite eloisa elza emilia erica estela eva evelyn fabiola fernanda ' +
+  'filomena fiorella gabrielle gilda gladis glaucia gloria graca graciela gracieli greice helen hilda ida iolanda irma isabele ivone ' +
+  'jane janete jaqueline jeniffer jennifer jocelia josefa josiane josiele joselia judite julie juliane juliete kamila karla kassia keila ' +
+  'keyla laila leila lena leonor leopoldina lia lilia lourdes lucia lucilene lucimar lucineia lurdes magda maiara maira maisa mara ' +
+  'marcella marciane margareth maribel marilda marilene marli marlei marly martha matilde mayara mayra melissa mercedes mirela miriele ' +
+  'nadia nadir naiara nair nara natasha nayara neide neuza nilda nilza nina noemi nubia odete olga olivia ondina otilia palmira pamela ' +
+  'penha perla polliana rachel rebeca regiane rejane rosalia rosalina rosario roselaine rosemary rosilene ruana sabina salete ' +
+  'samara samira sandy selma shirley simara sirlei sirley socorro solange sophia sofia soraia suelen sueli suely susana tabata talita ' +
+  'tamara tamires tania tereza teresa tereza thaisa thalita thamires theresa uiara ursula valdete valentina vanda vania vilma virginia ' +
+  'viviana wanda wendy yara yasmim zelia zilda zuleica zuleide').split(' '));
+const EXC_MASC_TERMINA_A = new Set(['luca', 'gianluca', 'joshua', 'nikita', 'sasha', 'mustafa', 'josua', 'misha']);
+const EXC_FEM_TERMINA_O = new Set(['consuelo', 'socorro', 'conceicao', 'assuncao', 'encarnacao', 'anunciacao', 'carmo', 'rosario']);
+
+function semAcentoMin(s) {
+  return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
+
+// 'M' | 'F' | '' (dúvida)
+function generoDoPrimeiroNome(primeiro) {
+  let n = semAcentoMin(primeiro);
+  if (!n) return '';
+  if (EXC_FEM_TERMINA_O.has(n) || NOMES_FEM.has(n)) return 'F';
+  if (EXC_MASC_TERMINA_A.has(n) || NOMES_MASC.has(n)) return 'M';
+  if (/a$/.test(n)) return 'F';
+  if (/(o|os|ao|son|ton)$/.test(n)) return 'M';
+  return '';
+}
+
+// Retorna 'Prezado' | 'Prezada' | 'Prezados' | 'Prezadas' | '' (dúvida → você escolhe no card)
+function inferirTratamento(nomeCompleto) {
+  let n = (nomeCompleto || '').replace(/\s+/g, ' ').trim();
+  if (!n) return '';
+  let partes = n.split(' ');
+  let idxE = partes.findIndex((p, i) => i > 0 && /^e$/i.test(p));
+  if (idxE > 0 && partes[idxE + 1]) {
+    let g1 = generoDoPrimeiroNome(partes[0]);
+    let g2 = generoDoPrimeiroNome(partes[idxE + 1]);
+    if (!g1 || !g2) return '';
+    return (g1 === 'F' && g2 === 'F') ? 'Prezadas' : 'Prezados';
+  }
+  let g = generoDoPrimeiroNome(partes[0]);
+  return g === 'M' ? 'Prezado' : g === 'F' ? 'Prezada' : '';
+}
+
+// Troca só a saudação da 1ª linha do texto, preservando qualquer edição manual feita no resto.
+function atualizarSaudacaoNoTexto(texto, tratamento, nomeCompleto) {
+  let nomeSaud = primeiroNomeSaudacao(nomeCompleto);
+  let trat = tratamento || 'Prezado(a)';
+  let novaSaud = nomeSaud ? `${trat} ${nomeSaud},` : `${tratamento || 'Prezado'} cliente,`;
+  return (texto || '').replace(/^Prezad(?:o|a|os|as)(?:\(a\))?\s+[^,\n]*,/, novaSaud);
+}
+
+function gerarRelatorioTexto(dados, cenarioOverride, nomeCliente, tratamento, retornarPartes) {
   let rentabilidade = dados.rentabilidadeMensal;
   let pctCdi = dados.pctCdi;
   let alocacoes = dados.alocacoes;
@@ -954,7 +1047,7 @@ function gerarRelatorioTexto(dados, cenarioOverride, nomeCliente) {
       return nomes.slice(0, -1).join(', ') + ' e ' + nomes[nomes.length - 1];
     }
     function retornoAbs(retNum) {
-      return Math.abs(retNum).toFixed(2).replace('.', ',');
+      return Math.abs(retNum).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     let melhorPlural = melhores.length > 1;
@@ -968,10 +1061,28 @@ function gerarRelatorioTexto(dados, cenarioOverride, nomeCliente) {
       ? `Já ${piorPlural ? 'as classes' : 'a classe'} ${nomesUnidos(piores)} ${piorPlural ? 'foram as maiores detratoras' : 'foi a maior detratora'} do mês, com retorno de -${retornoAbs(minRet)}%.`
       : `Já ${nomesUnidos(piores)} ${piorPlural ? 'tiveram' : 'teve'} a menor alta, de ${retornoAbs(minRet)}%.`;
 
-    if (isQuantum) {
-      desempenhoTexto = `No desempenho consolidado por classe de ativo ${trechoMelhor} ${trechoPior}`;
+    // Classe única (ou todas com o mesmo retorno): melhor e pior são as mesmas, então só uma frase,
+    // senão o texto se contradiz ("destaque positivo" e "menor alta" da mesma classe).
+    let todosIguais = Math.abs(maxRet - minRet) < 0.005; // tolerância de arredondamento
+    let trechoFinal;
+    if (!todosIguais) {
+      trechoFinal = `${trechoMelhor} ${trechoPior}`;
+    } else if (classesList.length > 1) {
+      // várias classes com exatamente o mesmo retorno: ninguém se destaca, então descreve o conjunto
+      if (Math.abs(maxRet) < 0.005) trechoFinal = `todas as classes ficaram estáveis, com retorno de ${retornoAbs(0)}%.`;
+      else if (maxRet > 0) trechoFinal = `todas as classes tiveram alta de ${retornoAbs(maxRet)}%.`;
+      else trechoFinal = `todas as classes tiveram retorno de -${retornoAbs(maxRet)}%.`;
+    } else if (Math.abs(maxRet) < 0.005) {
+      trechoFinal = `a classe ${classesList[0].nome} ficou estável, com retorno de ${retornoAbs(0)}%.`;
     } else {
-      desempenhoTexto = `No desempenho por classe de ativo ${trechoMelhor} ${trechoPior}`;
+      // classe única: positiva mantém "principal destaque"; negativa vira "maior detratora"
+      trechoFinal = maxRet > 0 ? trechoMelhor : trechoPior.replace(/^Já /, '');
+    }
+
+    if (isQuantum) {
+      desempenhoTexto = `No desempenho consolidado por classe de ativo ${trechoFinal}`;
+    } else {
+      desempenhoTexto = `No desempenho por classe de ativo ${trechoFinal}`;
     }
   } else {
     desempenhoTexto = isQuantum
@@ -999,15 +1110,24 @@ function gerarRelatorioTexto(dados, cenarioOverride, nomeCliente) {
   let carteiraLabel = isQuantum ? 'sua carteira consolidada' : 'sua carteira';
 
   let saudacaoNome = primeiroNomeSaudacao(nomeCliente) || 'cliente';
+  // tratamento: 'Prezado' | 'Prezada' | 'Prezados' | 'Prezadas'. Vazio = dúvida → "Prezado(a)" até você escolher no card.
+  let tratamentoUsado = tratamento !== undefined ? tratamento : inferirTratamento(nomeCliente);
+  let saudacaoTrat = saudacaoNome === 'cliente' ? (tratamentoUsado || 'Prezado') : (tratamentoUsado || 'Prezado(a)');
 
-  let texto = `Prezado ${saudacaoNome}, tudo bem? Segue o seu relatório mensal.
+  let carteiraFrase = `Considerando toda volatilidade do mês no mercado ${carteiraLabel} apresentou ${qualificador} ${rentabilidadeStr}, equivalente a ${pctCdiStr} do CDI do período.`;
+  let fechamento = `Por fim, reforçamos que a construção de patrimônio exige, além de bons retornos, tempo, disciplina e constância nos aportes. Investir regularmente e manter a estratégia ao longo do tempo contribui para resultados consistentes e alinhados aos objetivos financeiros definidos.`;
+
+  // Usado pela mensagem única de grupo (casais): devolve as partes sem a saudação
+  if (retornarPartes) return { cenario, carteiraFrase, desempenhoTexto, fechamento };
+
+  let texto = `${saudacaoTrat} ${saudacaoNome}, tudo bem? Segue o seu relatório mensal.
 
 ${cenario}
 
-Considerando toda volatilidade do mês no mercado ${carteiraLabel} apresentou ${qualificador} ${rentabilidadeStr}, equivalente a ${pctCdiStr} do CDI do período.
+${carteiraFrase}
 ${desempenhoTexto}
 
-Por fim, reforçamos que a construção de patrimônio exige, além de bons retornos, tempo, disciplina e constância nos aportes. Investir regularmente e manter a estratégia ao longo do tempo contribui para resultados consistentes e alinhados aos objetivos financeiros definidos.`;
+${fechamento}`;
 
   return texto;
 }
@@ -1159,8 +1279,16 @@ document.getElementById('btnExportarEnvio').addEventListener('click', () => {
     return true;
   });
 
+  // Quem está marcado como enviado fica de fora (só entra se o filtro for "Enviados", para reenviar de propósito)
+  let jaEnviados = 0;
+  if (filtroAtual !== 'enviados') {
+    jaEnviados = lista.filter(c => c.enviado).length;
+    lista = lista.filter(c => !c.enviado);
+  }
+  let notaEnviados = jaEnviados ? ` ${jaEnviados} já marcado(s) como enviado ficou(aram) de fora.` : '';
+
   if (!lista.length) {
-    setStatus('Nenhum cliente no filtro atual para exportar.', 'err');
+    setStatus(jaEnviados ? 'Todos os clientes do filtro já estão marcados como enviados. Nada a exportar.' : 'Nenhum cliente no filtro atual para exportar.', 'err');
     return;
   }
 
@@ -1211,9 +1339,42 @@ document.getElementById('btnExportarEnvio').addEventListener('click', () => {
       destino: grupo ? 'grupo' : (tel ? 'telefone' : ''),
       enviar: !!(tel || grupo),
       texto: c.texto,
-      fileName: c.fileName
+      fileName: c.fileName,
+      fileNames: [c.fileName],
+      tipo: 'individual'
     };
   });
+
+  // Casais/famílias no mesmo grupo do WhatsApp: UMA entrada por grupo, com todos os PDFs
+  let gruposExp = gruposDaLista(lista);
+  sincronizarMensagensGrupo(gruposExp);
+  salvarMsgGrupos();
+  let gruposEmitidosExp = {};
+  let pacoteFinal = [];
+  lista.forEach((c, i) => {
+    let g = gruposExp.find(x => x.membros.includes(c));
+    if (!g) { pacoteFinal.push(pacote[i]); return; }
+    if (gruposEmitidosExp[g.chave]) return;
+    gruposEmitidosExp[g.chave] = true;
+    let entradas = g.membros.map(m => pacote[lista.indexOf(m)]);
+    pacoteFinal.push({
+      codigo: entradas[0].codigo,
+      codigos: entradas.map(e => e.codigo),
+      nome: juntarNomes(g.membros.map(m => m.nome)),
+      telefone: entradas.map(e => e.telefone).find(Boolean) || '',
+      grupo: g.nome,
+      destino: 'grupo',
+      enviar: true,
+      texto: msgGrupos[g.chave].texto,
+      fileName: entradas[0].fileName,
+      fileNames: entradas.map(e => e.fileName),
+      tipo: 'grupo',
+      membros: entradas.map(e => ({ codigo: e.codigo, nome: e.nome, fileName: e.fileName }))
+    });
+  });
+  pacote = pacoteFinal;
+  let semTratamento = pacote.filter(e => /^Prezado\(a\)/.test(e.texto || '')).map(e => e.nome);
+  let avisoTrat = semTratamento.length ? ` ATENÇÃO: Prezado/Prezada não definido para: ${semTratamento.join(', ')}.` : '';
 
   let dataStr = new Date().toISOString().slice(0, 10);
   let nomeArq = `envio_whatsapp_${dataStr}.json`;
@@ -1228,11 +1389,95 @@ document.getElementById('btnExportarEnvio').addEventListener('click', () => {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 
   if (semContato.length) {
-    setStatus(`${pacote.length} exportado(s), mas ${semContato.length} sem telefone nem grupo cadastrado: ${semContato.join(', ')}`, 'err');
+    setStatus(`${pacote.length} exportado(s), mas ${semContato.length} sem telefone nem grupo cadastrado: ${semContato.join(', ')}.${avisoTrat}${notaEnviados}`, 'err');
+  } else if (avisoTrat) {
+    setStatus(`${pacote.length} exportado(s).${avisoTrat}${notaEnviados}`, 'err');
   } else {
-    setStatus(`${pacote.length} cliente(s) exportado(s) para envio!`, 'ok');
+    setStatus(`${pacote.length} envio(s) exportado(s)!${notaEnviados}`, 'ok');
   }
 });
+
+// ========== MENSAGEM ÚNICA POR GRUPO (casais/famílias com um XPerformance cada) ==========
+const MSG_GRUPOS_LS_KEY = 'pbfMsgGrupos_v1';
+let msgGrupos = {};        // chave do grupo -> { texto, editado, ids, ass }
+let idsEmGrupo = new Set(); // ids de clientes que hoje estão numa mensagem de grupo
+
+function salvarMsgGrupos() {
+  try { localStorage.setItem(MSG_GRUPOS_LS_KEY, JSON.stringify(msgGrupos)); } catch (e) { /* silencioso */ }
+}
+
+function grupoDoCliente(c) {
+  return ((c.grupo || '').trim() || (c.codigo ? (grupos[c.codigo] || '') : '')).trim();
+}
+
+function chaveGrupo(nome) {
+  return semAcentoMin(nome).replace(/\s+/g, ' ');
+}
+
+// Só forma grupo quem tem o MESMO nome de grupo do WhatsApp e são 2+ pessoas
+function agruparPorGrupo(lista) {
+  let mapa = {};
+  lista.forEach(c => {
+    let g = grupoDoCliente(c);
+    if (!g) return;
+    let k = chaveGrupo(g);
+    if (!mapa[k]) mapa[k] = { chave: k, nome: g, membros: [] };
+    mapa[k].membros.push(c);
+  });
+  return Object.values(mapa).filter(x => x.membros.length >= 2);
+}
+
+// Quem já foi marcado como enviado sai da mensagem do grupo (o cônjuge que faltou vai sozinho).
+// Se TODOS do grupo estão enviados, o card continua aparecendo para poder desmarcar.
+function gruposDaLista(lista) {
+  return agruparPorGrupo(lista).map(g => {
+    let pendentes = g.membros.filter(m => !m.enviado);
+    if (pendentes.length === 0) return g;
+    return pendentes.length >= 2 ? { ...g, membros: pendentes } : null;
+  }).filter(Boolean);
+}
+
+function juntarNomes(nomes) {
+  if (nomes.length <= 1) return nomes[0] || '';
+  return nomes.slice(0, -1).join(', ') + ' e ' + nomes[nomes.length - 1];
+}
+
+function tratamentoDoGrupo(membros) {
+  let ts = membros.map(m => m.tratamento || '');
+  if (ts.some(t => !t)) return 'Prezado(a)s';
+  return ts.every(t => t === 'Prezada' || t === 'Prezadas') ? 'Prezadas' : 'Prezados';
+}
+
+// Saudação plural + cenário UMA vez + um bloco por carteira + fechamento UMA vez
+function gerarMensagemGrupo(membros, cenarioOverride) {
+  let cenario = cenarioOverride !== undefined ? cenarioOverride : document.getElementById('textoCenario').value;
+  let nomes = membros.map(m => primeiroNomeSaudacao(m.nome) || 'cliente');
+  let blocos = [];
+  let fechamento = '';
+  membros.forEach((m, i) => {
+    let p = gerarRelatorioTexto(m.dados, cenario, m.nome, m.tratamento, true);
+    if (!fechamento) fechamento = p.fechamento;
+    blocos.push(`*${nomes[i]}:* ${p.carteiraFrase}\n${p.desempenhoTexto}`);
+  });
+  return `${tratamentoDoGrupo(membros)} ${juntarNomes(nomes)}, tudo bem? Seguem os seus relatórios mensais.\n\n${cenario}\n\n${blocos.join('\n\n')}\n\n${fechamento}`;
+}
+
+// Cria/atualiza o texto de cada grupo. Texto editado à mão só é refeito se mudar quem está no grupo.
+function sincronizarMensagensGrupo(listaGrupos) {
+  listaGrupos.forEach(g => {
+    let ids = g.membros.map(m => m.id).join(',');
+    let ass = g.membros.map(m => (m.tratamento || '') + '|' + m.nome).join(';');
+    let atual = msgGrupos[g.chave];
+    if (!atual || atual.ids !== ids || (!atual.editado && atual.ass !== ass)) {
+      msgGrupos[g.chave] = { texto: gerarMensagemGrupo(g.membros), editado: false, ids, ass };
+    } else if (atual.editado && atual.ass !== ass) {
+      // texto editado à mão: preserva tudo e só atualiza a saudação (Prezados/Prezadas + nomes)
+      let nomes = g.membros.map(m => primeiroNomeSaudacao(m.nome) || 'cliente');
+      atual.texto = atual.texto.replace(/^Prezad(?:o|a|os|as)(?:\(a\))?s?\s+[^,\n]*,/, `${tratamentoDoGrupo(g.membros)} ${juntarNomes(nomes)},`);
+      atual.ass = ass;
+    }
+  });
+}
 
 function novoId() { return 'c' + (idSeq++) + '_' + Date.now(); }
 
@@ -1241,13 +1486,15 @@ function salvarEstado() {
     let serial = clientes.map(c => ({
       id: c.id, fileName: c.fileName, nome: c.nome, codigo: c.codigo,
       dados: c.dados, texto: c.texto, enviado: c.enviado,
-      telefone: c.telefone || '', grupo: c.grupo || ''
+      telefone: c.telefone || '', grupo: c.grupo || '',
+      tratamento: c.tratamento || '', tratamentoManual: !!c.tratamentoManual
     }));
     localStorage.setItem(LS_KEY, JSON.stringify(serial));
   } catch (e) { /* silencioso */ }
 }
 
 function carregarEstado() {
+  try { msgGrupos = JSON.parse(localStorage.getItem(MSG_GRUPOS_LS_KEY) || '{}') || {}; } catch (e) { msgGrupos = {}; }
   try {
     let raw = localStorage.getItem(LS_KEY);
     if (!raw) return;
@@ -1256,7 +1503,9 @@ function carregarEstado() {
       ...c,
       log: [],
       telefone: c.telefone || (c.codigo && telefones[c.codigo]) || '',
-      grupo: c.grupo || (c.codigo && grupos[c.codigo]) || ''
+      grupo: c.grupo || (c.codigo && grupos[c.codigo]) || '',
+      tratamento: c.tratamento !== undefined ? c.tratamento : inferirTratamento(c.nome),
+      tratamentoManual: !!c.tratamentoManual
     }));
     if (clientes.length) renderLista();
   } catch (e) { /* silencioso */ }
@@ -1270,11 +1519,27 @@ function contagem() {
 
 function atualizarContador() {
   let { total, enviados, pendentes } = contagem();
-  document.getElementById('batchCounter').innerHTML = `<b>${pendentes}</b> pendente(s) · <b>${enviados}</b> enviado(s) · ${total} no total`;
+  let semTrat = clientes.filter(c => !c.enviado && !c.tratamento).length;
+  let avisoTrat = semTrat ? ` · <b style="color:var(--amber);">${semTrat}</b> com Prezado/Prezada a definir` : '';
+  document.getElementById('batchCounter').innerHTML = `<b>${pendentes}</b> pendente(s) · <b>${enviados}</b> enviado(s) · ${total} no total${avisoTrat}`;
 }
 
 function escapeHtml(s) {
   return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// Atualiza a saudação do texto + o select do card sem re-renderizar a lista (mantém os cards abertos)
+function aplicarSaudacaoNoCard(c) {
+  c.texto = atualizarSaudacaoNoTexto(c.texto, c.tratamento, c.nome);
+  let ta = document.querySelector(`[data-texto="${c.id}"]`);
+  if (ta) ta.value = c.texto;
+  let sel = document.querySelector(`[data-trat="${c.id}"]`);
+  if (sel) {
+    sel.value = c.tratamento || '';
+    sel.classList.toggle('warn', !c.tratamento);
+  }
+  atualizarContador();
+  if (idsEmGrupo.has(c.id)) renderLista();
 }
 
 function renderLista() {
@@ -1292,16 +1557,34 @@ function renderLista() {
     return;
   }
 
-  cont.innerHTML = lista.map(c => {
+  // Mensagem única por grupo (casais): agrupa quem está no mesmo grupo do WhatsApp
+  let gruposLista = gruposDaLista(lista);
+  sincronizarMensagensGrupo(gruposLista);
+  salvarMsgGrupos();
+  idsEmGrupo = new Set();
+  let gruposPorGid = {};
+  gruposLista.forEach(g => {
+    g.gid = 'g_' + g.chave.replace(/[^a-z0-9]/g, '_');
+    gruposPorGid[g.gid] = g;
+    g.membros.forEach(m => idsEmGrupo.add(m.id));
+  });
+  let abertos = Array.from(cont.querySelectorAll('.client-body.open')).map(e => e.id);
+
+  const htmlCard = c => {
     let patrimHtml = c.dados && c.dados.patrimonio
       ? `<span class="client-patrim">${fmtBRL(parseFloat(c.dados.patrimonio.replace(/\./g, '').replace(',', '.')))}</span>`
       : '';
     return `
-    <div class="client-card ${c.enviado ? 'enviado' : ''}" data-id="${c.id}">
+    <div class="client-card ${c.enviado ? 'enviado' : ''} ${idsEmGrupo.has(c.id) ? 'membro-grupo' : ''}" data-id="${c.id}">
       <div class="client-head" data-toggle="${c.id}">
         <span class="client-arrow" id="arrow_${c.id}">▶</span>
         <input class="client-name-input" data-nome="${c.id}" value="${escapeHtml(c.nome)}">
+        <select class="client-trat-select ${c.tratamento ? '' : 'warn'}" data-trat="${c.id}" title="Tratamento da saudação (Prezado / Prezada)">
+          <option value="" ${!c.tratamento ? 'selected' : ''}>Escolher</option>
+          ${['Prezado', 'Prezada', 'Prezados', 'Prezadas'].map(t => `<option value="${t}" ${c.tratamento === t ? 'selected' : ''}>${t}</option>`).join('')}
+        </select>
         ${c.codigo ? `<span class="client-codigo">#${escapeHtml(c.codigo)}</span>` : ''}
+        ${idsEmGrupo.has(c.id) ? `<span class="client-codigo" title="O envio usa a mensagem única do grupo (card dourado acima)">msg do grupo</span>` : ''}
         <input class="client-tel-input" data-tel="${c.id}" placeholder="Telefone (DDI+DDD)" value="${escapeHtml(c.telefone || (c.codigo && telefones[c.codigo]) || '')}">
         <input class="client-tel-input" data-grupo="${c.id}" placeholder="Grupo (opcional)" value="${escapeHtml(c.grupo || (c.codigo && grupos[c.codigo]) || '')}" style="width:170px;">
         <span class="client-pill ${c.enviado ? 'enviado-pill' : 'pendente'}">${c.enviado ? 'Enviado' : 'Pendente'}</span>
@@ -1319,7 +1602,53 @@ function renderLista() {
         <div class="client-debug-box" id="debug_${c.id}">${escapeHtml((c.log || []).join('\n')) || 'Sem detalhes de leitura salvos (recarregue processando o PDF novamente).'}</div>
       </div>
     </div>`;
-  }).join('');
+  };
+
+  const htmlGrupo = g => {
+    let m = msgGrupos[g.chave];
+    let todosEnv = g.membros.every(x => x.enviado);
+    return `
+    <div class="client-card grupo-card ${todosEnv ? 'enviado' : ''}" data-gcard="${g.gid}">
+      <div class="client-head" data-toggle="${g.gid}">
+        <span class="client-arrow" id="arrow_${g.gid}">▶</span>
+        <span class="grupo-titulo">${escapeHtml(g.nome)} · mensagem única</span>
+        <span class="client-codigo">${g.membros.length} relatórios</span>
+        <span class="client-pill ${todosEnv ? 'enviado-pill' : 'pendente'}">${todosEnv ? 'Enviado' : 'Pendente'}</span>
+        <div class="client-actions">
+          <button class="btn btn-ghost btn-sm" data-gcopiar="${g.gid}">Copiar</button>
+          <button class="btn-check btn-sm ${todosEnv ? 'active' : ''}" data-gcheck="${g.gid}">${todosEnv ? 'Enviado' : 'Marcar enviado'}</button>
+        </div>
+      </div>
+      <div class="client-body" id="body_${g.gid}">
+        <textarea class="client-textarea" data-gtexto="${g.gid}">${escapeHtml(m.texto)}</textarea>
+        <div class="client-meta-row">
+          <span class="client-patrim">Inclui: ${g.membros.map(x => escapeHtml(primeiroNomeSaudacao(x.nome) || x.nome)).join(', ')}</span>
+          <button class="client-debug-toggle" data-gregerar="${g.gid}">Regenerar texto do grupo</button>
+        </div>
+      </div>
+    </div>`;
+  };
+
+  // Ordem: card do grupo + seus membros juntos; os demais clientes seguem a ordem normal
+  let htmlFinal = [];
+  let gruposEmitidos = {};
+  lista.forEach(c => {
+    let g = gruposLista.find(x => x.membros.includes(c));
+    if (!g) { htmlFinal.push(htmlCard(c)); return; }
+    if (gruposEmitidos[g.gid]) return;
+    gruposEmitidos[g.gid] = true;
+    htmlFinal.push(htmlGrupo(g));
+    g.membros.forEach(m => htmlFinal.push(htmlCard(m)));
+  });
+  cont.innerHTML = htmlFinal.join('');
+
+  // reabre os cards que estavam abertos antes de re-renderizar
+  abertos.forEach(bid => {
+    let b = document.getElementById(bid);
+    let a = document.getElementById('arrow_' + bid.replace(/^body_/, ''));
+    if (b) b.classList.add('open');
+    if (a) a.classList.add('open');
+  });
 
   // eventos dos cards renderizados
   cont.querySelectorAll('[data-toggle]').forEach(el => {
@@ -1335,7 +1664,25 @@ function renderLista() {
     el.addEventListener('change', () => {
       let id = el.getAttribute('data-nome');
       let c = clientes.find(x => x.id === id);
-      if (c) { c.nome = el.value.trim() || c.nome; salvarEstado(); }
+      if (c) {
+        c.nome = el.value.trim() || c.nome;
+        // Se você ainda não escolheu o tratamento à mão, reavalia pelo nome editado
+        if (!c.tratamentoManual) c.tratamento = inferirTratamento(c.nome);
+        aplicarSaudacaoNoCard(c);
+        salvarEstado();
+      }
+    });
+  });
+  cont.querySelectorAll('[data-trat]').forEach(el => {
+    el.addEventListener('click', ev => ev.stopPropagation());
+    el.addEventListener('change', () => {
+      let id = el.getAttribute('data-trat');
+      let c = clientes.find(x => x.id === id);
+      if (!c) return;
+      c.tratamento = el.value;
+      c.tratamentoManual = !!el.value;
+      aplicarSaudacaoNoCard(c);
+      salvarEstado();
     });
   });
   cont.querySelectorAll('[data-texto]').forEach(el => {
@@ -1351,6 +1698,10 @@ function renderLista() {
       let id = el.getAttribute('data-copiar');
       let c = clientes.find(x => x.id === id);
       if (!c) return;
+      if (/^Prezado\(a\)/.test(c.texto || '')) {
+        setStatus(`Defina Prezado ou Prezada para ${escapeHtml(c.nome)} antes de copiar.`, 'err');
+        return;
+      }
       try {
         await navigator.clipboard.writeText(c.texto);
         setStatus(`Texto de ${escapeHtml(c.nome)} copiado!`, 'ok');
@@ -1384,15 +1735,66 @@ function renderLista() {
       let c = clientes.find(x => x.id === id);
       if (!c) return;
       let grupo = el.value.trim();
+      let grupoAnterior = grupoDoCliente(c);
       c.grupo = grupo;
       if (c.codigo) {
         if (grupo) grupos[c.codigo] = grupo; else delete grupos[c.codigo];
         salvarTelefones();
       }
       salvarEstado();
+      // mudou de grupo → refaz a montagem das mensagens únicas
+      if (grupo !== grupoAnterior) renderLista();
     };
     el.addEventListener('change', salvarGrupo);
     el.addEventListener('blur', salvarGrupo);
+  });
+  cont.querySelectorAll('[data-gtexto]').forEach(el => {
+    el.addEventListener('input', () => {
+      let g = gruposPorGid[el.getAttribute('data-gtexto')];
+      if (!g || !msgGrupos[g.chave]) return;
+      msgGrupos[g.chave].texto = el.value;
+      msgGrupos[g.chave].editado = true;
+      salvarMsgGrupos();
+    });
+  });
+  cont.querySelectorAll('[data-gcopiar]').forEach(el => {
+    el.addEventListener('click', async (ev) => {
+      ev.stopPropagation();
+      let g = gruposPorGid[el.getAttribute('data-gcopiar')];
+      if (!g) return;
+      let texto = msgGrupos[g.chave].texto;
+      if (/^Prezado\(a\)/.test(texto)) {
+        setStatus(`Defina Prezado/Prezada de todos do grupo ${escapeHtml(g.nome)} antes de copiar.`, 'err');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(texto);
+        setStatus(`Texto do grupo ${escapeHtml(g.nome)} copiado!`, 'ok');
+      } catch (e) {
+        setStatus('Erro ao copiar texto', 'err');
+      }
+    });
+  });
+  cont.querySelectorAll('[data-gcheck]').forEach(el => {
+    el.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      let g = gruposPorGid[el.getAttribute('data-gcheck')];
+      if (!g) return;
+      let novo = !g.membros.every(x => x.enviado);
+      g.membros.forEach(x => { x.enviado = novo; });
+      salvarEstado();
+      renderLista();
+    });
+  });
+  cont.querySelectorAll('[data-gregerar]').forEach(el => {
+    el.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      let g = gruposPorGid[el.getAttribute('data-gregerar')];
+      if (!g) return;
+      delete msgGrupos[g.chave];
+      renderLista();
+      setStatus(`Texto do grupo ${escapeHtml(g.nome)} regenerado.`, 'ok');
+    });
   });
   cont.querySelectorAll('[data-check]').forEach(el => {
     el.addEventListener('click', (ev) => {
@@ -1454,12 +1856,13 @@ document.getElementById('btnImportar').addEventListener('click', async () => {
     try {
       let dados = await extrairDadosPDF(file, log);
       let { nome, codigo } = parseClienteDoNomeArquivo(file.name);
-      let texto = gerarRelatorioTexto(dados, undefined, nome);
+      let tratamento = inferirTratamento(nome);
+      let texto = gerarRelatorioTexto(dados, undefined, nome, tratamento);
       let telInit = codigo ? (telefones[codigo] || '') : '';
       let grupoInit = codigo ? (grupos[codigo] || '') : '';
       clientes.push({
         id: novoId(), fileName: file.name, nome, codigo, dados, texto, enviado: false, log,
-        telefone: telInit, grupo: grupoInit
+        telefone: telInit, grupo: grupoInit, tratamento, tratamentoManual: false
       });
       ok++;
     } catch (e) {
@@ -1490,10 +1893,12 @@ document.getElementById('btnAtualizarCenario').addEventListener('click', () => {
   let n = 0;
   clientes.forEach(c => {
     if (!c.enviado && c.dados) {
-      c.texto = gerarRelatorioTexto(c.dados, cenarioAtual, c.nome);
+      c.texto = gerarRelatorioTexto(c.dados, cenarioAtual, c.nome, c.tratamento);
       n++;
     }
   });
+  msgGrupos = {}; // as mensagens únicas de grupo são refeitas com o novo cenário
+  salvarMsgGrupos();
   salvarEstado();
   renderLista();
   setStatus(`Cenário atualizado em ${n} cliente(s) pendente(s).`, 'ok');
@@ -1502,6 +1907,8 @@ document.getElementById('btnAtualizarCenario').addEventListener('click', () => {
 document.getElementById('btnLimpar').addEventListener('click', () => {
   if (clientes.length && !confirm('Isso vai apagar toda a lista de clientes processados. Confirma?')) return;
   clientes = [];
+  msgGrupos = {};
+  salvarMsgGrupos();
   salvarEstado();
   renderLista();
   document.getElementById('status').classList.remove('show');
