@@ -273,6 +273,9 @@ body.light .hub-theme-btn .hub-theme-knob {
 .relatorio-texto { font-size: 14px; line-height: 1.6; color: var(--text); white-space: pre-wrap; }
 .cenario-textarea { width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; padding: 12px; color: var(--text); font-size: 14px; font-family: 'DM Sans', sans-serif; resize: vertical; margin-top: 0.5rem; }
 .cenario-textarea:focus { outline: none; border-color: var(--gold); }
+.fechamento-toggle { display:inline-flex; align-items:center; gap:7px; font-size:12px; color:var(--text2); cursor:pointer; user-select:none; padding:6px 10px; border:1px solid var(--border2); border-radius:8px; }
+.fechamento-toggle:hover { border-color: var(--gold); color: var(--gold); }
+.fechamento-toggle input { accent-color: var(--gold); cursor:pointer; margin:0; }
 
 /* ===== BATCH / LISTA DE CLIENTES ===== */
 .batch-toolbar { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
@@ -372,7 +375,7 @@ body.light .hub-theme-btn .hub-theme-knob {
 <main class="main">
   <div class="card">
     <div class="card-title">Cenário Macro do Mês</div>
-    <textarea id="textoCenario" class="cenario-textarea" rows="6">Em outubro, os mercados internacionais foram impactados pela intensificação das tensões geopolíticas no Oriente Médio, que pressionaram o petróleo Brent para próximo de US$ 118 por barril, e pela realização de lucros em ações de tecnologia diante das preocupações com os elevados investimentos em inteligência artificial. Nos EUA, o Fed manteve os juros entre 3,75% e 4,00% ao ano. No Brasil, a reeleição de Lula provocou forte volatilidade nos ativos domésticos, levando o Ibovespa a recuar 9,88%, em seu pior desempenho mensal desde junho de 2022, enquanto o dólar avançou cerca de 5,2%, encerrando o mês próximo de R$ 5,44.</textarea>
+    <textarea id="textoCenario" class="cenario-textarea" rows="6">Em outubro, os mercados internacionais foram impactados pela intensificação das tensões geopolíticas no Oriente Médio, que pressionaram o petróleo Brent para próximo de US$ 118 por barril, e pela realização de lucros em ações de tecnologia diante das preocupações com os elevados investimentos em inteligência artificial. Nos EUA, o Fed manteve os juros entre 3,75% e 4,00% ao ano. No Brasil, a reeleição de Lula provocou forte volatilidade nos ativos domésticos, levando o Ibovespa a recuar 9,88%, em seu pior desempenho mensal desde junho de 2022, a taxa DI Futuro subiu aproximadamente 20% para janeiro de 2028, enquanto o dólar avançou cerca de 5,2%, encerrando o mês próximo de R$ 5,44.</textarea>
     <div style="display:flex; justify-content:flex-end; margin-top:0.75rem;">
       <button class="btn btn-elegant" id="btnSalvarFrase">Salvar frase e gerar novo HTML</button>
     </div>
@@ -414,6 +417,7 @@ body.light .hub-theme-btn .hub-theme-knob {
         <button class="filter-tab" data-filtro="enviados">Enviados</button>
       </div>
       <div class="batch-counter" id="batchCounter">0 clientes</div>
+      <label class="fechamento-toggle" title="Liga/desliga o parágrafo final (&quot;Por fim, reforçamos...&quot;) em todos os clientes pendentes"><input type="checkbox" id="chkFechamento" checked><span>Incluir parágrafo final</span></label>
       <button class="btn btn-ghost btn-sm" id="btnAtualizarCenario">Atualizar cenário em pendentes</button>
       <button class="btn btn-gold btn-sm" id="btnExportarEnvio">Exportar para envio (WhatsApp)</button>
     </div>
@@ -1115,7 +1119,7 @@ function gerarRelatorioTexto(dados, cenarioOverride, nomeCliente, tratamento, re
   let saudacaoTrat = saudacaoNome === 'cliente' ? (tratamentoUsado || 'Prezado') : (tratamentoUsado || 'Prezado(a)');
 
   let carteiraFrase = `Considerando toda volatilidade do mês no mercado ${carteiraLabel} apresentou ${qualificador} ${rentabilidadeStr}, equivalente a ${pctCdiStr} do CDI do período.`;
-  let fechamento = `Por fim, reforçamos que a construção de patrimônio exige, além de bons retornos, tempo, disciplina e constância nos aportes. Investir regularmente e manter a estratégia ao longo do tempo contribui para resultados consistentes e alinhados aos objetivos financeiros definidos.`;
+  let fechamento = incluirFechamento ? FECHAMENTO_TEXTO : '';
 
   // Usado pela mensagem única de grupo (casais): devolve as partes sem a saudação
   if (retornarPartes) return { cenario, carteiraFrase, desempenhoTexto, fechamento };
@@ -1129,10 +1133,14 @@ ${desempenhoTexto}
 
 ${fechamento}`;
 
-  return texto;
+  return texto.replace(/\s+$/, '');
 }
 
 // ========== LOTE DE CLIENTES ==========
+const FECHAMENTO_TEXTO = `Por fim, reforçamos que a construção de patrimônio exige, além de bons retornos, tempo, disciplina e constância nos aportes. Investir regularmente e manter a estratégia ao longo do tempo contribui para resultados consistentes e alinhados aos objetivos financeiros definidos.`;
+const FECHAMENTO_LS_KEY = 'pbfIncluirFechamento_v1';
+let incluirFechamento = true;
+try { incluirFechamento = localStorage.getItem(FECHAMENTO_LS_KEY) !== '0'; } catch (e) { /* silencioso */ }
 const LS_KEY = 'pbfRelatorioBatchState_v1';
 let clientes = []; // { id, fileName, nome, codigo, dados, texto, enviado, log }
 let filtroAtual = 'todos';
@@ -1459,7 +1467,7 @@ function gerarMensagemGrupo(membros, cenarioOverride) {
     if (!fechamento) fechamento = p.fechamento;
     blocos.push(`*${nomes[i]}:* ${p.carteiraFrase}\n${p.desempenhoTexto}`);
   });
-  return `${tratamentoDoGrupo(membros)} ${juntarNomes(nomes)}, tudo bem? Seguem os seus relatórios mensais.\n\n${cenario}\n\n${blocos.join('\n\n')}\n\n${fechamento}`;
+  return `${tratamentoDoGrupo(membros)} ${juntarNomes(nomes)}, tudo bem? Seguem os seus relatórios mensais.\n\n${cenario}\n\n${blocos.join('\n\n')}\n\n${fechamento}`.replace(/\s+$/, '');
 }
 
 // Cria/atualiza o texto de cada grupo. Texto editado à mão só é refeito se mudar quem está no grupo.
@@ -1902,6 +1910,37 @@ document.getElementById('btnAtualizarCenario').addEventListener('click', () => {
   salvarEstado();
   renderLista();
   setStatus(`Cenário atualizado em ${n} cliente(s) pendente(s).`, 'ok');
+});
+
+// ========== PARÁGRAFO FINAL: incluir / não incluir em todos os clientes ==========
+function removerFechamentoDoTexto(t) {
+  return (t || '').replace(FECHAMENTO_TEXTO, '').replace(/\n{3,}/g, '\n\n').replace(/\s+$/, '');
+}
+function adicionarFechamentoAoTexto(t) {
+  t = t || '';
+  if (t.includes(FECHAMENTO_TEXTO)) return t;
+  return t.replace(/\s+$/, '') + '\n\n' + FECHAMENTO_TEXTO;
+}
+document.getElementById('chkFechamento').checked = incluirFechamento;
+document.getElementById('chkFechamento').addEventListener('change', (e) => {
+  incluirFechamento = e.target.checked;
+  try { localStorage.setItem(FECHAMENTO_LS_KEY, incluirFechamento ? '1' : '0'); } catch (err) { /* silencioso */ }
+  let aplicar = incluirFechamento ? adicionarFechamentoAoTexto : removerFechamentoDoTexto;
+  let n = 0;
+  clientes.forEach(c => {
+    if (!c.enviado && c.texto) { c.texto = aplicar(c.texto); n++; }
+  });
+  Object.keys(msgGrupos).forEach(k => {
+    let m = msgGrupos[k];
+    if (!m || !m.texto) return;
+    let ids = (m.ids || '').split(',').filter(Boolean);
+    let todosEnv = ids.length > 0 && ids.every(id => { let c = clientes.find(x => x.id === id); return c && c.enviado; });
+    if (!todosEnv) m.texto = aplicar(m.texto);
+  });
+  salvarMsgGrupos();
+  salvarEstado();
+  renderLista();
+  setStatus(`Parágrafo final ${incluirFechamento ? 'incluído' : 'removido'} em ${n} cliente(s) pendente(s) e nos grupos pendentes.`, 'ok');
 });
 
 document.getElementById('btnLimpar').addEventListener('click', () => {
